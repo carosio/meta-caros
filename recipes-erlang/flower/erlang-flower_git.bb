@@ -14,5 +14,5 @@ DEPENDS += "erlang-regine erlang-gen-listener-tcp erlang-gen-socket"
 inherit tetrapak
 
 python () {
-    erlang_def_package("erlang-flower", "flower-*", "ebin priv", "src include test README.md", d)
+    erlang_def_package("flower", "flower-*", "ebin priv", "src include test README.md", d)
 }
