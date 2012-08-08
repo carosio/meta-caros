@@ -9,7 +9,7 @@ SRCREV="AUTOINC"
 PR = "r0"
 
 SRC_URI = "git://gitolite@codebasin.net/rofl-pub.git;protocol=ssh \
-	   file://rofl-pub_add_autotools_support.patch;apply=yes"
+	   file://add_autotools_support.patch;apply=yes"
 
 S = "${WORKDIR}/git"
 

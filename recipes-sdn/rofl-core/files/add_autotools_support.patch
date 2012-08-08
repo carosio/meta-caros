@@ -1,35 +1,7 @@
-diff --git a/.gitignore b/.gitignore
-index 55b4ec9..c54b1b3 100644
---- a/.gitignore
-+++ b/.gitignore
-@@ -2,8 +2,12 @@
- /doc
- .depend
- *.o
-+*.lo
-+*.la
- *.a
- *.log
-+.deps
-+.libs
- /controller/controller
- /socktest/socktest
- *~
-@@ -13,3 +17,9 @@
- lib/common/librofcommon.a
- *.orig
- build
-+*.in
-+/aclocal.m4
-+/autom4te.cache/
-+/auxdir/
-+/configure
-+Makefile
-diff --git a/Makefile.am b/Makefile.am
-new file mode 100644
-index 0000000..6ae435f
---- /dev/null
-+++ b/Makefile.am
+Index: git/Makefile.am
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ git/Makefile.am	2012-08-07 18:10:30.168101734 +0200
 @@ -0,0 +1,20 @@
 +#
 +#
@@ -37,7 +9,7 @@ index 0000000..6ae435f
 +ACLOCAL_AMFLAGS = -I m4
 +
 +EXTRA_DIST = README
-+SUBDIRS = lib/common lib/config lib/rofl socktest
++SUBDIRS = include lib/common lib/config lib/rofl socktest
 +
 +doc:
 +	@doxygen doxyfile.conf
@@ -51,12 +23,11 @@ index 0000000..6ae435f
 +			make -C $$dir $@; \
 +		done; \
 +	fi
-diff --git a/configure.ac b/configure.ac
-new file mode 100644
-index 0000000..c03c4b8
---- /dev/null
-+++ b/configure.ac
-@@ -0,0 +1,69 @@
+Index: git/configure.ac
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ git/configure.ac	2012-08-07 18:10:30.172101796 +0200
+@@ -0,0 +1,70 @@
 +#                                               -*- Autoconf -*-
 +# Process this file with autoconf to produce a configure script.
 +
@@ -121,16 +92,16 @@ index 0000000..c03c4b8
 +
 +AC_CONFIG_FILES([
 +  Makefile
++  include/Makefile
 +  lib/common/Makefile
 +  lib/config/Makefile
 +  lib/rofl/Makefile
 +  socktest/Makefile])
 +AC_OUTPUT
-diff --git a/lib/common/Makefile.am b/lib/common/Makefile.am
-new file mode 100644
-index 0000000..8482c71
---- /dev/null
-+++ b/lib/common/Makefile.am
+Index: git/lib/common/Makefile.am
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ git/lib/common/Makefile.am	2012-08-07 18:10:30.172101796 +0200
 @@ -0,0 +1,25 @@
 +#
 +#
@@ -158,11 +129,10 @@ index 0000000..8482c71
 +librofcommon_la_LDFLAGS = -version-info 0:1:0
 +librofcommon_la_CXXFLAGS = $(ORAN_FLAGS) -I$(top_srcdir)/include
 \ No newline at end of file
-diff --git a/lib/common/makefile b/lib/common/makefile
-deleted file mode 100644
-index e01cad9..0000000
---- a/lib/common/makefile
-+++ /dev/null
+Index: git/lib/common/makefile
+===================================================================
+--- git.orig/lib/common/makefile	2012-08-07 18:10:29.792095953 +0200
++++ /dev/null	1970-01-01 00:00:00.000000000 +0000
 @@ -1,63 +0,0 @@
 -#
 -#
@@ -227,11 +197,10 @@ index e01cad9..0000000
 -			rm -f *~
 -
 -include .depend
-diff --git a/lib/config/Makefile.am b/lib/config/Makefile.am
-new file mode 100644
-index 0000000..734aa01
---- /dev/null
-+++ b/lib/config/Makefile.am
+Index: git/lib/config/Makefile.am
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ git/lib/config/Makefile.am	2012-08-07 18:10:30.172101796 +0200
 @@ -0,0 +1,8 @@
 +#
 +#
@@ -242,11 +211,10 @@ index 0000000..734aa01
 +librofconfig_la_LDFLAGS = -version-info 0:1:0
 +librofconfig_la_CXXFLAGS = $(ORAN_FLAGS) -I$(top_srcdir)/include
 \ No newline at end of file
-diff --git a/lib/config/makefile b/lib/config/makefile
-deleted file mode 100644
-index 5b1891d..0000000
---- a/lib/config/makefile
-+++ /dev/null
+Index: git/lib/config/makefile
+===================================================================
+--- git.orig/lib/config/makefile	2012-08-07 18:10:29.792095953 +0200
++++ /dev/null	1970-01-01 00:00:00.000000000 +0000
 @@ -1,68 +0,0 @@
 -#
 -#
@@ -316,11 +284,10 @@ index 5b1891d..0000000
 -			rm -f *~
 -
 -include .depend
-diff --git a/lib/makefile b/lib/makefile
-deleted file mode 100644
-index d781628..0000000
---- a/lib/makefile
-+++ /dev/null
+Index: git/lib/makefile
+===================================================================
+--- git.orig/lib/makefile	2012-08-07 18:10:29.796096014 +0200
++++ /dev/null	1970-01-01 00:00:00.000000000 +0000
 @@ -1,25 +0,0 @@
 -#
 -#
@@ -347,11 +314,10 @@ index d781628..0000000
 -		make -C $$dir rclean; \
 -	done;
 -
-diff --git a/lib/rofl/Makefile.am b/lib/rofl/Makefile.am
-new file mode 100644
-index 0000000..1d6b9ac
---- /dev/null
-+++ b/lib/rofl/Makefile.am
+Index: git/lib/rofl/Makefile.am
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ git/lib/rofl/Makefile.am	2012-08-07 18:10:30.172101796 +0200
 @@ -0,0 +1,9 @@
 +#
 +#
@@ -363,11 +329,10 @@ index 0000000..1d6b9ac
 +librofl_la_LDFLAGS = -version-info 0:1:0
 +librofl_la_CXXFLAGS = $(ORAN_FLAGS) -I$(top_srcdir)/include
 \ No newline at end of file
-diff --git a/lib/rofl/makefile b/lib/rofl/makefile
-deleted file mode 100644
-index 8ff949f..0000000
---- a/lib/rofl/makefile
-+++ /dev/null
+Index: git/lib/rofl/makefile
+===================================================================
+--- git.orig/lib/rofl/makefile	2012-08-07 18:10:29.796096014 +0200
++++ /dev/null	1970-01-01 00:00:00.000000000 +0000
 @@ -1,56 +0,0 @@
 -#
 -#
@@ -425,11 +390,10 @@ index 8ff949f..0000000
 -			rm -f *~
 -
 -include .depend
-diff --git a/m4/.gitignore b/m4/.gitignore
-new file mode 100644
-index 0000000..edc9d61
---- /dev/null
-+++ b/m4/.gitignore
+Index: git/m4/.gitignore
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ git/m4/.gitignore	2012-08-07 18:10:30.172101796 +0200
 @@ -0,0 +1,6 @@
 +libtool.m4
 +lt~obsolete.m4
@@ -437,11 +401,10 @@ index 0000000..edc9d61
 +ltsugar.m4
 +ltversion.m4
 +
-diff --git a/makefile b/makefile
-deleted file mode 100644
-index 5199754..0000000
---- a/makefile
-+++ /dev/null
+Index: git/makefile
+===================================================================
+--- git.orig/makefile	2012-08-07 18:10:29.796096014 +0200
++++ /dev/null	1970-01-01 00:00:00.000000000 +0000
 @@ -1,39 +0,0 @@
 -#
 -#
@@ -482,11 +445,10 @@ index 5199754..0000000
 -doc:
 -	@doxygen doxyfile.conf
 -
-diff --git a/makefile.inc b/makefile.inc
-deleted file mode 100644
-index 5304c88..0000000
---- a/makefile.inc
-+++ /dev/null
+Index: git/makefile.inc
+===================================================================
+--- git.orig/makefile.inc	2012-08-07 18:10:29.796096014 +0200
++++ /dev/null	1970-01-01 00:00:00.000000000 +0000
 @@ -1,30 +0,0 @@
 -CC=${CROSS_COMPILE}g++
 -
@@ -518,11 +480,10 @@ index 5304c88..0000000
 -# enable performance testing for L2 forwarding
 -# CFLAGS += -DSWITCHINGTEST
 -
-diff --git a/socktest/Makefile.am b/socktest/Makefile.am
-new file mode 100644
-index 0000000..e735e55
---- /dev/null
-+++ b/socktest/Makefile.am
+Index: git/socktest/Makefile.am
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ git/socktest/Makefile.am	2012-08-07 18:10:30.172101796 +0200
 @@ -0,0 +1,13 @@
 +#
 +#
@@ -537,11 +498,10 @@ index 0000000..e735e55
 +		    -I$(top_srcdir)/include/config \
 +		    -I$(top_srcdir)/include/rofl
 +socktest_LDADD = $(top_builddir)/lib/rofl/librofl.la $(top_builddir)/lib/common/librofcommon.la
-diff --git a/socktest/makefile b/socktest/makefile
-deleted file mode 100644
-index 0bfe719..0000000
---- a/socktest/makefile
-+++ /dev/null
+Index: git/socktest/makefile
+===================================================================
+--- git.orig/socktest/makefile	2012-08-07 18:10:29.796096014 +0200
++++ /dev/null	1970-01-01 00:00:00.000000000 +0000
 @@ -1,45 +0,0 @@
 -#
 -#
@@ -588,3 +548,34 @@ index 0bfe719..0000000
 -			rm -f *~
 -			
 -include .depend
+Index: git/include/Makefile.am
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ git/include/Makefile.am	2012-08-07 18:10:59.488552543 +0200
+@@ -0,0 +1,25 @@
++#
++#
++#
++
++nobase_pkginclude_HEADERS = \
++	common/caddress.h common/cclock.h common/cctlelem.h common/cerror.h common/cfibentry.h \
++	common/cflowentry.h common/cforward.h common/cfsm.h common/cfspentry.h common/cfsptable.h \
++	common/cftentry.h common/cfttable.h common/cfwdelem.h common/cfwdentry.h common/cfwdtable.h \
++	common/cgraph.h common/cgroupentry.h common/cgtentry.h common/cgttable.h common/ciosrv.h \
++	common/clldplist.h common/clldptlv.h common/cmacaddr.h common/cmemory.h common/cmempool.h \
++	common/cofaclist.h common/cofaction.h common/cofactionset.h common/cofbase.h \
++	common/cofbclist.h common/cofbucket.h common/cofctrl.h common/cofdpath.h common/cofinlist.h \
++	common/cofinst.h common/coflist.h common/cofmatch.h common/cofpacket.h common/cofport.h \
++	common/cofportlist.h common/cofrpc.h common/coxmatch.h common/coxmlist.h common/cpacket.h \
++	common/cpipe.h common/cport.h common/cpppoelist.h common/cpppoetlv.h common/crandom.h \
++	common/croflexp.h common/csocket.h common/csyslog.h common/cutbase.h common/cvastring.h \
++	common/endian_conversion.h common/farpv4frame.h common/fetherframe.h common/fframe.h \
++	common/ficmpv4frame.h common/fipv4frame.h common/flldpframe.h common/fmplsframe.h \
++	common/fpppframe.h common/fpppoeframe.h common/ftcpframe.h common/fudpframe.h \
++	common/fvlanframe.h common/lldp.h common/openflow11.h \
++	common/openflow12.h common/openflow_rofl.h common/rofcommon.h common/thread_helper.h \
++	config/ccli.h config/cconfigfwdelem.h config/cconfigport.h \
++	rofl/cethport.h rofl/clinuxport.h rofl/cmmapport.h rofl/cnetmapport.h \
++	rofl/cofipv4port.h rofl/cpkbuf.h rofl/crib.h rofl/ctapport.h rofl/cunixenv.h \
++	rofl/cunixport.h
+\ No newline at end of file
