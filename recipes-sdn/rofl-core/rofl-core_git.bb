@@ -8,8 +8,7 @@ DEPENDS = "libcli"
 SRCREV="AUTOINC"
 PR = "r0"
 
-SRC_URI = "git://gitolite@codebasin.net/rofl-pub.git;protocol=ssh \
-	   file://add_autotools_support.patch;apply=yes"
+SRC_URI = "git://gitolite@codebasin.net/rofl-core.git;protocol=ssh"
 
 S = "${WORKDIR}/git"
 

@@ -1,15 +1,14 @@
 DESCRIPTION = "Revised OpenFlow Library IPADAPTD (ROFL)"
 SECTION = "net"
 LICENSE = "commercial"
-LIC_FILES_CHKSUM = "file://ipadaptd.cc;beginline=1;endline=3;md5=82d386d3654ce7c9a0e2d7115551d090"
+LIC_FILES_CHKSUM = "file://COPYRIGHT;md5=e4d7e1de5b6d0c6597a7f5cb61577266"
 
 DEPENDS = "rofl-core"
 
 SRCREV="AUTOINC"
 PR = "r0"
 
-SRC_URI = "git://gitolite@codebasin.net/rofl-ipadaptd.git;protocol=ssh \
-	   file://add_autotools_support.patch;apply=yes"
+SRC_URI = "git://gitolite@codebasin.net/ipadaptd.git;protocol=ssh"
 
 S = "${WORKDIR}/git"
 
