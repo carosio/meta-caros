@@ -16,13 +16,17 @@ RDEPENDS_task-core-sdn = "\
     erlang-flower \
     rofl-adpd \
     rofl-ethctld \
-    rofl-ipctld \
-    rofl-ipadaptd"
+    rofl-ipctld"
 
 RDEPENDS_task-core-sdn-dbg = "\
     erlang-flower-dbg \
-    rofl-dbg"
+    rofl-adpd-dbg \
+    rofl-ethctld-dbg \
+    rofl-ipctld-dbg"
 
 RDEPENDS_task-core-sdn-dev = "\
     erlang-flower-dev \
-    rofl-dev"
+    rofl-adpd-dev \
+    rofl-ethctld-dev \
+    rofl-ipctld-dev"
+

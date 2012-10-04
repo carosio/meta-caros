@@ -16,7 +16,6 @@ ALLOW_EMPTY = "1"
 
 RDEPENDS_task-core-sdn-sdk = "\
     erlang-flower \
-    rofl \
     rofl-adpd \
     rofl-ethctld \
     rofl-ipctld \
