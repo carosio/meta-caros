@@ -8,8 +8,10 @@ DEPENDS = "libcli"
 SRCREV="AUTOINC"
 PR = "r0"
 
-SRC_URI = "git://gitolite@codebasin.net/rofl-core.git;protocol=ssh"
+SRC_URI = "git://gitolite@codebasin.net/rofl-core.git;protocol=ssh;branch=devel"
 
 S = "${WORKDIR}/git"
 
 inherit autotools
+
+EXTRA_OECONF += "--enable-experimental --enable-debug"

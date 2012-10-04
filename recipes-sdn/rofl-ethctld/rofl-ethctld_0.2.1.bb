@@ -7,12 +7,11 @@ DEPENDS = "rofl-core"
 
 PR = "r0"
 
-SRC_URI = "git://gitolite@codebasin.net/ethctld.git;protocol=ssh;tag=0.1"
+SRC_URI = "git://gitolite@codebasin.net/ethctld.git;protocol=ssh;tag=v${PV}"
 
 S = "${WORKDIR}/git"
 
 inherit autotools
 
+EXTRA_OECONF += "--enable-debug"
 CXXFLAGS_append = " -I${STAGING_INCDIR}/rofl"
-
-

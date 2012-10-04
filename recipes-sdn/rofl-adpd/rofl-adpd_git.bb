@@ -8,12 +8,13 @@ DEPENDS = "rofl-core"
 SRCREV="AUTOINC"
 PR = "r0"
 
-SRC_URI = "git://gitolite@codebasin.net/adpd.git;protocol=ssh"
+SRC_URI = "git://gitolite@codebasin.net/adpd.git;protocol=ssh;branch=devel"
 
 S = "${WORKDIR}/git"
 
 inherit autotools
 
+EXTRA_OECONF += "--enable-debug"
 CXXFLAGS_append = " -I${STAGING_INCDIR}/rofl"
 
-
+FILES_${PN} += '/usr/lib/libofhal_x86.so'
