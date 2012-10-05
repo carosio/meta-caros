@@ -7,11 +7,23 @@ DEPENDS = "rofl-core"
 
 PR = "r0"
 
-SRC_URI = "git://gitolite@codebasin.net/ethctld.git;protocol=ssh;tag=v${PV}"
+SRC_URI = "git://gitolite@codebasin.net/ethctld.git;protocol=ssh;tag=v${PV} \
+	   file://init"
 
 S = "${WORKDIR}/git"
 
-inherit autotools
+inherit autotools update-rc.d
+
+INITSCRIPT_NAME = "ethctld"
+INITSCRIPT_PARAMS = "defaults 50"
 
 EXTRA_OECONF += "--enable-debug"
 CXXFLAGS_append = " -I${STAGING_INCDIR}/rofl"
+
+do_install_append() {
+    install -d ${D}${sysconfdir} \
+	${D}${sysconfdir}/init.d \
+	${D}${sysconfdir}/rofl
+
+    install -m0755 ${WORKDIR}/init ${D}${sysconfdir}/init.d/ethctld
+}
