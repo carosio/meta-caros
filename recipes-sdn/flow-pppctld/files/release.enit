@@ -1,0 +1,12 @@
+{release, 'flow-pppctld', [
+	{vsn, "1.0"},
+	{applications, [
+			kernel,
+			stdlib,
+			sasl,
+			sasl_syslog,
+			regine,
+			flower,
+			ppp
+	]}
+]}.
