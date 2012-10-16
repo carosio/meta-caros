@@ -9,7 +9,7 @@ PR = "r0"
 SRC_URI = "git://git@git.tpip.net/reppp.git;protocol=ssh"
 
 S = "${WORKDIR}/git"
-DEPENDS += "erlang-regine erlang-flower"
+DEPENDS += "erlang-regine erlang-flower erlang-eradius"
 
 inherit tetrapak
 
