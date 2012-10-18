@@ -3,14 +3,14 @@ SECTION = "devel"
 LICENSE = "commercial"
 LIC_FILES_CHKSUM = "file://${THISDIR}/files/LICENSE;md5=6b53c33414d6498f819ab22fb1d5805b"
 
-PR = "r0"
+PR = "r1"
 
 SRC_URI = "file://user.config \
 	   file://defaults.config \
 	   file://release.enit"
 
 S = "${WORKDIR}"
-DEPENDS += "erlang-enit erlang-sasl-syslog erlang-flow-pppctld"
+RDEPENDS += "erlang-enit erlang-sasl-syslog erlang-flow-pppctld"
 
 do_install_append() {
     install -m 0755 -d \
