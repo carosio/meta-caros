@@ -4,15 +4,16 @@ LICENSE = "MPL-2.0"
 LIC_FILES_CHKSUM = "file://COPYRIGHT;md5=5d425c8f3157dbf212db2ec53d9e5132"
 
 DEPENDS = "rofl-core"
+RDEPENDS = "busybox-runit"
 
-PR = "r0"
+PR = "r1"
 
 SRC_URI = "git://gitolite@codebasin.net/adpd.git;protocol=ssh;tag=v${PV} \
-	   file://init"
+	   file://run"
 
 S = "${WORKDIR}/git"
 
-inherit autotools update-rc.d
+inherit autotools
 
 INITSCRIPT_NAME = "adpd"
 INITSCRIPT_PARAMS = "defaults 51"
@@ -24,8 +25,8 @@ FILES_${PN} += '/usr/lib/libofhal_x86.so'
 
 do_install_append() {
     install -d ${D}${sysconfdir} \
-	${D}${sysconfdir}/init.d \
-	${D}${sysconfdir}/rofl
+	${D}${sysconfdir}/rofl \
+	${D}/var/service/adpd
 
-    install -m0755 ${WORKDIR}/init ${D}${sysconfdir}/init.d/adpd
+    install -m0755 ${WORKDIR}/run ${D}/var/service/adpd
 }
