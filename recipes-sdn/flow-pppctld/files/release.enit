@@ -7,6 +7,7 @@
 			sasl_syslog,
 			regine,
 			flower,
-			ppp
+			ppp,
+			flow_pppctld
 	]}
 ]}.
