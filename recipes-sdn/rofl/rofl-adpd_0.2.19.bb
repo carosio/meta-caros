@@ -6,22 +6,20 @@ LIC_FILES_CHKSUM = "file://COPYRIGHT;md5=5d425c8f3157dbf212db2ec53d9e5132"
 DEPENDS = "rofl-core"
 RDEPENDS = "busybox-runit"
 
-PR = "r1"
+PR = "r0"
 
 SRC_URI = "git://gitolite@codebasin.net/adpd.git;protocol=ssh;tag=v${PV} \
+	   file://cfwd_queue_fix.patch \
 	   file://run"
 
 S = "${WORKDIR}/git"
 
 inherit autotools
 
-INITSCRIPT_NAME = "adpd"
-INITSCRIPT_PARAMS = "defaults 51"
-
-EXTRA_OECONF += "--enable-debug --enable-backwards_compat"
+EXTRA_OECONF += "--sysconfdir=/etc/rofl --enable-x86legacy --enable-static --disable-shared --enable-debug"
 CXXFLAGS_append = " -I${STAGING_INCDIR}/rofl"
 
-FILES_${PN} += '/usr/lib/libofhal_x86.so'
+# FILES_${PN} += '/usr/lib/libofhal_x86.so'
 
 do_install_append() {
     install -d ${D}${sysconfdir} \

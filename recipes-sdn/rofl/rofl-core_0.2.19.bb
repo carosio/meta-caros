@@ -13,4 +13,4 @@ S = "${WORKDIR}/git"
 
 inherit autotools
 
-EXTRA_OECONF += "--enable-experimental --enable-debug"
+EXTRA_OECONF += "--sysconfdir=/etc/rofl --enable-static --disable-shared --enable-debug"

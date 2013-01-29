@@ -1,0 +1,20 @@
+diff --git a/src/adpd_x86engine/cfwdengine.cc b/src/adpd_x86engine/cfwdengine.cc
+index e4ab135..f0f1c30 100644
+--- a/src/adpd_x86engine/cfwdengine.cc
++++ b/src/adpd_x86engine/cfwdengine.cc
+@@ -72,13 +72,14 @@ cfwdengine::pkt_enqueue(
+ {
+ 	{
+ 		RwLock lock(&fwd_lock, RwLock::RWLOCK_WRITE);
++
++		pin_queue.pk_store(pkb);
+ 		if (not flags.test(CFWDENGINE_FLAG_WAKEUP_PENDING))
+ 		{
+ 			notify(cevent(CFWDENGINE_EVENT_HANDLE_PKB));
+ 			flags.set(CFWDENGINE_FLAG_WAKEUP_PENDING);
+ 		}
+ 	}
+-	pin_queue.pk_store(pkb);
+ }
+ 
+ 
