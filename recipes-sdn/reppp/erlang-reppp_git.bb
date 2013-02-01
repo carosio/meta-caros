@@ -5,6 +5,7 @@ LIC_FILES_CHKSUM = "file://src/ppp_app.erl;beginline=1;endline=1;md5=0f89632c1db
 
 SRCREV="AUTOINC"
 PR = "r0"
+PV="0.0+git${SRCPV}"
 
 SRC_URI = "git://git@git.tpip.net/reppp.git;protocol=ssh"
 
