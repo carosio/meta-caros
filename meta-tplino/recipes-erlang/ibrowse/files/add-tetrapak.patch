@@ -1,0 +1,16 @@
+diff --git a/tetrapak/config.ini b/tetrapak/config.ini
+new file mode 100644
+index 0000000..1a43efc
+--- /dev/null
++++ b/tetrapak/config.ini
+@@ -0,0 +1,10 @@
++[build]
++version = "2.2.0~~~d~~~c"
++
++[package]
++maintainer = "Felix Lange <fl@travelping.com>"
++include_src = true
++exclude = "rebar|^src/.*\\.src|\\.gitignore|^examples/|^doc/|^test/|README|^Makefile|patches|\.pc"
++
++[xref]
++ignore_undef = [{ibrowse_test_server, start_server, 2}]

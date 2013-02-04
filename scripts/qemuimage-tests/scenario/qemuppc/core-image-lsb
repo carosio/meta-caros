@@ -1,0 +1,7 @@
+sanity ssh
+sanity scp
+sanity dmesg
+sanity smart_help
+sanity smart_query
+sanity rpm_query
+sanity shutdown

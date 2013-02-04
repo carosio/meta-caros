@@ -1,0 +1,12 @@
+diff --git a/tetrapak/config.ini b/tetrapak/config.ini
+new file mode 100644
+index 0000000..fffab1e
+--- /dev/null
++++ b/tetrapak/config.ini
+@@ -0,0 +1,6 @@
++[build]
++version = "2.3.0~~~d~~~c"
++
++[package]
++maintainer = "Felix Lange <fl@travelping.com>"
++exclude = "\\.travis.yml|rebar|\\.gitignore|^examples/|^scripts/|^support|README|CHANGES\\.md|^Makefile|patches|\.pc"

@@ -1,0 +1,62 @@
+#!/usr/bin/env python
+
+# Report significant differences in the buildhistory repository since a specific revision
+#
+# Copyright (C) 2012 Intel Corporation
+# Author: Paul Eggleton <paul.eggleton@linux.intel.com>
+
+import sys
+import os
+from distutils.version import LooseVersion
+
+# Ensure PythonGit is installed (buildhistory_analysis needs it)
+try:
+    import git
+except ImportError:
+    print("Please install GitPython (python-git) 0.3.1 or later in order to use this script")
+    sys.exit(1)
+
+def main():
+    if LooseVersion(git.__version__) < '0.3.1':
+        print("Version of GitPython is too old, please install GitPython (python-git) 0.3.1 or later in order to use this script")
+        sys.exit(1)
+
+    if (len(sys.argv) < 3):
+        print("Report significant differences in the buildhistory repository")
+        print("Syntax: %s <buildhistory-path> <since-revision> [to-revision]" % os.path.basename(sys.argv[0]))
+        print("If to-revision is not specified, it defaults to HEAD")
+        sys.exit(1)
+
+    # Set path to OE lib dir so we can import the buildhistory_analysis module
+    basepath = os.path.abspath(os.path.dirname(os.path.abspath(sys.argv[0])) + '/..')
+    newpath = basepath + '/meta/lib'
+    # Set path to bitbake lib dir so the buildhistory_analysis module can load bb.utils
+    if os.path.exists(basepath + '/bitbake/lib/bb'):
+        bitbakepath = basepath + '/bitbake'
+    else:
+        # look for bitbake/bin dir in PATH
+        bitbakepath = None
+        for pth in os.environ['PATH'].split(':'):
+            if os.path.exists(os.path.join(pth, '../lib/bb')):
+                bitbakepath = os.path.abspath(os.path.join(pth, '..'))
+                break
+        if not bitbakepath:
+            print("Unable to find bitbake by searching parent directory of this script or PATH")
+            sys.exit(1)
+
+    sys.path[0:0] = [newpath, bitbakepath + '/lib']
+    import oe.buildhistory_analysis
+
+    if len(sys.argv) > 3:
+        torev = sys.argv[3]
+    else:
+        torev = 'HEAD'
+    changes = oe.buildhistory_analysis.process_changes(sys.argv[1], sys.argv[2], torev)
+    for chg in changes:
+        print('%s' % chg)
+
+    sys.exit(0)
+
+
+if __name__ == "__main__":
+    main()

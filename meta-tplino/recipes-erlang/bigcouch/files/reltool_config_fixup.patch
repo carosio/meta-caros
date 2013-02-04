@@ -1,0 +1,29 @@
+diff --git a/rel/reltool.config b/rel/reltool.config
+index 3caff2d..c8f8e2f 100644
+--- a/rel/reltool.config
++++ b/rel/reltool.config
+@@ -36,8 +36,23 @@
+     {rel, "start_clean", "", [kernel, stdlib]},
+     {boot_rel, "bigcouch"},
+     {profile, embedded},
+-    {excl_sys_filters, ["^bin/.*", "^erts.*/bin/(dialyzer|typer)"]},
++    {app_file, strip},
++    {excl_sys_filters, ["^bin/.*", "^erts.*/bin/(dialyzer|typer)",
++			"^erts.*/(doc|info|include|lib|man|src)"]},
+     {excl_archive_filters, [".*"]},
++    {excl_app_filters, ["^priv/obj"]},
++
++    {app, mochiweb, [{excl_app_filters, ["^priv"]}]},
++    {app, eunit, [{incl_cond, exclude}]},
++    {app, gs, [{incl_cond, exclude}]},
++    {app, wx, [{incl_cond, exclude}]},
++    {app, observer, [{incl_cond, exclude}]},
++    {app, et, [{mod, et_viewer, [{incl_cond, exclude}]},
++	       {mod, et_gs_contents_viewer, [{incl_cond, exclude}]},
++	       {mod, et_gs_viewer, [{incl_cond, exclude}]},
++	       {mod, et_wx_contents_viewer, [{incl_cond, exclude}]},
++	       {mod, et_wx_viewer, [{incl_cond, exclude}]}
++    ]},
+ 
+     % It's sufficient to list 'chttpd' here, as reltool will pull in all
+     % dependencies.  But we'll be explicit and list everything actively

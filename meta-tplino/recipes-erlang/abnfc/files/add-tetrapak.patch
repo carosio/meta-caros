@@ -1,0 +1,11 @@
+diff --git a/tetrapak/config.ini b/tetrapak/config.ini
+new file mode 100644
+index 0000000..283d54f
+--- /dev/null
++++ b/tetrapak/config.ini
+@@ -0,0 +1,5 @@
++[package]
++maintainer  = "Felix Lange <fl@travelping.com>"
++deb.section = "devel"
++include_src = true
++exclude     = ".gitignore|Makefile|bootstrap|samples|\\.mk|patches|\.pc"

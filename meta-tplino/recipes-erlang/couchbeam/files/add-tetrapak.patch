@@ -1,0 +1,14 @@
+diff --git a/tetrapak/config.ini b/tetrapak/config.ini
+new file mode 100644
+index 0000000..d43d6dd
+--- /dev/null
++++ b/tetrapak/config.ini
+@@ -0,0 +1,8 @@
++[build]
++version = "0.7.1.~o~~~c"
++
++[package]
++maintainer = "Felix Lange <fl@travelping.com>"
++extra_apps = ["ejson", "mochiweb", "oauth"]
++include_doc = false
++exclude = "^t/|^deps/|^examples/|^NEWS|rebar|\\.gitignore|^Makefile|README\\.md|THANKS|AUTHORS|patches|\\.pc"

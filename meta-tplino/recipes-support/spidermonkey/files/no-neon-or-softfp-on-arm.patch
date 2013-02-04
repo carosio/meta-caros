@@ -1,0 +1,138 @@
+--- x/js/src/configure.in	2011-12-01 06:50:23.000000000 -0700
++++ x/js/src/configure.in	2011-12-01 06:54:05.000000000 -0700
+@@ -3546,22 +3546,22 @@
+ fi
+ AC_SUBST(HAVE_ARM_SIMD)
+ 
+-AC_MSG_CHECKING(for ARM NEON support in compiler)
+-_SAVE_CFLAGS="$CFLAGS"
+-if test "$GNU_CC"; then
+-  # gcc needs -mfpu=neon to recognize NEON instructions
+-  CFLAGS="$CFLAGS -mfpu=neon -mfloat-abi=softfp"
+-fi
+-AC_TRY_COMPILE([],
+-               [asm("vadd.i8 d0, d0, d0");],
+-               result="yes", result="no")
+-AC_MSG_RESULT("$result")
+-if test "$result" = "yes"; then
+-    AC_DEFINE(HAVE_ARM_NEON)
+-    HAVE_ARM_NEON=1
+-fi
+-CFLAGS="$_SAVE_CFLAGS"
+-AC_SUBST(HAVE_ARM_NEON)
++dnl AC_MSG_CHECKING(for ARM NEON support in compiler)
++dnl _SAVE_CFLAGS="$CFLAGS"
++dnl if test "$GNU_CC"; then
++dnl   # gcc needs -mfpu=neon to recognize NEON instructions
++dnl   CFLAGS="$CFLAGS -mfpu=neon -mfloat-abi=softfp"
++dnl fi
++dnl AC_TRY_COMPILE([],
++dnl                [asm("vadd.i8 d0, d0, d0");],
++dnl                result="yes", result="no")
++dnl AC_MSG_RESULT("$result")
++dnl if test "$result" = "yes"; then
++dnl     AC_DEFINE(HAVE_ARM_NEON)
++dnl     HAVE_ARM_NEON=1
++dnl fi
++dnl CFLAGS="$_SAVE_CFLAGS"
++dnl AC_SUBST(HAVE_ARM_NEON)
+ 
+ dnl ========================================================
+ dnl = pthread support
+@@ -4687,9 +4687,9 @@
+       if test "$GNU_CC"; then
+         AC_DEFINE(MOZ_THUMB2)
+         AC_DEFINE(MOZ_ARM_ARCH)
+-        CFLAGS="$CFLAGS -march=armv7-a -mthumb -mfloat-abi=softfp $MOZ_ARM_VFP_FLAGS"
+-        CXXFLAGS="$CXXFLAGS -march=armv7-a -mthumb -mfloat-abi=softfp $MOZ_ARM_VFP_FLAGS"
+-        ASFLAGS="$ASFLAGS -march=armv7-a -mthumb -mfloat-abi=softfp $MOZ_ARM_VFP_FLAGS"
++        CFLAGS="$CFLAGS -march=armv7-a -mthumb $MOZ_ARM_VFP_FLAGS"
++        CXXFLAGS="$CXXFLAGS -march=armv7-a -mthumb $MOZ_ARM_VFP_FLAGS"
++        ASFLAGS="$ASFLAGS -march=armv7-a -mthumb $MOZ_ARM_VFP_FLAGS"
+       else
+         AC_MSG_ERROR([--enable-thumb2 is not supported for non-GNU toolchains])
+       fi
+@@ -4703,9 +4703,9 @@
+     arm*)
+       if test "$GNU_CC"; then
+         AC_DEFINE(MOZ_ARM_ARCH)
+-        CFLAGS="$CFLAGS -march=armv7-a -marm -mfloat-abi=softfp $MOZ_ARM_VFP_FLAGS"
+-        CXXFLAGS="$CXXFLAGS -march=armv7-a -marm -mfloat-abi=softfp $MOZ_ARM_VFP_FLAGS"
+-        ASFLAGS="$ASFLAGS -march=armv7-a -marm -mfloat-abi=softfp $MOZ_ARM_VFP_FLAGS"
++        CFLAGS="$CFLAGS -march=armv7-a -marm $MOZ_ARM_VFP_FLAGS"
++        CXXFLAGS="$CXXFLAGS -march=armv7-a -marm $MOZ_ARM_VFP_FLAGS"
++        ASFLAGS="$ASFLAGS -march=armv7-a -marm $MOZ_ARM_VFP_FLAGS"
+       else
+         AC_MSG_ERROR([--with-cpu-arch=armv7 is not supported for non-GNU toolchains])
+       fi
+--- x/js/src/configure	2011-12-01 06:50:23.000000000 -0700
++++ x/js/src/configure	2011-12-01 06:51:51.000000000 -0700
+@@ -10633,42 +10633,6 @@
+ fi
+ 
+ 
+-echo $ac_n "checking for ARM NEON support in compiler""... $ac_c" 1>&6
+-echo "configure:10638: checking for ARM NEON support in compiler" >&5
+-_SAVE_CFLAGS="$CFLAGS"
+-if test "$GNU_CC"; then
+-  # gcc needs -mfpu=neon to recognize NEON instructions
+-  CFLAGS="$CFLAGS -mfpu=neon -mfloat-abi=softfp"
+-fi
+-cat > conftest.$ac_ext <<EOF
+-#line 10645 "configure"
+-#include "confdefs.h"
+-
+-int main() {
+-asm("vadd.i8 d0, d0, d0");
+-; return 0; }
+-EOF
+-if { (eval echo configure:10652: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+-  rm -rf conftest*
+-  result="yes"
+-else
+-  echo "configure: failed program was:" >&5
+-  cat conftest.$ac_ext >&5
+-  rm -rf conftest*
+-  result="no"
+-fi
+-rm -f conftest*
+-echo "$ac_t"""$result"" 1>&6
+-if test "$result" = "yes"; then
+-    cat >> confdefs.h <<\EOF
+-#define HAVE_ARM_NEON 1
+-EOF
+-
+-    HAVE_ARM_NEON=1
+-fi
+-CFLAGS="$_SAVE_CFLAGS"
+-
+-
+ case "$target_os" in
+ darwin*)
+     USE_PTHREADS=1
+@@ -13307,9 +13271,9 @@
+ #define MOZ_ARM_ARCH 1
+ EOF
+ 
+-        CFLAGS="$CFLAGS -march=armv7-a -mthumb -mfloat-abi=softfp $MOZ_ARM_VFP_FLAGS"
+-        CXXFLAGS="$CXXFLAGS -march=armv7-a -mthumb -mfloat-abi=softfp $MOZ_ARM_VFP_FLAGS"
+-        ASFLAGS="$ASFLAGS -march=armv7-a -mthumb -mfloat-abi=softfp $MOZ_ARM_VFP_FLAGS"
++        CFLAGS="$CFLAGS -march=armv7-a -mthumb $MOZ_ARM_VFP_FLAGS"
++        CXXFLAGS="$CXXFLAGS -march=armv7-a -mthumb $MOZ_ARM_VFP_FLAGS"
++        ASFLAGS="$ASFLAGS -march=armv7-a -mthumb $MOZ_ARM_VFP_FLAGS"
+       else
+         { echo "configure: error: --enable-thumb2 is not supported for non-GNU toolchains" 1>&2; exit 1; }
+       fi
+@@ -13326,9 +13290,9 @@
+ #define MOZ_ARM_ARCH 1
+ EOF
+ 
+-        CFLAGS="$CFLAGS -march=armv7-a -marm -mfloat-abi=softfp $MOZ_ARM_VFP_FLAGS"
+-        CXXFLAGS="$CXXFLAGS -march=armv7-a -marm -mfloat-abi=softfp $MOZ_ARM_VFP_FLAGS"
+-        ASFLAGS="$ASFLAGS -march=armv7-a -marm -mfloat-abi=softfp $MOZ_ARM_VFP_FLAGS"
++        CFLAGS="$CFLAGS -march=armv7-a -marm $MOZ_ARM_VFP_FLAGS"
++        CXXFLAGS="$CXXFLAGS -march=armv7-a -marm $MOZ_ARM_VFP_FLAGS"
++        ASFLAGS="$ASFLAGS -march=armv7-a -marm $MOZ_ARM_VFP_FLAGS"
+       else
+         { echo "configure: error: --with-cpu-arch=armv7 is not supported for non-GNU toolchains" 1>&2; exit 1; }
+       fi

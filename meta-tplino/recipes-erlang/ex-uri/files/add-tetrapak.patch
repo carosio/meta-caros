@@ -1,0 +1,42 @@
+diff --git a/tetrapak/build_grammar.erl b/tetrapak/build_grammar.erl
+new file mode 100644
+index 0000000..45a6d6f
+--- /dev/null
++++ b/tetrapak/build_grammar.erl
+@@ -0,0 +1,21 @@
++-task({"build:grammar", "Build the URI grammar using abnfc"}).
++-task({"clean:grammar", "Delete compiled abnfc grammars"}).
++-hook({"build:grammar", run_before, "build:erlang"}).
++
++check("clean:grammar") ->
++    tpk_util:check_files_exist(tetrapak:subdir("src"), ".abnf", tetrapak:subdir("src"), ".erl");
++check("build:grammar") ->
++    tpk_util:check_files_mtime(tetrapak:subdir("src"), ".abnf", tetrapak:subdir("src"), ".erl").
++
++run("build:grammar", Files) ->
++    AbnfOptions = [noobj, {o, tetrapak:subdir("src")}],
++    lists:foreach(fun ({Input, _}) ->
++                      io:format("abnfc ~s~n", [Input]),
++                      case abnfc:file(Input, AbnfOptions) of
++                          ok      -> ok;
++                          Error1  -> tetrapak:fail("compile error: ~p", [Error1])
++                      end
++                  end, Files);
++
++run("clean:grammar", Files) ->
++    [tpk_file:delete(Erl) || {_Abnfc, Erl} <- Files], ok.
+diff --git a/tetrapak/config.ini b/tetrapak/config.ini
+new file mode 100644
+index 0000000..57f54ff
+--- /dev/null
++++ b/tetrapak/config.ini
+@@ -0,0 +1,9 @@
++[build]
++version = "1.0~~~d~~~c"
++
++[package]
++maintainer = "Felix Lange <fl@travelping.com>"
++deb.section = "net"
++extra_apps = [abnfc] 
++extra_build_apps = [eunit, abnfc]
++exclude = "rebar\\.config|\\.agner\\.config|\\.gitignore|patches|\.pc"

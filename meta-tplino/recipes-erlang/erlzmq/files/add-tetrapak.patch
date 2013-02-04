@@ -1,0 +1,79 @@
+diff --git a/c_src/Makefile b/c_src/Makefile
+index ecdd385..fe40544 100644
+--- a/c_src/Makefile
++++ b/c_src/Makefile
+@@ -1,33 +1,11 @@
+-LINUX=$(shell uname | grep Linux | wc -l | xargs echo)
+-DEPS=../deps
++CFLAGS +=-Wall -fPIC -I. $(shell erl -noinput -eval 'io:format("-I~s -I~s/erts-~s/include", [code:lib_dir(erl_interface, include), code:root_dir(), erlang:system_info(version)]), halt(0).')
+ 
+-ifeq ($(LINUX),1)
+-ZMQ_FLAGS=--with-pic
+-else
+-ZMQ_FLAGS=
+-endif
++all: ../priv/erlzmq_drv.so 
+ 
+-ifndef ZEROMQ_VERSION
+-ZEROMQ_VERSION=v2.1.11
+-endif
++clean: 
++	rm -f ../priv/*.so
++	rm -f *.o
+ 
+-all: $(DEPS)/zeromq2/src/.libs/libzmq.a
+-
+-clean:
+-	if test -e $(DEPS)/zeromq2/Makefile; then \
+-		cd $(DEPS)/zeromq2; make clean; \
+-	else \
+-		true; \
+-	fi
+-
+-distclean:
+-	@rm -rf $(DEPS)
+-
+-$(DEPS)/zeromq2:
+-	@mkdir $(DEPS)
+-	@git clone git://github.com/zeromq/zeromq2-1.git $(DEPS)/zeromq2
+-	@echo $(ZEROMQ_VERSION)
+-	@cd $(DEPS)/zeromq2 && git checkout $(ZEROMQ_VERSION)
+-
+-$(DEPS)/zeromq2/src/.libs/libzmq.a: $(DEPS)/zeromq2
+-	@cd $(DEPS)/zeromq2 && ./autogen.sh && ./configure $(ZMQ_FLAGS) && make
++../priv/erlzmq_drv.so: erlzmq_nif.o vector.o
++	(test -d ../priv || mkdir -p ../priv)
++	$(CC) $(LDFLAGS) -fPIC -shared erlzmq_nif.o vector.o -lei -lerl_interface -lzmq -o ../priv/erlzmq_drv.so
+diff --git a/tetrapak/config.ini b/tetrapak/config.ini
+new file mode 100644
+index 0000000..b64c367
+--- /dev/null
++++ b/tetrapak/config.ini
+@@ -0,0 +1,13 @@
++[build]
++version = "2.0~~~d~~~c"
++
++[package]
++maintainer   = "Felix Lange <fl@travelping.com>"
++architecture = host 
++include_src  = true
++exclude      = "\\.gitignore|rebar|rebar\\.config|deps|perf|^Makefile|patches|\.pc"
++
++[package.deb]
++section = "net"
++dependencies = ["libzmq1 (>= 2.1.7)", "libzmq1 (< 2.2)"] 
++build_dependencies = ["libzmq-dev (>= 2.1.7)", "libzmq-dev (< 2.2)"]
+diff --git a/tetrapak/zmq_nif.erl b/tetrapak/zmq_nif.erl
+new file mode 100644
+index 0000000..a412be0
+--- /dev/null
++++ b/tetrapak/zmq_nif.erl
+@@ -0,0 +1,8 @@
++-task({"build:nif", "Build the zmq NIF library"}).
++-task({"clean:nif", "Clean the zmq NIF library"}).
++
++run("clean:nif", _) ->
++    tetrapak:outputcmd("make", ["-C", tetrapak:subdir("c_src"), "-w", "clean"]);
++
++run("build:nif", _) ->
++    tetrapak:outputcmd("make", ["-C", tetrapak:subdir("c_src"), "-w", "all"]).

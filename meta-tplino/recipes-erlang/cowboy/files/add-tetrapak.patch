@@ -1,0 +1,13 @@
+diff --git a/tetrapak/config.ini b/tetrapak/config.ini
+new file mode 100644
+index 0000000..381d65d
+--- /dev/null
++++ b/tetrapak/config.ini
+@@ -0,0 +1,7 @@
++[build]
++version = "~t.~o~~~c~~RoadRunnr"
++
++[package]
++extra_build_apps = [eunit]
++maintainer = "Andreas Schultz <as@travelping.com>"
++exclude = "Makefile|\\.gitignore|rebar|rebar\\.config|AUTHORS|LICENSE|README\\.md|ROADMAP\\.md|CHANGELOG\\.md|cover\\.spec|examples|test|patches|\.pc"

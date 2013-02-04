@@ -1,0 +1,55 @@
+diff --git a/c_src/Makefile b/c_src/Makefile
+new file mode 100644
+index 0000000..4db34ec
+--- /dev/null
++++ b/c_src/Makefile
+@@ -0,0 +1,21 @@
++CFLAGS +=-Wall -fPIC -I. $(shell erl -noinput -eval 'io:format("-I~s -I~s/erts-~s/include", [code:lib_dir(erl_interface, include), code:root_dir(), erlang:system_info(version)]), halt(0).')
++SRCS = $(wildcard *.c) $(wildcard yajl/*.c)
++OBJS = $(patsubst %.c,%.o,$(SRCS))
++LIBRARY = ../priv/ejson.so
++DEPENDS = depends.mk
++
++all: $(LIBRARY)
++
++$(DEPENDS): $(SRCS)
++	gcc -M $(CFLAGS) $(SRCS) >depends.mk
++
++include $(DEPENDS)
++
++clean:
++	rm -f $(DEPENDS)
++	rm -f $(LIBRARY)
++	rm -f $(OBJS)
++
++$(LIBRARY): $(OBJS)
++	(test -d ../priv || mkdir -p ../priv)
++	$(CC) $(LDFLAGS) -fPIC -shared -lerl_interface -lerts -o $(LIBRARY)
+diff --git a/tetrapak/build_nif.erl b/tetrapak/build_nif.erl
+new file mode 100644
+index 0000000..96e821c
+--- /dev/null
++++ b/tetrapak/build_nif.erl
+@@ -0,0 +1,8 @@
++-task({"build:nif", "Build the ejson NIF library"}).
++-task({"clean:nif", "Clean the ejson NIF library"}).
++
++run("build:nif", _) ->
++    tetrapak:outputcmd(tetrapak:subdir("c_src"), "make", ["all"]);
++
++run("clean:nif", _) ->
++    tetrapak:outputcmd(tetrapak:subdir("c_src"), "make", ["clean"]).
+\ No newline at end of file
+diff --git a/tetrapak/config.ini b/tetrapak/config.ini
+new file mode 100644
+index 0000000..6b1f59a
+--- /dev/null
++++ b/tetrapak/config.ini
+@@ -0,0 +1,7 @@
++[build]
++version = "~t.~o~~~c"
++
++[package]
++maintainer = "Felix Lange <fl@travelping.com>"
++architecture = "host"
++exclude = "^t/|rebar|\\.gitignore|^Makefile|README\\.md|NOTICE|THANKS|AUTHORS|patches|\.pc"

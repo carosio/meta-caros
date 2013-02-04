@@ -1,0 +1,11 @@
+diff --git a/rel/overlay/etc/default.ini b/rel/overlay/etc/default.ini
+index 81c363d..1998422 100644
+--- a/rel/overlay/etc/default.ini
++++ b/rel/overlay/etc/default.ini
+@@ -28,6 +28,6 @@ allow_jsonp = false
+
+ [log]
+-file = {{prefix}}/var/log/bigcouch.log
++file = /var/log/bigcouch/bigcouch.log
+ level = info
+ include_sasl = true

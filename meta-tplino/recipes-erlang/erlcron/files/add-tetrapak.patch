@@ -1,0 +1,14 @@
+diff --git a/tetrapak/config.ini b/tetrapak/config.ini
+new file mode 100644
+index 0000000..203bfd0
+--- /dev/null
++++ b/tetrapak/config.ini
+@@ -0,0 +1,8 @@
++[build]
++version = "~t.~o~~~c"
++
++[package]
++maintainer  = "Martin Roedel <mr@travelping.com>"
++deb.section = "admin"
++exclude     = "\\.gitignore|^LICENSE|^README|sinan.cfg|patches|\\.pc"
++
