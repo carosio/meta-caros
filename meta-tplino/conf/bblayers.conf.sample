@@ -1,0 +1,18 @@
+# LAYER_CONF_VERSION is increased each time build/conf/bblayers.conf
+# changes incompatibly
+LCONF_VERSION = "6"
+
+BBPATH = "${TOPDIR}"
+BBFILES ?= ""
+
+BBLAYERS ?= " \
+  ##COREBASE##/meta \
+  ##COREBASE##/meta-yocto \
+  ##COREBASE##/meta-yocto-bsp \
+  ##COREBASE##/meta-tplino \
+  "
+BBLAYERS_NON_REMOVABLE ?= " \
+  ##COREBASE##/meta \
+  ##COREBASE##/meta-yocto \
+  ##COREBASE##/meta-tplino \
+  "
