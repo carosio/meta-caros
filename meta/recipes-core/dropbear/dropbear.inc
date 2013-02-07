@@ -9,6 +9,8 @@ INC_PR = "r2"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=3a5b0c2f0d0c49dfde9558ae2036683c"
 
+inherit autotools systemd
+
 DEPENDS = "zlib"
 RPROVIDES = "ssh sshd"
 DEPENDS += "${@base_contains('DISTRO_FEATURES', 'pam', 'libpam', '', d)}"
@@ -19,17 +21,14 @@ SRC_URI = "http://matt.ucc.asn.au/dropbear/releases/dropbear-${PV}.tar.gz \
 	         file://configure.patch \
 	         file://fix-2kb-keys.patch \
 	         file://nopw-option.patch \
-	         file://init \
+		 file://dropbearkey.service \
+		 file://dropbear@.service \
+            	 file://dropbear.socket \
                  ${@base_contains('DISTRO_FEATURES', 'pam', '${PAM_SRC_URI}', '', d)} "
 
 PAM_SRC_URI = "file://dropbear-enable-pam.patch \
                file://dropbear-configuration-file.patch \
                file://dropbear"
-
-inherit autotools update-rc.d
-
-INITSCRIPT_NAME = "dropbear"
-INITSCRIPT_PARAMS = "defaults 10"
 
 CFLAGS_prepend = " -I. "
 LD = "${CC}"
@@ -40,9 +39,11 @@ EXTRA_OEMAKE = 'MULTI=1 SCPPROGRESS=1 PROGRAMS="${SBINCOMMANDS} ${BINCOMMANDS}"'
 EXTRA_OECONF += "\
  ${@base_contains('DISTRO_FEATURES', 'pam', '--enable-pam', '--disable-pam', d)}"
 
+SYSTEMD_PACKAGES = "${PN}-systemd"
+SYSTEMD_SERVICE_${PN}-systemd = "dropbear.socket"
+
 do_install() {
 	install -d ${D}${sysconfdir} \
-		   ${D}${sysconfdir}/init.d \
 		   ${D}${sysconfdir}/default \
 		   ${D}${sysconfdir}/dropbear \
                    ${D}${bindir} \
@@ -56,12 +57,6 @@ do_install() {
 	do
 		ln -s ./dropbearmulti ${D}${sbindir}/$i
 	done
-	cat ${WORKDIR}/init | sed -e 's,/etc,${sysconfdir},g' \
-				  -e 's,/usr/sbin,${sbindir},g' \
-				  -e 's,/var,${localstatedir},g' \
-				  -e 's,/usr/bin,${bindir},g' \
-				  -e 's,/usr,${prefix},g' > ${D}${sysconfdir}/init.d/dropbear
-	chmod 755 ${D}${sysconfdir}/init.d/dropbear
 	for i in ${DISTRO_FEATURES};
 	do
 		if [ ${i} = "pam" ];  then
@@ -69,7 +64,6 @@ do_install() {
 			install -m 0644 ${WORKDIR}/dropbear  ${D}${sysconfdir}/pam.d/
 		fi
 	done
-
 }
 
 inherit update-alternatives

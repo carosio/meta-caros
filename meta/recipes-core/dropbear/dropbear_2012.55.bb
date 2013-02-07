@@ -5,3 +5,6 @@ SRC_URI[sha256sum] = "808df243c61bb60f2f18fa64bca628cbba0918b2a14139f10e6d59d4ac
 
 PR = "${INC_PR}.1"
 
+do_install_append() {
+        ln -sf /dev/null ${D}${systemd_unitdir}/system/dropbear.service
+}
