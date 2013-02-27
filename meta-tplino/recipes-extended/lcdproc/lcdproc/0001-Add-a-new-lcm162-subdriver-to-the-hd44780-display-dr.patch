@@ -1,0 +1,282 @@
+From 812ed88167449fbf961a856f8fde60f8fe3d00e5 Mon Sep 17 00:00:00 2001
+From: Holger Rasch <rasch@bytemine.net>
+Date: Fri, 3 Apr 2009 01:58:24 +0200
+Subject: [PATCH] Add a new 'lcm162' subdriver to the hd44780 display driver.
+
+---
+ acinclude.m4                     |    2 +-
+ server/drivers/Makefile.am       |    2 +-
+ server/drivers/hd44780-drivers.h |    2 +
+ server/drivers/hd44780-lcm162.c  |  134 ++++++++++++++++++++++++++++++++++++++
+ server/drivers/hd44780-lcm162.h  |    9 +++
+ 5 files changed, 147 insertions(+), 2 deletions(-)
+ create mode 100644 server/drivers/hd44780-lcm162.c
+ create mode 100644 server/drivers/hd44780-lcm162.h
+
+Index: lcdproc-0.5.6/acinclude.m4
+===================================================================
+--- lcdproc-0.5.6.orig/acinclude.m4	2012-09-01 23:34:24.000000000 +0200
++++ lcdproc-0.5.6/acinclude.m4	2013-02-19 11:37:49.842545217 +0100
+@@ -213,7 +213,7 @@
+ 		hd44780)
+ 			HD44780_DRIVERS="hd44780-hd44780-serial.o hd44780-hd44780-lis2.o hd44780-hd44780-usblcd.o"
+ 			if test "$ac_cv_port_have_lpt" = yes ; then
+-				HD44780_DRIVERS="$HD44780_DRIVERS hd44780-hd44780-4bit.o hd44780-hd44780-ext8bit.o hd44780-lcd_sem.o hd44780-hd44780-winamp.o hd44780-hd44780-serialLpt.o"
++				HD44780_DRIVERS="$HD44780_DRIVERS hd44780-hd44780-4bit.o hd44780-hd44780-ext8bit.o hd44780-lcd_sem.o hd44780-hd44780-winamp.o hd44780-hd44780-serialLpt.o hd44780-hd44780-lcm162.o"
+ 			fi
+ 			if test "$enable_libusb" = yes ; then
+ 				HD44780_DRIVERS="$HD44780_DRIVERS hd44780-hd44780-bwct-usb.o hd44780-hd44780-lcd2usb.o hd44780-hd44780-uss720.o hd44780-hd44780-usbtiny.o hd44780-hd44780-usb4all.o"
+Index: lcdproc-0.5.6/server/drivers/Makefile.am
+===================================================================
+--- lcdproc-0.5.6.orig/server/drivers/Makefile.am	2012-08-19 16:29:08.000000000 +0200
++++ lcdproc-0.5.6/server/drivers/Makefile.am	2013-02-19 11:38:52.850224984 +0100
+@@ -95,7 +95,7 @@
+ glcdlib_SOURCES =    lcd.h lcd_lib.h glcdlib.h glcdlib.c report.h
+ glk_SOURCES =        lcd.h glk.c glk.h glkproto.c glkproto.h report.h
+ hd44780_SOURCES =    lcd.h lcd_lib.h hd44780.h hd44780.c hd44780-drivers.h hd44780-low.h hd44780-charmap.h report.h adv_bignum.h
+-EXTRA_hd44780_SOURCES = hd44780-4bit.c hd44780-4bit.h hd44780-ext8bit.c hd44780-ext8bit.h lcd_sem.c lcd_sem.h hd44780-serialLpt.c hd44780-serialLpt.h hd44780-serial.c hd44780-serial.h hd44780-winamp.c hd44780-winamp.h hd44780-bwct-usb.c hd44780-bwct-usb.h hd44780-lcd2usb.c hd44780-lcd2usb.h hd44780-usbtiny.c hd44780-usbtiny.h hd44780-lis2.c hd44780-lis2.h hd44780-i2c.c hd44780-i2c.h hd44780-ftdi.c hd44780-ftdi.h hd44780-ethlcd.c hd44780-ethlcd.h hd44780-uss720.c hd44780-uss720.h hd44780-usblcd.c hd44780-usblcd.h hd44780-usb4all.c hd44780-usb4all.h port.h lpt-port.h timing.h
++EXTRA_hd44780_SOURCES = hd44780-4bit.c hd44780-4bit.h hd44780-ext8bit.c hd44780-ext8bit.h lcd_sem.c lcd_sem.h hd44780-serialLpt.c hd44780-serialLpt.h hd44780-serial.c hd44780-serial.h hd44780-winamp.c hd44780-winamp.h hd44780-bwct-usb.c hd44780-bwct-usb.h hd44780-lcd2usb.c hd44780-lcd2usb.h hd44780-usbtiny.c hd44780-usbtiny.h hd44780-lis2.c hd44780-lis2.h hd44780-i2c.c hd44780-i2c.h hd44780-ftdi.c hd44780-ftdi.h hd44780-ethlcd.c hd44780-ethlcd.h hd44780-uss720.c hd44780-uss720.h hd44780-usblcd.c hd44780-usblcd.h hd44780-usb4all.c hd44780-usb4all.h port.h lpt-port.h timing.h hd44780-lcm162.c hd44780-lcm162.h
+ i2500vfd_SOURCES =   lcd.h i2500vfd.c i2500vfd.h glcd_font5x8.h report.h
+ icp_a106_SOURCES =   lcd.h lcd_lib.h icp_a106.c icp_a106.h report.h
+ imon_SOURCES =       lcd.h lcd_lib.h hd44780-charmap.h imon.h imon.c report.h adv_bignum.h
+Index: lcdproc-0.5.6/server/drivers/hd44780-drivers.h
+===================================================================
+--- lcdproc-0.5.6.orig/server/drivers/hd44780-drivers.h	2012-08-19 16:29:08.000000000 +0200
++++ lcdproc-0.5.6/server/drivers/hd44780-drivers.h	2013-02-19 11:40:08.889838536 +0100
+@@ -16,6 +16,7 @@
+ # include "hd44780-ext8bit.h"
+ # include "hd44780-serialLpt.h"
+ # include "hd44780-winamp.h"
++# include "hd44780-lcm162.h"
+ #endif
+ #include "hd44780-serial.h"
+ #include "hd44780-lis2.h"
+@@ -52,6 +53,7 @@
+ 	{ "8bit",          HD44780_CT_8BIT,          IF_TYPE_PARPORT, hd_init_ext8bit   },
+ 	{ "serialLpt",     HD44780_CT_SERIALLPT,     IF_TYPE_PARPORT, hd_init_serialLpt },
+ 	{ "winamp",        HD44780_CT_WINAMP,        IF_TYPE_PARPORT, hd_init_winamp    },
++	{ "lcm162",        HD44780_CT_LCM162,        IF_TYPE_PARPORT, hd_init_lcm162    },
+ #endif
+ 	/* serial connection types */
+ 	{ "picanlcd",      HD44780_CT_PICANLCD,      IF_TYPE_SERIAL,  hd_init_serial    },
+Index: lcdproc-0.5.6/server/drivers/hd44780-lcm162.c
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ lcdproc-0.5.6/server/drivers/hd44780-lcm162.c	2013-02-19 14:57:31.331740829 +0100
+@@ -0,0 +1,190 @@
++/*
++ * 8-bit driver module for Hitachi HD44780 based LCD displays.
++ * The LCD is operated in it's 8 bit-mode to be connected to a single
++ * PC parallel port.
++ *
++ * Copyright (c)  1999, 1995 Benjamin Tse <blt@Comports.com>
++ *                2001 Joris Robijn <joris@robijn.net>
++ *		  2009 Holger Rasch <rasch@bytemine.net>
++ *		  2013 Andreas Schultz <as@travelping.com>
++ *
++ * Created modular driver Dec 1999, Benjamin Tse <blt@Comports.com>
++ *
++ * Based on the code in the lcdtime package which uses the LCD
++ * controller in its 8-bit mode.
++ *
++ * This file is released under the GNU General Public License. Refer to the
++ * COPYING file distributed with this package.
++ */
++
++/*
++ * Copied from "hd44780-ext8.c" and modified for lcm-162 module
++ * found in nexcom nsaXXXX models.
++ *
++ * Extended for backlight support in new Lanner LCM's
++ *
++ * The connections are:
++ * printer port   LCD
++ * D0 (2)	  D0
++ * D1 (3)	  D1
++ * D2 (4)	  D2
++ * D3 (5)	  D3
++ * D4 (6)	  D4
++ * D5 (7)	  D5
++ * D6 (8)	  D6
++ * D7 (9)	  D7
++ * nLF   (14)     EN
++ * INIT  (16)     RW
++ * nSEL  (17)     RS
++ *
++ * Backlight
++ * nSTRB  (1)	  backlight (optional, see documentation)
++ */
++
++#include "hd44780-lcm162.h"
++#include "hd44780-low.h"
++#include "lpt-port.h"
++#include "port.h"
++#include "lcd_sem.h"
++#include "report.h"
++
++#include <stdio.h>
++#include <string.h>
++#include <errno.h>
++
++// Generally, any function that accesses the LCD control lines needs to be
++// implemented separately for each HW design. This is typically (but not
++// restricted to):
++// HD44780_senddata
++// HD44780_readkeypad
++
++void lcm162_HD44780_senddata(PrivateData *p, unsigned char displayID, unsigned char flags, unsigned char ch);
++void lcm162_HD44780_backlight(PrivateData *p, unsigned char state);
++unsigned char lcm162_HD44780_readkeypad(PrivateData *p, unsigned int YData);
++void lcm162_HD44780_output(PrivateData *p, int data);
++
++/* lcm-162 specific mapping parport <-> hd44780 signals */
++#define	RS	SEL
++#define	RW	INIT
++#define	EN1	LF
++#define BL	nSTRB
++
++static int semid;
++
++/**
++ * Initialize the driver.
++ * \param drvthis  Pointer to driver structure.
++ * \retval 0       Success.
++ * \retval -1      Error.
++ */
++int
++hd_init_lcm162(Driver *drvthis)
++{
++	PrivateData *p = (PrivateData*) drvthis->private_data;
++	HD44780_functions *hd44780_functions = p->hd44780_functions;
++
++	semid = sem_get();
++
++	// Reserve the port registers
++	if (port_access_multiple(p->port,3)) {
++		report(RPT_ERR, "%s: cannot get IO-permission for 0x%03X: %s",
++				drvthis->name, p->port, strerror(errno));
++		return -1;
++	}
++
++	hd44780_functions->senddata = lcm162_HD44780_senddata;
++	hd44780_functions->backlight = lcm162_HD44780_backlight;
++	hd44780_functions->readkeypad = lcm162_HD44780_readkeypad;
++
++	// setup the lcd in 8 bit mode
++	hd44780_functions->senddata(p, 0, RS_INSTR, FUNCSET | IF_8BIT);
++	hd44780_functions->uPause(p, 4100);
++	hd44780_functions->senddata(p, 0, RS_INSTR, FUNCSET | IF_8BIT);
++	hd44780_functions->uPause(p, 100);
++	hd44780_functions->senddata(p, 0, RS_INSTR, FUNCSET | IF_8BIT | TWOLINE | SMALLCHAR);
++	hd44780_functions->uPause(p, 40);
++
++	common_init (p, IF_8BIT);
++
++	if (p->have_keypad)
++		p->stuckinputs = 0;	/* unused here */
++
++	// Writes new value to the "bargraph" latches
++	hd44780_functions->output = NULL;
++	return 0;
++}
++
++/**
++ * Send data or commands to the display.
++ * \param p          Pointer to driver's private data structure.
++ * \param displayID  ID of the display (or 0 for all) to send data to.
++ * \param flags      Defines whether to end a command or data.
++ * \param ch         The value to send.
++ */
++void
++lcm162_HD44780_senddata(PrivateData *p, unsigned char displayID, unsigned char flags, unsigned char ch)
++{
++	unsigned char enableLines = 0, portControl;
++
++	// Only one controller is supported
++	enableLines = EN1;
++
++	if (flags == RS_INSTR)
++		portControl = 0;
++	else //if (iflags == RS_DATA)
++		portControl = RS;
++
++	portControl |= p->backlight_bit;
++
++	semop_wait(semid);
++	port_out(p->port + 2, portControl ^ OUTMASK);
++	port_out(p->port, ch);
++	if (p->delayBus) p->hd44780_functions->uPause(p, 1);
++	port_out(p->port + 2, (enableLines|portControl) ^ OUTMASK);
++	if (p->delayBus) p->hd44780_functions->uPause(p, 1);
++	port_out(p->port + 2, portControl ^ OUTMASK);
++	sem_signal(semid);
++}
++
++/**
++ * Turn display backlight on or off.
++ * \param p      Pointer to driver's private data structure.
++ * \param state  New backlight status.
++ */
++void lcm162_HD44780_backlight(PrivateData *p, unsigned char state)
++{
++	unsigned char in = port_in(p->port + 2) & ~BL;
++
++	// Backlight uses inverse port
++	p->backlight_bit = (state ? BL : 0);
++
++	// Semaphores not needed because backlight will not go together with
++	// the bargraph anyway...
++	port_out(p->port + 2, in | (p->backlight_bit ^ OUTMASK));
++}
++
++/**
++ * Read keypress.
++ * \param p      Pointer to driver's private data structure.
++ * \param YData  Bitmap of rows / lines to enable.
++ * \return       Bitmap of the pressed keys.
++ */
++unsigned char lcm162_HD44780_readkeypad(PrivateData *p, unsigned int YData)
++{
++	unsigned char readval;
++
++	if (YData) return 0;	/* no keymatrix */
++
++	readval = port_in(p->port + 1);
++	if (readval & ACK) {
++		/* a key is pressed */
++
++		/* 4 keys encoded in signals PAPEREND and FAULT */
++		/* map them to low nibble (multiple keys not supported) */
++		return 1 << (
++			((readval & FAULT) / FAULT << 1) |
++			((readval & PAPEREND) / PAPEREND)
++		);
++	} else
++		return 0;
++}
+Index: lcdproc-0.5.6/server/drivers/hd44780-lcm162.h
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ lcdproc-0.5.6/server/drivers/hd44780-lcm162.h	2013-02-19 11:37:49.854545156 +0100
+@@ -0,0 +1,9 @@
++#ifndef HD_LCM162_H
++#define HD_LCM162_H
++
++#include "lcd.h"					  /* for Driver */
++
++// initialise this particular driver
++int hd_init_lcm162(Driver *drvthis);
++
++#endif
+Index: lcdproc-0.5.6/server/drivers/hd44780-low.h
+===================================================================
+--- lcdproc-0.5.6.orig/server/drivers/hd44780-low.h	2013-02-19 13:59:35.394252743 +0100
++++ lcdproc-0.5.6/server/drivers/hd44780-low.h	2013-02-19 13:59:26.834297406 +0100
+@@ -53,6 +53,7 @@
+ #define HD44780_CT_USBLCD		19
+ #define HD44780_CT_USBTINY		20
+ #define HD44780_CT_USB4ALL		21
++#define HD44780_CT_LCM162		22
+ /**@}*/
+ 
+ /** \name Symbolic names for interface types
