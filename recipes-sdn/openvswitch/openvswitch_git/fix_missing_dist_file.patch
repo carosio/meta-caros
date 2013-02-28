@@ -1,0 +1,12 @@
+diff --git a/Makefile.am b/Makefile.am
+index 328b248..fd194fa 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -62,6 +62,7 @@ EXTRA_DIST = \
+ 	boot.sh \
+ 	build-aux/sodepends.pl \
+ 	build-aux/soexpand.pl \
++	m4/openvswitch.m4 \
+ 	$(MAN_FRAGMENTS) \
+ 	$(MAN_ROOTS)
+ bin_PROGRAMS =
