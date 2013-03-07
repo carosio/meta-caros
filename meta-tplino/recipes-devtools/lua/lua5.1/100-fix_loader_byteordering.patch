@@ -1,0 +1,94 @@
+Index: lua-5.1.5/src/lundump.c
+===================================================================
+--- lua-5.1.5.orig/src/lundump.c
++++ lua-5.1.5/src/lundump.c
+@@ -4,6 +4,9 @@
+ ** See Copyright Notice in lua.h
+ */
+ 
++#include <endian.h>
++#include <inttypes.h>
++#include <byteswap.h>
+ #include <string.h>
+ 
+ #define lundump_c
+@@ -25,6 +28,7 @@ typedef struct {
+  ZIO* Z;
+  Mbuffer* b;
+  const char* name;
++ int swap;
+ } LoadState;
+ 
+ #ifdef LUAC_TRUST_BINARIES
+@@ -40,7 +44,6 @@ static void error(LoadState* S, const ch
+ }
+ #endif
+ 
+-#define LoadMem(S,b,n,size)	LoadBlock(S,b,(n)*(size))
+ #define	LoadByte(S)		(lu_byte)LoadChar(S)
+ #define LoadVar(S,x)		LoadMem(S,&x,1,sizeof(x))
+ #define LoadVector(S,b,n,size)	LoadMem(S,b,n,size)
+@@ -51,6 +54,41 @@ static void LoadBlock(LoadState* S, void
+  IF (r!=0, "unexpected end");
+ }
+ 
++static void LoadMem (LoadState* S, void* b, int n, size_t size)
++{
++ LoadBlock(S,b,n*size);
++ if (S->swap)
++ {
++  void* p = b;
++  switch (size)
++  {
++   case 1:
++  	break;
++   case 2:
++	while (n--) {
++		*(uint16_t *)p = bswap_16(*(uint16_t *)p);
++		p += 2;
++	}
++  	break;
++   case 4:
++	while (n--) {
++		*(uint32_t *)p = bswap_32(*(uint32_t *)p);
++		p += 4;
++	}
++  	break;
++   case 8:
++	while (n--) {
++		*(uint64_t *)p = bswap_64(*(uint64_t *)p);
++		p += 8;
++	}
++  	break;
++   default:
++   	IF(1, "bad size");
++  	break;
++  }
++ }
++}
++
+ static int LoadChar(LoadState* S)
+ {
+  char x;
+@@ -186,6 +224,7 @@ static void LoadHeader(LoadState* S)
+  char s[LUAC_HEADERSIZE];
+  luaU_header(h);
+  LoadBlock(S,s,LUAC_HEADERSIZE);
++ S->swap=(s[6]!=h[6]); s[6]=h[6];
+  IF (memcmp(h,s,LUAC_HEADERSIZE)!=0, "bad header");
+ }
+ 
+@@ -213,12 +252,11 @@ Proto* luaU_undump (lua_State* L, ZIO* Z
+ */
+ void luaU_header (char* h)
+ {
+- int x=1;
+  memcpy(h,LUA_SIGNATURE,sizeof(LUA_SIGNATURE)-1);
+  h+=sizeof(LUA_SIGNATURE)-1;
+  *h++=(char)LUAC_VERSION;
+  *h++=(char)LUAC_FORMAT;
+- *h++=(char)*(char*)&x;				/* endianness */
++ *h++=(char)(BYTE_ORDER == LITTLE_ENDIAN);	/* endianness */
+  *h++=(char)sizeof(int);
+  *h++=(char)sizeof(size_t);
+  *h++=(char)sizeof(Instruction);

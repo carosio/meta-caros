@@ -4,11 +4,14 @@ LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://COPYRIGHT;md5=59bdd99bb82238f238cf5c65c21604fd"
 HOMEPAGE = "http://www.lua.org/"
 
-PR = "r1"
+PR = "r2"
 
 DEPENDS += "readline"
 SRC_URI = "http://www.lua.org/ftp/lua-${PV}.tar.gz \
            file://bitwise_operators.patch \
+           file://010-shared_liblua.patch \
+           file://020-disable_readline.patch \
+           file://100-fix_loader_byteordering.patch \
            file://lua5.1.pc \
           "
 S = "${WORKDIR}/lua-${PV}"
@@ -20,6 +23,12 @@ SRC_URI_append_libc-uclibc = "${UCLIBC_PATCHES}"
 
 TARGET_CC_ARCH += " -fPIC ${LDFLAGS}"
 EXTRA_OEMAKE = "'CC=${CC} -fPIC' 'MYCFLAGS=${CFLAGS} -DLUA_USE_LINUX -fPIC' MYLDFLAGS='${LDFLAGS}'"
+
+PACKAGES_prepend = "lib${PN} lib${PN}-dev lib${PN}-staticdev "
+
+FILES_lib${PN} = "${libdir}/liblua.so.*"
+FILES_lib${PN}-dev += "${libdir}/liblua.so"
+FILES_lib${PN}-staticdev += "${libdir}/liblua.a"
 
 do_configure_prepend() {
 	sed -i -e s:/usr/local:${prefix}:g src/luaconf.h
@@ -42,6 +51,9 @@ do_install () {
 		install
 	install -d ${D}${libdir}/pkgconfig
 	install -m 0644 ${WORKDIR}/lua5.1.pc ${D}${libdir}/pkgconfig/lua5.1.pc
+	rm ${D}${libdir}/liblua.so
+	ln -fs  liblua.so.${PV} ${D}${libdir}/liblua.so.5.1
+	ln -fs  liblua.so.${PV} ${D}${libdir}/liblua.so
 	rmdir ${D}${libdir}/lua/5.1
 	rmdir ${D}${libdir}/lua
 	rmdir ${D}${datadir}/lua/5.1

@@ -1,0 +1,26 @@
+Index: lua-5.1.5/src/Makefile
+===================================================================
+--- lua-5.1.5.orig/src/Makefile
++++ lua-5.1.5/src/Makefile
+@@ -104,7 +104,7 @@ generic:
+ 	$(MAKE) all MYCFLAGS=
+ 
+ linux:
+-	$(MAKE) all MYCFLAGS=-DLUA_USE_LINUX MYLIBS="-Wl,-E -ldl -lreadline -lhistory -lncurses"
++	$(MAKE) all MYCFLAGS=-DLUA_USE_LINUX MYLIBS="-Wl,-E -ldl"
+ 
+ macosx:
+ 	$(MAKE) all MYCFLAGS=-DLUA_USE_LINUX MYLIBS="-lreadline"
+Index: lua-5.1.5/src/luaconf.h
+===================================================================
+--- lua-5.1.5.orig/src/luaconf.h
++++ lua-5.1.5/src/luaconf.h
+@@ -37,7 +37,7 @@
+ #if defined(LUA_USE_LINUX)
+ #define LUA_USE_POSIX
+ #define LUA_USE_DLOPEN		/* needs an extra library: -ldl */
+-#define LUA_USE_READLINE	/* needs some extra libraries */
++#undef LUA_USE_READLINE		/* needs some extra libraries */
+ #endif
+ 
+ #if defined(LUA_USE_MACOSX)
