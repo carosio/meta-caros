@@ -26,7 +26,6 @@ SRC_URI = "file://rotation \
            file://share/dot.bashrc \
            file://share/dot.profile \
            file://licenses/GPL-2 \
-           file://os-release \
            "
 S = "${WORKDIR}"
 
@@ -106,8 +105,8 @@ do_install () {
 	install -m 0644 ${WORKDIR}/profile ${D}${sysconfdir}/profile
 	install -m 0644 ${WORKDIR}/shells ${D}${sysconfdir}/shells
 	install -m 0755 ${WORKDIR}/share/dot.profile ${D}${sysconfdir}/skel/.profile
+	install -m 0755 ${WORKDIR}/share/dot.profile ${D}${ROOT_HOME}/.profile
 	install -m 0755 ${WORKDIR}/share/dot.bashrc ${D}${sysconfdir}/skel/.bashrc
-	install -m 0755 ${WORKDIR}/os-release ${D}${sysconfdir}/os-release
 	install -m 0644 ${WORKDIR}/inputrc ${D}${sysconfdir}/inputrc
 	install -m 0644 ${WORKDIR}/nsswitch.conf ${D}${sysconfdir}/nsswitch.conf
 	install -m 0644 ${WORKDIR}/host.conf ${D}${sysconfdir}/host.conf

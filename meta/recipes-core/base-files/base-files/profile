@@ -30,3 +30,5 @@ export PATH PS1 OPIEDIR QPEDIR QTDIR EDITOR TERM
 
 umask 022
 
+alias ll='ls -all --color=auto'
+alias ls='ls --color=auto'
