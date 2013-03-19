@@ -17,6 +17,7 @@ hob-image-*.bb
 *~
 !meta-yocto
 !meta-yocto-bsp
+!meta-tplino/
 bitbake/doc/manual/html/
 bitbake/doc/manual/pdf/
 bitbake/doc/manual/txt/
