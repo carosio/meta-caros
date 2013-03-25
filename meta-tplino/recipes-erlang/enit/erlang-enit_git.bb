@@ -3,7 +3,7 @@ SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://src/enit.erl;beginline=1;endline=19;md5=fc016e255103ff7b4faba219415dee94"
 
-SRCREV="5f0735a06b7264ecca96fe88fcb632905a823432"
+SRCREV="7ff37bd4dd332249a065dd9c63eb1ed3f7305359"
 PV = "0.1+git${SRCPV}"
 PR = "r0"
 
