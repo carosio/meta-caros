@@ -6,5 +6,3 @@ fi
 
 # path set by /etc/profile
 # export PATH
-
-mesg n
