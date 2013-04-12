@@ -4,32 +4,30 @@ LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=ff253ad767462c46be284da12dda33e8"
 
 SRCREV = "42a471caa33c1fa753cf9e9221d678fc0d0f714f"
-PR = "r4"
+PR = "r5"
 
 SRC_URI = "git://github.com/cloudant/bigcouch.git;protocol=git;branch=0.4.x \
 	   file://fix_scons_cross_compilation_brain_fuck.patch;apply=yes \
 	   file://reltool_config_fixup.patch;apply=yes \
 	   file://use_sh_instead_of_bash.patch;apply=yes \
-	   file://log-to-var-log.patch;apply=yes \
+	   file://log-to-var-log.patch;apply=no \
 	   file://enable_erlang_views.patch;apply=yes \
-           file://bigcouch.init"
+           file://bigcouch.service"
 
 BIGCOUCH_PREFIX ?= "/opt/bigcouch"
 BIGCOUCH_DATA ?= "${BIGCOUCH_PREFIX}/var/lib"
 BIGCOUCH_VIEW ?= "${BIGCOUCH_PREFIX}/var/lib"
+BIGCOUCH_LOG ?= "${BIGCOUCH_PREFIX}/var/log"
 BIGCOUCH_USER ?= "bigcouch"
 BIGCOUCH_GROUP ?= "bigcouch"
-BIGCOUCH_COOKIE ?= "yocto"
+BIGCOUCH_COOKIE ?= "34598720572589uhuyfgeoyfyf8q70tp783urhi"
 
 S = "${WORKDIR}/git"
 
 DEPENDS += "erlang-native erlang nspr spidermonkey curl icu"
 RDEPENDS_${PN} += "tzdata"
 
-inherit useradd python-dir update-rc.d rebar
-
-INITSCRIPT_NAME = "bigcouch"
-INITSCRIPT_PARAMS = "start 90 2 3 4 5 . stop 60 0 1 6 ."
+inherit useradd python-dir rebar
 
 USERADD_PACKAGES = "${PN}"
 GROUPADD_PARAM_${PN} = "--system ${BIGCOUCH_GROUP}"
@@ -37,8 +35,7 @@ USERADD_PARAM_${PN} = "--system --home ${BIGCOUCH_PREFIX} \
                        --shell /bin/false -g ${BIGCOUCH_GROUP} \
                        --no-create-home ${BIGCOUCH_USER}"
 
-FILES_${PN} += "${BIGCOUCH_PREFIX} \
-                /var/log/bigcouch"
+FILES_${PN} += "${BIGCOUCH_PREFIX}"
 
 FILES_${PN}-dbg += "${BIGCOUCH_PREFIX}/bin/.debug \
                     ${BIGCOUCH_PREFIX}/erts-*/bin/.debug \
@@ -62,7 +59,7 @@ do_configure() {
 {data_dir, "${BIGCOUCH_DATA}"}.
 {view_dir, "${BIGCOUCH_VIEW}"}.
 {user, "${BIGCOUCH_USER}"}.
-{node_name, "-name bigcouch"}.
+{node_name, "-sname bigcouch"}.
 {cookie, "-setcookie ${BIGCOUCH_COOKIE}"}.
 {cluster_port, 5984}.
 {cluster_ssl, 6984}.
@@ -85,8 +82,11 @@ do_install() {
 
     HOST="${TARGET_SYS}" ./rebar root_dir=${STAGING_DIR_HOST}/usr/lib/erlang generate
 
-    install -d ${D}${sysconfdir}/init.d
-    install -m 0755 ${WORKDIR}/bigcouch.init ${D}${sysconfdir}/init.d/bigcouch
+    install -d ${D}${sysconfdir}/systemd/system \
+               ${D}${sysconfdir}/systemd/system/multi-user.target.wants
+
+    install -m 0755 ${THISDIR}/files/bigcouch.service ${D}${sysconfdir}/systemd/system
+    ln -s ${D}${sysconfdir}/systemd/system/bigcouch.service ${D}${sysconfdir}/systemd/system/multi-user.target.wants/bigcouch.service
 
     install -d ${D}/${BIGCOUCH_PREFIX}
     cp -a rel/bigcouch/* ${D}/${BIGCOUCH_PREFIX}
@@ -94,8 +94,8 @@ do_install() {
     chown ${BIGCOUCH_USER} ${D}/${BIGCOUCH_DATA}
     install -d ${D}/${BIGCOUCH_VIEW}
     chown ${BIGCOUCH_USER} ${D}/${BIGCOUCH_VIEW}
-
-    install -d ${D}/var/log/bigcouch
+    install -d ${D}/${BIGCOUCH_LOG}
+    chown ${BIGCOUCH_USER} ${D}/${BIGCOUCH_LOG}
 }
 
 addtask rebar_fetch after do_unpack before do_patch

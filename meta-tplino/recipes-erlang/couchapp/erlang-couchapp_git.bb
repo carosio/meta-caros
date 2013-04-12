@@ -5,9 +5,12 @@ LIC_FILES_CHKSUM = "file://${COREBASE}/LICENSE;md5=3f40d7994397109285ec7b81fdeb3
 
 SRCREV="7ff8b04534141be28bcb4451044f2e021c6255b3"
 PV = "0.1+git${SRCPV}"
-PR = "r0"
+PR = "r1"
 
 SRC_URI = "git://github.com/travelping/couchapp-erlang.git;protocol=git"
+
+DEPENDS_append = " erlang-couchbeam "
+RDEPENDS_${PN}_append = " erlang-couchbeam "
 
 S = "${WORKDIR}/git"
 
