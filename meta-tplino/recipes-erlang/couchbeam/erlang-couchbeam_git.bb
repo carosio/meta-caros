@@ -3,7 +3,7 @@ SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=212a03dbdaf546250bb9c74b04bfdeae"
 
-SRCREV="a46e440141f5a261b7a249cb972e45681da1e60c"
+SRCREV="d34ebb6ea97260c3dd775d796bff67c87b2717de"
 PV = "0.7.1+git${SRCPV}"
 PR = "r1"
 
