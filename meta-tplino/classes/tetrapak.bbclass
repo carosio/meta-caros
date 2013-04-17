@@ -2,10 +2,13 @@ inherit erlang
 
 DEPENDS += "tetrapak-native erlang"
 
+erllibs = "${STAGING_DIR_ERLANG_LIBS}:${TETRAPAK_ERL_LIBS}"
+
 do_compile() {
-    ERL_LIBS=${STAGING_DIR_ERLANG_LIBS} tetrapak build
+    mkdir -p ebin
+    ERL_LIBS=${erllibs} tetrapak build
 }
 
 do_install() {
-    ERL_LIBS=${STAGING_DIR_ERLANG_LIBS} tetrapak install -prefix ${D}
+    ERL_LIBS=${erllibs} tetrapak install -prefix ${D}
 }
