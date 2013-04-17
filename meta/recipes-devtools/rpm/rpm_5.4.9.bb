@@ -43,7 +43,7 @@ LICENSE = "LGPLv2.1"
 LIC_FILES_CHKSUM = "file://COPYING.LIB;md5=2d5025d4aa3495befef8f17206a5b0a1"
 
 DEPENDS = "libpcre attr acl popt ossp-uuid file bison-native"
-PR = "r61"
+PR = "r62"
 
 # rpm2cpio is a shell script, which is part of the rpm src.rpm.  It is needed
 # in order to extract the distribution SRPM into a format we can extract...
@@ -84,7 +84,8 @@ SRC_URI = "http://www.rpm5.org/files/rpm/rpm-5.4/rpm-5.4.9-0.20120508.src.rpm;ex
 	   file://python-rpm-rpmsense.patch \
 	   file://rpm-reloc-macros.patch \
 	   file://rpm-platform2.patch \
-     file://rpm-remove-sykcparse-decl.patch \
+	   file://rpm-remove-sykcparse-decl.patch \
+	   file://debugedit-segv.patch \
 	  "
 
 # Uncomment the following line to enable platform score debugging
@@ -223,7 +224,6 @@ FILES_${PN} =  "${bindir}/rpm \
 		${libdir}/rpm/bin/wget \
 		/var/lib/rpm \
 		/var/cache/rpm \
-		/var/volatile/cache/rpm \
 		"
 
 FILES_${PN}-dbg += "${libdir}/rpm/.debug \
@@ -309,7 +309,7 @@ FILES_${PN}-build = "${prefix}/src/rpm \
 		${libdir}/rpm/vpkg-provides2.sh \
 		${libdir}/rpm/perfile_rpmdeps.sh \
 		"
-RDEPENDS_${PN} = "base-files"
+RDEPENDS_${PN} = "base-files ${PN}-postinsts"
 RDEPENDS_${PN}_class-native = ""
 RDEPENDS_${PN}-build = "file"
 
@@ -358,13 +358,13 @@ FILES_${PN}-staticdev = " \
 
 do_configure() {
 	# Disable tests!
-	echo "all:" > tests/Makefile.am
+	echo "all:" > ${S}/tests/Makefile.am
 
-	./autogen.sh
+	( cd ${S}; ${S}/autogen.sh )
 
 	# NASTY hack to make sure configure files the right pkg-config file...
 	sed -e 's/pkg-config --exists uuid/pkg-config --exists ossp-uuid/g' \
-	    -e 's/pkg-config uuid/pkg-config ossp-uuid/g' -i configure
+	    -e 's/pkg-config uuid/pkg-config ossp-uuid/g' -i ${S}/configure
 
 	export varprefix=${localstatedir}
 	oe_runconf
@@ -446,6 +446,7 @@ do_install_append() {
 
 	rm -rf ${D}/var/lib/wdj ${D}/var/cache/wdj
 	rm -f ${D}/${libdir}/rpm/bin/api-sanity-checker.pl
+
 }
 
 do_install_append_class-native() {

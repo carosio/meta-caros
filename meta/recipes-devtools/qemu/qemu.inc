@@ -1,10 +1,10 @@
 DESCRIPTION = "open source processor emulator"
 HOMEPAGE = "http://qemu.org"
 LICENSE = "GPLv2 & LGPLv2.1"
-DEPENDS = "glib-2.0 zlib alsa-lib virtual/libx11 pixman"
-DEPENDS_class-native = "zlib-native alsa-lib-native glib-2.0-native pixman-native"
-DEPENDS_class-nativesdk = "nativesdk-zlib nativesdk-libsdl nativesdk-glib-2.0 nativesdk-pixman"
-RDEPENDS_class-nativesdk = "nativesdk-libsdl"
+DEPENDS = "glib-2.0 zlib alsa-lib virtual/libx11 pixman dtc libsdl"
+DEPENDS_class-native = "zlib-native alsa-lib-native glib-2.0-native pixman-native dtc-native"
+DEPENDS_class-nativesdk = "nativesdk-zlib nativesdk-libsdl nativesdk-glib-2.0 nativesdk-pixman nativesdk-dtc"
+RDEPENDS_${PN}_class-nativesdk = "nativesdk-libsdl"
 
 require qemu-targets.inc
 inherit autotools
@@ -13,7 +13,7 @@ BBCLASSEXTEND = "native nativesdk"
 # QEMU_TARGETS is overridable variable
 QEMU_TARGETS ?= "arm i386 mips mipsel mips64 mips64el ppc sh4 x86_64"
 
-SDL ?= "--disable-sdl"
+SDL ?= ""
 SDL_class-native ?= ""
 SDL_class-nativesdk ?= ""
 
@@ -26,10 +26,16 @@ SRC_URI = "\
     file://larger_default_ram_size.patch \
     file://arm-bgr.patch \
     file://Revert-vmware_vga-Add-back-some-info-in-local-state-.patch \
+    file://0001-doc-Fix-texinfo-table-markup-in-qemu-options.hx.patch \
+    file://0002-docs-Fix-generating-qemu-doc.html-with-texinfo-5.patch \
     "
 
 SRC_URI_append_class-nativesdk = "\
     file://relocatable_sdk.patch \
+    "
+
+SRC_URI_append_class-native = "\
+    file://fix-libcap-header-issue-on-some-distro.patch \
     "
 
 EXTRA_OECONF += "--target-list=${@get_qemu_target_list(d)} --disable-werror --disable-vnc-tls --audio-drv-list=oss,alsa --audio-card-list=ac97,es1370 ${SDL} --disable-curl --disable-vnc-jpeg --disable-bluez --with-system-pixman"

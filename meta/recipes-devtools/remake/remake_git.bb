@@ -9,17 +9,17 @@ SRC_URI += "file://version-remake.texi.patch"
 SRCREV = "414d6e84121c6740ff5079370c905dea0f0e1ddb"
 S = "${WORKDIR}/git"
 
+PV = "3.82+dbg-0.8+git${SRCPV}"
+
 DEPENDS += "readline"
 PROVIDES += "make"
 
 do_configure_prepend() {
+    # remove the default LINGUAS since we are not going to generate languages
+    rm ${S}/po/LINGUAS
+    touch ${S}/po/LINGUAS
     # create config.rpath which required by configure.ac
-    autopoint || touch config.rpath
-}
-
-do_compile_prepend() {
-    # updating .po and other gnu build files
-    make update
+    ( cd ${S}; autopoint || touch config.rpath )
 }
 
 BBCLASSEXTEND = "native"

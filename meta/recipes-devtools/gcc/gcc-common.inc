@@ -38,7 +38,7 @@ def get_gcc_multiarch_setting(bb, d):
 def get_tune_parameters(tune, d):
     availtunes = d.getVar('AVAILTUNES', True)
     if tune not in availtunes.split():
-        bb.error('The tune: %s is not one of the available tunes: %s', tune, availtunes)
+        bb.error('The tune: %s is not one of the available tunes: %s', tune or None, availtunes)
 
     localdata = bb.data.createCopy(d)
     override = ':tune-' + tune
@@ -57,6 +57,8 @@ def get_tune_parameters(tune, d):
     retdict['pkgarch'] = localdata.getVar('TUNE_PKGARCH', True)
     retdict['package_extra_archs'] = localdata.getVar('PACKAGE_EXTRA_ARCHS', True)
     return retdict
+
+get_tune_parameters[vardepsexclude] = "AVAILTUNES"
 
 # We really need HOST_SYS here for some packages and TARGET_SYS for others.
 # For now, libgcc is most important so we fix for that - RP.

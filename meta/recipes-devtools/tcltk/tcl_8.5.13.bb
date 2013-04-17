@@ -34,12 +34,12 @@ DEPENDS_class-native = ""
 EXTRA_OECONF = "--enable-threads --disable-rpath"
 
 do_configure() {
-	gnu-configize
+	( cd ${S}; gnu-configize )
 	oe_runconf
 }
 
 do_compile_prepend() {
-	echo > ../compat/fixstrtod.c
+	echo > ${S}/../compat/fixstrtod.c
 }
 
 do_install() {
@@ -55,7 +55,7 @@ do_install() {
 	for dir in compat generic unix
 	do
 		install -d ${D}${includedir}/tcl${PV}/$dir
-		install -m 0644 $dir/*.h ${D}${includedir}/tcl${PV}/$dir/
+		install -m 0644 ${S}/../$dir/*.h ${D}${includedir}/tcl${PV}/$dir/
 	done
 }
 

@@ -7,7 +7,7 @@ LIC_FILES_CHKSUM = "file://Copying;md5=2b4c6ffbcfcbdee469f02565f253d81a \
 # We need gnugrep (for -I)
 DEPENDS = "virtual/db grep-native"
 DEPENDS += "gdbm zlib"
-PR = "r0"
+PR = "r1"
 
 # 5.10.1 has Module::Build built-in
 PROVIDES += "libmodule-build-perl"
@@ -210,6 +210,11 @@ do_install() {
 
 }
 
+do_install_append_class-nativesdk () {
+        create_wrapper ${D}${bindir}/perl \
+            PERL5LIB='$PERL5LIB:$OECORE_NATIVE_SYSROOT/${libdir_nativesdk}/perl:$OECORE_NATIVE_SYSROOT/${libdir_nativesdk}/perl/${PV}'
+}
+
 PACKAGE_PREPROCESS_FUNCS += "perl_package_preprocess"
 
 perl_package_preprocess () {
@@ -247,6 +252,7 @@ FILES_${PN} = "${bindir}/perl ${bindir}/perl${PV} \
                ${libdir}/perl/${PV}/warnings \
                ${libdir}/perl/${PV}/vars.pm \
               "
+FILES_${PN}_append_class-nativesdk = " ${bindir}/perl.real"
 RPROVIDES_${PN} += "perl-module-strict perl-module-vars perl-module-config perl-module-warnings \
                     perl-module-warnings-register"
 FILES_${PN}-dev = "${libdir}/perl/${PV}/CORE"
@@ -269,6 +275,7 @@ FILES_${PN}-dbg += "${libdir}/perl/${PV}/auto/*/.debug \
                     ${libdir}/perl/${PV}/*/*/*/.debug "
 FILES_${PN}-doc = "${libdir}/perl/${PV}/*/*.txt \
                    ${libdir}/perl/${PV}/*/*/*.txt \
+                   ${libdir}/perl/${PV}/auto/XS/Typemap \
                    ${libdir}/perl/${PV}/B/assemble \
                    ${libdir}/perl/${PV}/B/cc_harness \
                    ${libdir}/perl/${PV}/B/disassemble \
@@ -302,7 +309,7 @@ PACKAGES_append = " perl-modules "
 
 python populate_packages_prepend () {
     libdir = d.expand('${libdir}/perl/${PV}')
-    do_split_packages(d, libdir, 'auto/(.*)/[^/]*\.(so|ld|ix|al)', 'perl-module-%s', 'perl module %s', recursive=True, match_path=True, prepend=False)
+    do_split_packages(d, libdir, 'auto/([^.]*)/[^/]*\.(so|ld|ix|al)', 'perl-module-%s', 'perl module %s', recursive=True, match_path=True, prepend=False)
     do_split_packages(d, libdir, 'Module/([^\/]*)\.pm', 'perl-module-%s', 'perl module %s', recursive=True, allow_dirs=False, match_path=True, prepend=False)
     do_split_packages(d, libdir, 'Module/([^\/]*)/.*', 'perl-module-%s', 'perl module %s', recursive=True, allow_dirs=False, match_path=True, prepend=False)
     do_split_packages(d, libdir, '(^(?!(CPAN\/|CPANPLUS\/|Module\/|unicore\/|auto\/)[^\/]).*)\.(pm|pl|e2x)', 'perl-module-%s', 'perl module %s', recursive=True, allow_dirs=False, match_path=True, prepend=False)

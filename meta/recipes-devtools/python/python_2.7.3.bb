@@ -1,6 +1,6 @@
 require python.inc
 DEPENDS = "python-native bzip2 db gdbm openssl readline sqlite3 zlib"
-PR = "${INC_PR}.2"
+PR = "${INC_PR}.3"
 
 DISTRO_SRC_URI ?= "file://sitecustomize.py"
 DISTRO_SRC_URI_linuxstdbase = ""
@@ -28,6 +28,7 @@ SRC_URI += "\
   file://python-2.7.3-berkeley-db-5.3.patch \
   file://python-2.7.3-remove-bsdb-rpath.patch \
   file://builddir.patch \
+  file://python-2.7.3-CVE-2012-2135.patch \
 "
 
 S = "${WORKDIR}/Python-${PV}"
@@ -121,6 +122,9 @@ PACKAGE_PREPROCESS_FUNCS += "py_package_preprocess"
 py_package_preprocess () {
 	# copy back the old Makefile to fix target package
 	install -m 0644 Makefile.orig ${PKGD}/${libdir}/python${PYTHON_MAJMIN}/config/Makefile
+
+	# Remove references to buildmachine paths in target Makefile
+	sed -i -e 's:--sysroot=${STAGING_DIR_TARGET}::g' -e s:'--with-libtool-sysroot=${STAGING_DIR_TARGET}'::g ${PKGD}/${libdir}/python${PYTHON_MAJMIN}/config/Makefile
 }
 
 require python-${PYTHON_MAJMIN}-manifest.inc
