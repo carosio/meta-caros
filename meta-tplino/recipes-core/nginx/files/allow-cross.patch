@@ -1,0 +1,30 @@
+--- ./auto/types/sizeof.orig	2013-04-19 09:30:21.242699109 +0200
++++ ./auto/types/sizeof	2013-04-19 09:32:52.802694362 +0200
+@@ -41,6 +41,14 @@
+ 
+ if [ -x $NGX_AUTOTEST ]; then
+     ngx_size=`$NGX_AUTOTEST`
++    cachename=$(echo "ngx_cache_sizeof_$ngx_type" | tr ' *' '_p')
++    cacheval=$(eval echo "\$$cachename")
++    if [ -n "$cacheval" ]; then
++        ngx_size="$cacheval"
++    else
++        ngx_size=`$NGX_AUTOTEST`
++    fi
++    ngx_size=4
+     echo " $ngx_size bytes"
+ fi
+ 
+--- ./auto/feature.orig	2013-04-19 09:33:19.250693534 +0200
++++ ./auto/feature	2013-04-19 09:34:03.198692157 +0200
+@@ -49,6 +49,10 @@
+ 
+ if [ -x $NGX_AUTOTEST ]; then
+ 
++    if [ "$cross_compiling" = "yes" ]; then
++        ngx_feature_run=no
++    fi
++
+     case "$ngx_feature_run" in
+ 
+         yes)

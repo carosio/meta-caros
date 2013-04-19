@@ -1,0 +1,11 @@
+/var/nginx/access /var/nginx/error {
+        daily
+        missingok
+	rotate 7
+        notifempty
+	# create
+        sharedscripts
+        postrotate
+                [ ! -f /var/run/nginx.pid ] || kill -USR1 `cat /var/run/nginx.pid`
+        endscript
+}
