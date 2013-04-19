@@ -4,7 +4,7 @@ LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=ff253ad767462c46be284da12dda33e8"
 
 SRCREV = "42a471caa33c1fa753cf9e9221d678fc0d0f714f"
-PR = "r5"
+PR = "r6"
 
 SRC_URI = "git://github.com/cloudant/bigcouch.git;protocol=git;branch=0.4.x \
 	   file://fix_scons_cross_compilation_brain_fuck.patch;apply=yes \
@@ -27,7 +27,7 @@ S = "${WORKDIR}/git"
 DEPENDS += "erlang-native erlang nspr spidermonkey curl icu"
 RDEPENDS_${PN} += "tzdata"
 
-inherit useradd python-dir rebar
+inherit useradd python-dir rebar systemd
 
 USERADD_PACKAGES = "${PN}"
 GROUPADD_PARAM_${PN} = "--system ${BIGCOUCH_GROUP}"
@@ -41,6 +41,9 @@ FILES_${PN}-dbg += "${BIGCOUCH_PREFIX}/bin/.debug \
                     ${BIGCOUCH_PREFIX}/erts-*/bin/.debug \
                     ${BIGCOUCH_PREFIX}/lib/*/priv/lib/.debug \
                     ${BIGCOUCH_PREFIX}/lib/couch-*/priv/.debug"
+
+SYSTEMD_PACKAGES = "${PN}-systemd"
+SYSTEMD_SERVICE_${PN}-systemd = "bigcouch.service"
 
 do_rebar_fetch() {
     sed -i -e"s|https://|git://|g" rebar.config
@@ -81,12 +84,6 @@ do_install() {
     sed -i s/%VSN%/`git describe --match 1.*`/ apps/couch/ebin/couch.app
 
     HOST="${TARGET_SYS}" ./rebar root_dir=${STAGING_DIR_HOST}/usr/lib/erlang generate
-
-    install -d ${D}${sysconfdir}/systemd/system \
-               ${D}${sysconfdir}/systemd/system/multi-user.target.wants
-
-    install -m 0755 ${THISDIR}/files/bigcouch.service ${D}${sysconfdir}/systemd/system
-    ln -s ${D}${sysconfdir}/systemd/system/bigcouch.service ${D}${sysconfdir}/systemd/system/multi-user.target.wants/bigcouch.service
 
     install -d ${D}/${BIGCOUCH_PREFIX}
     cp -a rel/bigcouch/* ${D}/${BIGCOUCH_PREFIX}
