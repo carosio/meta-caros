@@ -1,7 +1,7 @@
 SUMMARY = "Miscellaneous files for the base system."
 DESCRIPTION = "The base-files package creates the basic system directory structure and provides a small set of key configuration files for the system."
 SECTION = "base"
-PR = "r74"
+PR = "r75"
 LICENSE = "GPLv2"
 LIC_FILES_CHKSUM = "file://licenses/GPL-2;md5=94d55d512a9ba36caa9b7df079bae19f"
 # Removed all license related tasks in this recipe as license.bbclass 
@@ -26,6 +26,7 @@ SRC_URI = "file://rotation \
            file://share/dot.bashrc \
            file://share/dot.profile \
            file://licenses/GPL-2 \
+           file://os-release \
            "
 S = "${WORKDIR}"
 
@@ -111,6 +112,7 @@ do_install () {
 	install -m 0644 ${WORKDIR}/nsswitch.conf ${D}${sysconfdir}/nsswitch.conf
 	install -m 0644 ${WORKDIR}/host.conf ${D}${sysconfdir}/host.conf
 	install -m 0644 ${WORKDIR}/motd ${D}${sysconfdir}/motd
+	install -m 0644 ${WORKDIR}/os-release ${D}${sysconfdir}/os-release
 
 	ln -sf /proc/mounts ${D}${sysconfdir}/mtab
 }
