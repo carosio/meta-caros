@@ -13,5 +13,5 @@ S = "${WORKDIR}/git"
 inherit tetrapak
 
 python () {
-    erlang_def_package("erlang-iconv", "erlang-iconv-*", "ebin priv", "src include README.markdown", d)
+    erlang_def_package("iconv", "iconv-*", "ebin priv", "src include README.markdown", d)
 }

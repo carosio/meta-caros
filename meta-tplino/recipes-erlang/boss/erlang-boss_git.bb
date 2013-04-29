@@ -17,3 +17,4 @@ RDEPENDS_${PN}_append = " erlang-boss-db erlang-tinymq erlang-tiny-pq erlang-erl
 
 python () {
     erlang_def_package("boss", "boss*", "ebin priv", "src include doc-src skel", d)
+}
