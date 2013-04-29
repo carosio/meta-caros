@@ -6,6 +6,8 @@ DEPENDS =+ "qemu-native"
 
 inherit qemu
 
+GTKIMMODULES_PACKAGES ?= "${PN}"
+
 gtk_immodule_cache_postinst() {
 if [ "x$D" != "x" ]; then
     for maj_ver in 2 3; do
@@ -58,13 +60,13 @@ python populate_packages_append () {
     for pkg in gtkimmodules_pkgs:
             bb.note("adding gtk-immodule-cache postinst and postrm scripts to %s" % pkg)
 
-            postinst = d.getVar('pkg_postinst_%s' % pkg, True) or d.getVar('pkg_postinst', True)
+            postinst = d.getVar('pkg_postinst_%s' % pkg, True)
             if not postinst:
                 postinst = '#!/bin/sh\n'
             postinst += d.getVar('gtk_immodule_cache_postinst', True)
             d.setVar('pkg_postinst_%s' % pkg, postinst)
 
-            postrm = d.getVar('pkg_postrm_%s' % pkg, True) or d.getVar('pkg_postrm', True)
+            postrm = d.getVar('pkg_postrm_%s' % pkg, True)
             if not postrm:
                 postrm = '#!/bin/sh\n'
             postrm += d.getVar('gtk_immodule_cache_postrm', True)

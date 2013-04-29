@@ -185,6 +185,7 @@ class BBCooker:
 
         filtered_keys = bb.utils.approved_variables()
         bb.data.inheritFromOS(self.configuration.data, self.savedenv, filtered_keys)
+        self.configuration.data.setVar("BB_ORIGENV", self.savedenv)
 
     def enableDataTracking(self):
         self.configuration.data.enableTracking()
@@ -470,6 +471,8 @@ class BBCooker:
         taskdata.add_unresolved(localdata, self.status)
         bb.event.fire(bb.event.TreeDataPreparationCompleted(len(pkgs_to_build)), self.configuration.data)
         return runlist, taskdata
+    
+    ######## WARNING : this function requires cache_extra to be enabled ########
 
     def generateTaskDepTreeData(self, pkgs_to_build, task):
         """
@@ -543,6 +546,7 @@ class BBCooker:
 
         return depend_tree
 
+    ######## WARNING : this function requires cache_extra to be enabled ########
     def generatePkgDepTreeData(self, pkgs_to_build, task):
         """
         Create a dependency tree of pkgs_to_build, returning the data.
@@ -570,8 +574,12 @@ class BBCooker:
             lic = self.status.license[fn]
             section = self.status.section[fn]
             description = self.status.description[fn]
+            homepage = self.status.homepage[fn]
+            bugtracker = self.status.bugtracker[fn]
+            files_info = self.status.files_info[fn]
             rdepends = self.status.rundeps[fn]
             rrecs = self.status.runrecs[fn]
+            prevision = self.status.prevision[fn]
             inherits = self.status.inherits.get(fn, None)
             if pn not in depend_tree["pn"]:
                 depend_tree["pn"][pn] = {}
@@ -582,6 +590,10 @@ class BBCooker:
                 depend_tree["pn"][pn]["section"] = section
                 depend_tree["pn"][pn]["description"] = description
                 depend_tree["pn"][pn]["inherits"] = inherits
+                depend_tree["pn"][pn]["homepage"] = homepage
+                depend_tree["pn"][pn]["bugtracker"] = bugtracker
+                depend_tree["pn"][pn]["files_info"] = files_info
+                depend_tree["pn"][pn]["revision"] = prevision
 
             if fnid not in seen_fnids:
                 seen_fnids.append(fnid)
@@ -976,10 +988,16 @@ class BBCooker:
             bb.fetch.fetcher_init(data)
         bb.codeparser.parser_cache_init(data)
         bb.event.fire(bb.event.ConfigParsed(), data)
-        bb.parse.init_parser(data)
-        data.setVar('BBINCLUDED',bb.parse.get_file_depends(data))
-        self.configuration.data = data
-        self.configuration.data_hash = data.get_hash()
+
+        if data.getVar("BB_INVALIDCONF") is True:
+            data.setVar("BB_INVALIDCONF", False)
+            self.parseConfigurationFiles(self.configuration.prefile,
+                                         self.configuration.postfile)
+        else:
+            bb.parse.init_parser(data)
+            data.setVar('BBINCLUDED',bb.parse.get_file_depends(data))
+            self.configuration.data = data
+            self.configuration.data_hash = data.get_hash()
 
     def handleCollections( self, collections ):
         """Handle collections"""

@@ -32,8 +32,6 @@ import urllib
 from   bb import data
 from   bb.fetch2 import FetchMethod
 from   bb.fetch2 import FetchError
-from   bb.fetch2 import encodeurl
-from   bb.fetch2 import decodeurl
 from   bb.fetch2 import logger
 from   bb.fetch2 import runfetchcmd
 
@@ -65,8 +63,10 @@ class Wget(FetchMethod):
 
         basecmd = d.getVar("FETCHCMD_wget", True) or "/usr/bin/env wget -t 2 -T 30 -nv --passive-ftp --no-check-certificate"
 
-        if 'downloadfilename' in ud.parm:
-            basecmd += " -O ${DL_DIR}/" + ud.localfile
+        if not checkonly and 'downloadfilename' in ud.parm:
+            dldir = d.getVar("DL_DIR", True)
+            bb.utils.mkdirhier(os.path.dirname(dldir + os.sep + ud.localfile))
+            basecmd += " -O " + dldir + os.sep + ud.localfile
 
         if checkonly:
             fetchcmd = d.getVar("CHECKCOMMAND_wget", True) or d.expand(basecmd + " --spider '${URI}'")
@@ -77,9 +77,6 @@ class Wget(FetchMethod):
             fetchcmd = d.getVar("FETCHCOMMAND_wget", True) or d.expand(basecmd + " -P ${DL_DIR} '${URI}'")
 
         uri = uri.split(";")[0]
-        uri_decoded = list(decodeurl(uri))
-        uri_type = uri_decoded[0]
-        uri_host = uri_decoded[1]
 
         fetchcmd = fetchcmd.replace("${URI}", uri.split(";")[0])
         fetchcmd = fetchcmd.replace("${FILE}", ud.basename)

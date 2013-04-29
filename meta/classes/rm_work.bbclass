@@ -5,6 +5,11 @@
 #
 # INHERIT += "rm_work"
 #
+# To inhibit rm_work for some recipes, specify them in RM_WORK_EXCLUDE.
+# For example, in conf/local.conf:
+#
+# RM_WORK_EXCLUDE += "icu-native icu busybox"
+#
 
 # Use the completion scheduler by default when rm_work is active
 # to try and reduce disk usage
@@ -14,18 +19,23 @@ RMWORK_ORIG_TASK := "${BB_DEFAULT_TASK}"
 BB_DEFAULT_TASK = "rm_work_all"
 
 do_rm_work () {
+    # If the recipe name is in the RM_WORK_EXCLUDE, skip the recipe.
+    for p in ${RM_WORK_EXCLUDE}; do
+        if [ "$p" = "${PN}" ]; then
+            bbnote "rm_work: Skipping ${PN} since it is in RM_WORK_EXCLUDE"
+            exit 0
+        fi
+    done
+
     cd ${WORKDIR}
     for dir in *
     do
-        if [ `basename ${S}` = $dir ]; then
-            rm -rf $dir
-        # The package and packages-split directories are retained by sstate for 
-        # do_package so we retain them here too. Anything in sstate 'plaindirs' 
-        # should be retained. Also retain logs and other files in temp.
-        elif [ $dir != 'temp' ] && [ $dir != 'package' ]  && [ $dir != 'packages-split' ]; then
+        # Retain only logs and other files in temp.
+        if [ $dir != 'temp' ]; then
             rm -rf $dir
         fi
     done
+
     # Need to add pseudo back or subsqeuent work in this workdir
     # might fail since setscene may not rerun to recreate it
     mkdir ${WORKDIR}/pseudo/
@@ -54,6 +64,15 @@ do_rm_work () {
                 i=dummy
                 break
                 ;;
+            # We remove do_package entirely, including any
+            # sstate version since otherwise we'd need to leave 'plaindirs' around
+            # such as 'packages' and 'packages-split' and these can be large. No end
+            # of chain tasks depend directly on do_package anymore.
+            *do_package|*do_package.*|*do_package_setscene.*)
+                rm -f $i;
+                i=dummy
+                break
+                ;;
             *_setscene*)
                 i=dummy
                 break
@@ -71,7 +90,7 @@ do_rm_work () {
 addtask rm_work after do_${RMWORK_ORIG_TASK}
 
 do_rm_work_all () {
-	:
+    :
 }
 do_rm_work_all[recrdeptask] = "do_rm_work"
 addtask rm_work_all after do_rm_work

@@ -1,3 +1,5 @@
+# ex:ts=4:sw=4:sts=4:et
+# -*- tab-width: 4; c-basic-offset: 4; indent-tabs-mode: nil -*-
 #
 # BitBake Tests for the Fetcher (fetch2/)
 #
@@ -21,7 +23,233 @@ import unittest
 import tempfile
 import subprocess
 import os
+from bb.fetch2 import URI
 import bb
+
+class URITest(unittest.TestCase):
+    test_uris = {
+        "http://www.google.com/index.html" : {
+            'uri': 'http://www.google.com/index.html',
+            'scheme': 'http',
+            'hostname': 'www.google.com',
+            'port': None,
+            'hostport': 'www.google.com',
+            'path': '/index.html',
+            'userinfo': '',
+            'username': '',
+            'password': '',
+            'params': {},
+            'relative': False
+        },
+        "http://www.google.com/index.html;param1=value1" : {
+            'uri': 'http://www.google.com/index.html;param1=value1',
+            'scheme': 'http',
+            'hostname': 'www.google.com',
+            'port': None,
+            'hostport': 'www.google.com',
+            'path': '/index.html',
+            'userinfo': '',
+            'username': '',
+            'password': '',
+            'params': {
+                'param1': 'value1'
+            },
+            'relative': False
+        },
+        "http://www.example.com:8080/index.html" : {
+            'uri': 'http://www.example.com:8080/index.html',
+            'scheme': 'http',
+            'hostname': 'www.example.com',
+            'port': 8080,
+            'hostport': 'www.example.com:8080',
+            'path': '/index.html',
+            'userinfo': '',
+            'username': '',
+            'password': '',
+            'params': {},
+            'relative': False
+        },
+        "cvs://anoncvs@cvs.handhelds.org/cvs;module=familiar/dist/ipkg" : {
+            'uri': 'cvs://anoncvs@cvs.handhelds.org/cvs;module=familiar/dist/ipkg',
+            'scheme': 'cvs',
+            'hostname': 'cvs.handhelds.org',
+            'port': None,
+            'hostport': 'cvs.handhelds.org',
+            'path': '/cvs',
+            'userinfo': 'anoncvs',
+            'username': 'anoncvs',
+            'password': '',
+            'params': {
+                'module': 'familiar/dist/ipkg'
+            },
+            'relative': False
+        },
+        "cvs://anoncvs:anonymous@cvs.handhelds.org/cvs;tag=V0-99-81;module=familiar/dist/ipkg": {
+            'uri': 'cvs://anoncvs:anonymous@cvs.handhelds.org/cvs;tag=V0-99-81;module=familiar/dist/ipkg',
+            'scheme': 'cvs',
+            'hostname': 'cvs.handhelds.org',
+            'port': None,
+            'hostport': 'cvs.handhelds.org',
+            'path': '/cvs',
+            'userinfo': 'anoncvs:anonymous',
+            'username': 'anoncvs',
+            'password': 'anonymous',
+            'params': {
+                'tag': 'V0-99-81',
+                'module': 'familiar/dist/ipkg'
+            },
+            'relative': False
+        },
+        "file://example.diff": { # NOTE: Not RFC compliant!
+            'uri': 'file:example.diff',
+            'scheme': 'file',
+            'hostname': '',
+            'port': None,
+            'hostport': '',
+            'path': 'example.diff',
+            'userinfo': '',
+            'username': '',
+            'password': '',
+            'params': {},
+            'relative': True
+        },
+        "file:example.diff": { # NOTE: RFC compliant version of the former
+            'uri': 'file:example.diff',
+            'scheme': 'file',
+            'hostname': '',
+            'port': None,
+            'hostport': '',
+            'path': 'example.diff',
+            'userinfo': '',
+            'userinfo': '',
+            'username': '',
+            'password': '',
+            'params': {},
+            'relative': True
+        },
+        "file:///tmp/example.diff": {
+            'uri': 'file:///tmp/example.diff',
+            'scheme': 'file',
+            'hostname': '',
+            'port': None,
+            'hostport': '',
+            'path': '/tmp/example.diff',
+            'userinfo': '',
+            'userinfo': '',
+            'username': '',
+            'password': '',
+            'params': {},
+            'relative': False
+        },
+        "git:///path/example.git": {
+            'uri': 'git:///path/example.git',
+            'scheme': 'git',
+            'hostname': '',
+            'port': None,
+            'hostport': '',
+            'path': '/path/example.git',
+            'userinfo': '',
+            'userinfo': '',
+            'username': '',
+            'password': '',
+            'params': {},
+            'relative': False
+        },
+        "git:path/example.git": {
+            'uri': 'git:path/example.git',
+            'scheme': 'git',
+            'hostname': '',
+            'port': None,
+            'hostport': '',
+            'path': 'path/example.git',
+            'userinfo': '',
+            'userinfo': '',
+            'username': '',
+            'password': '',
+            'params': {},
+            'relative': True
+        },
+        "git://example.net/path/example.git": {
+            'uri': 'git://example.net/path/example.git',
+            'scheme': 'git',
+            'hostname': 'example.net',
+            'port': None,
+            'hostport': 'example.net',
+            'path': '/path/example.git',
+            'userinfo': '',
+            'userinfo': '',
+            'username': '',
+            'password': '',
+            'params': {},
+            'relative': False
+        }
+    }
+
+    def test_uri(self):
+        for test_uri, ref in self.test_uris.items():
+            uri = URI(test_uri)
+
+            self.assertEqual(str(uri), ref['uri'])
+
+            # expected attributes
+            self.assertEqual(uri.scheme, ref['scheme'])
+
+            self.assertEqual(uri.userinfo, ref['userinfo'])
+            self.assertEqual(uri.username, ref['username'])
+            self.assertEqual(uri.password, ref['password'])
+
+            self.assertEqual(uri.hostname, ref['hostname'])
+            self.assertEqual(uri.port, ref['port'])
+            self.assertEqual(uri.hostport, ref['hostport'])
+
+            self.assertEqual(uri.path, ref['path'])
+            self.assertEqual(uri.params, ref['params'])
+
+            self.assertEqual(uri.relative, ref['relative'])
+
+    def test_dict(self):
+        for test in self.test_uris.values():
+            uri = URI()
+
+            self.assertEqual(uri.scheme, '')
+            self.assertEqual(uri.userinfo, '')
+            self.assertEqual(uri.username, '')
+            self.assertEqual(uri.password, '')
+            self.assertEqual(uri.hostname, '')
+            self.assertEqual(uri.port, None)
+            self.assertEqual(uri.path, '')
+            self.assertEqual(uri.params, {})
+
+
+            uri.scheme = test['scheme']
+            self.assertEqual(uri.scheme, test['scheme'])
+
+            uri.userinfo = test['userinfo']
+            self.assertEqual(uri.userinfo, test['userinfo'])
+            self.assertEqual(uri.username, test['username'])
+            self.assertEqual(uri.password, test['password'])
+
+            uri.hostname = test['hostname']
+            self.assertEqual(uri.hostname, test['hostname'])
+            self.assertEqual(uri.hostport, test['hostname'])
+
+            uri.port = test['port']
+            self.assertEqual(uri.port, test['port'])
+            self.assertEqual(uri.hostport, test['hostport'])
+
+            uri.path = test['path']
+            self.assertEqual(uri.path, test['path'])
+
+            uri.params = test['params']
+            self.assertEqual(uri.params, test['params'])
+
+            self.assertEqual(str(uri)+str(uri.relative), str(test['uri'])+str(test['relative']))
+
+            self.assertEqual(str(uri), test['uri'])
+
+            uri.params = {}
+            self.assertEqual(uri.params, {})
+            self.assertEqual(str(uri), (str(uri).split(";"))[0])
 
 
 class FetcherTest(unittest.TestCase):
@@ -80,6 +308,8 @@ class FetcherTest(unittest.TestCase):
     def tearDown(self):
         bb.utils.prunedir(self.tempdir)
 
+    @unittest.skipIf(os.environ.get("BB_SKIP_NETTESTS") == "yes",
+                     "Unset BB_SKIP_NETTESTS to run network tests")
     def test_fetch(self):
         fetcher = bb.fetch.Fetch(["http://downloads.yoctoproject.org/releases/bitbake/bitbake-1.0.tar.gz", "http://downloads.yoctoproject.org/releases/bitbake/bitbake-1.1.tar.gz"], self.d)
         fetcher.download()
@@ -92,12 +322,16 @@ class FetcherTest(unittest.TestCase):
         self.assertEqual(len(os.listdir(self.unpackdir + "/bitbake-1.0/")), 9)
         self.assertEqual(len(os.listdir(self.unpackdir + "/bitbake-1.1/")), 9)
 
+    @unittest.skipIf(os.environ.get("BB_SKIP_NETTESTS") == "yes",
+                     "Unset BB_SKIP_NETTESTS to run network tests")
     def test_fetch_mirror(self):
         self.d.setVar("MIRRORS", "http://.*/.* http://downloads.yoctoproject.org/releases/bitbake")
         fetcher = bb.fetch.Fetch(["http://invalid.yoctoproject.org/releases/bitbake/bitbake-1.0.tar.gz"], self.d)
         fetcher.download()
         self.assertEqual(os.path.getsize(self.dldir + "/bitbake-1.0.tar.gz"), 57749)
 
+    @unittest.skipIf(os.environ.get("BB_SKIP_NETTESTS") == "yes",
+                     "Unset BB_SKIP_NETTESTS to run network tests")
     def test_fetch_premirror(self):
         self.d.setVar("PREMIRRORS", "http://.*/.* http://downloads.yoctoproject.org/releases/bitbake")
         fetcher = bb.fetch.Fetch(["http://invalid.yoctoproject.org/releases/bitbake/bitbake-1.0.tar.gz"], self.d)
@@ -123,21 +357,29 @@ class FetcherTest(unittest.TestCase):
         fetcher.download()
         checkrevision(self, fetcher)
 
+    @unittest.skipIf(os.environ.get("BB_SKIP_NETTESTS") == "yes",
+                     "Unset BB_SKIP_NETTESTS to run network tests")
     def test_gitfetch(self):
         url1 = url2 = "git://git.openembedded.org/bitbake"
         self.gitfetcher(url1, url2)
 
+    @unittest.skipIf(os.environ.get("BB_SKIP_NETTESTS") == "yes",
+                     "Unset BB_SKIP_NETTESTS to run network tests")
     def test_gitfetch_premirror(self):
         url1 = "git://git.openembedded.org/bitbake"
         url2 = "git://someserver.org/bitbake"
         self.d.setVar("PREMIRRORS", "git://someserver.org/bitbake git://git.openembedded.org/bitbake \n")
         self.gitfetcher(url1, url2)
 
+    @unittest.skipIf(os.environ.get("BB_SKIP_NETTESTS") == "yes",
+                     "Unset BB_SKIP_NETTESTS to run network tests")
     def test_gitfetch_premirror2(self):
         url1 = url2 = "git://someserver.org/bitbake"
         self.d.setVar("PREMIRRORS", "git://someserver.org/bitbake git://git.openembedded.org/bitbake \n")
         self.gitfetcher(url1, url2)
 
+    @unittest.skipIf(os.environ.get("BB_SKIP_NETTESTS") == "yes",
+                     "Unset BB_SKIP_NETTESTS to run network tests")
     def test_gitfetch_premirror3(self):
         realurl = "git://git.openembedded.org/bitbake"
         dummyurl = "git://someserver.org/bitbake"

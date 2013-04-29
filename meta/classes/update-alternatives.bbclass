@@ -169,7 +169,7 @@ def gen_updatealternativesvardeps(d):
 
 def ua_extend_depends(d):
     if not 'virtual/update-alternatives' in d.getVar('PROVIDES', True):
-        d.appendVar('DEPENDS', ' virtual/update-alternatives')
+        d.appendVar('DEPENDS', ' virtual/${MLPREFIX}update-alternatives')
 
 python __anonymous() {
     # Update Alternatives only works on target packages...
@@ -261,10 +261,7 @@ python perform_packagecopy_append () {
             src = '%s/%s' % (pkgdest, alt_target)
             dest = '%s/%s' % (pkgdest, link_rename[alt_target])
             link = os.readlink(src)
-            if os.path.isabs(link):
-                link_target = pkgdest + os.readlink(src)
-            else:
-                link_target = os.path.join(os.path.dirname(src), link)
+            link_target = oe.path.realpath(src, pkgdest, True)
 
             if os.path.lexists(link_target):
                 # Ok, the link_target exists, we can rename
@@ -282,7 +279,9 @@ python perform_packagecopy_append () {
                     bb.warn('%s: Unable to resolve dangling symlink: %s' % (pn, alt_target))
 }
 
-python populate_packages_prepend () {
+PACKAGESPLITFUNCS_prepend = "populate_packages_updatealternatives "
+
+python populate_packages_updatealternatives () {
     pn = d.getVar('BPN', True)
 
     # Do actual update alternatives processing
@@ -325,12 +324,12 @@ python populate_packages_prepend () {
 
             bb.note('adding update-alternatives calls to postinst/postrm for %s' % pkg)
             bb.note('%s' % alt_setup_links)
-            postinst = (d.getVar('pkg_postinst_%s' % pkg, True) or d.getVar('pkg_postinst', True)) or '#!/bin/sh\n'
+            postinst = d.getVar('pkg_postinst_%s' % pkg, True) or '#!/bin/sh\n'
             postinst += alt_setup_links
             d.setVar('pkg_postinst_%s' % pkg, postinst)
 
             bb.note('%s' % alt_remove_links)
-            postrm = (d.getVar('pkg_postrm_%s' % pkg, True) or d.getVar('pkg_postrm', True)) or '#!/bin/sh\n'
+            postrm = d.getVar('pkg_postrm_%s' % pkg, True) or '#!/bin/sh\n'
             postrm += alt_remove_links
             d.setVar('pkg_postrm_%s' % pkg, postrm)
 }
@@ -353,7 +352,7 @@ python package_do_filedeps_append () {
                 continue
 
             # Add file provide
-            trans_target = file_translate(alt_target)
+            trans_target = oe.package.file_translate(alt_target)
             d.appendVar('FILERPROVIDES_%s_%s' % (trans_target, pkg), " " + alt_link)
             if not trans_target in (d.getVar('FILERPROVIDESFLIST_%s' % pkg, True) or ""):
                 d.appendVar('FILERPROVIDESFLIST_%s' % pkg, " " + trans_target)

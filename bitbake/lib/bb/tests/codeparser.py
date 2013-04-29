@@ -1,3 +1,5 @@
+# ex:ts=4:sw=4:sts=4:et
+# -*- tab-width: 4; c-basic-offset: 4; indent-tabs-mode: nil -*-
 #
 # BitBake Test for codeparser.py
 #
@@ -24,6 +26,9 @@ import bb
 
 logger = logging.getLogger('BitBake.TestCodeParser')
 
+# bb.data references bb.parse but can't directly import due to circular dependencies.
+# Hack around it for now :( 
+import bb.parse
 import bb.data
 
 class ReferenceTest(unittest.TestCase):

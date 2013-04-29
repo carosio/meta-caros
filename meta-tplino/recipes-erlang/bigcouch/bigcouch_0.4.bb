@@ -42,8 +42,7 @@ FILES_${PN}-dbg += "${BIGCOUCH_PREFIX}/bin/.debug \
                     ${BIGCOUCH_PREFIX}/lib/*/priv/lib/.debug \
                     ${BIGCOUCH_PREFIX}/lib/couch-*/priv/.debug"
 
-SYSTEMD_PACKAGES = "${PN}-systemd"
-SYSTEMD_SERVICE_${PN}-systemd = "bigcouch.service"
+SYSTEMD_SERVICE_${PN} = "bigcouch.service"
 
 do_rebar_fetch() {
     sed -i -e"s|https://|git://|g" rebar.config
@@ -85,14 +84,19 @@ do_install() {
 
     HOST="${TARGET_SYS}" ./rebar root_dir=${STAGING_DIR_HOST}/usr/lib/erlang generate
 
-    install -d ${D}/${BIGCOUCH_PREFIX}
+    install -d ${D}/${BIGCOUCH_PREFIX} \
+    	       ${D}/${BIGCOUCH_DATA} \
+    	       ${D}/${BIGCOUCH_VIEW} \
+               ${D}/${BIGCOUCH_LOG} \
+	       ${D}${systemd_unitdir}/system
+
     cp -a rel/bigcouch/* ${D}/${BIGCOUCH_PREFIX}
-    install -d ${D}/${BIGCOUCH_DATA}
-    chown ${BIGCOUCH_USER} ${D}/${BIGCOUCH_DATA}
-    install -d ${D}/${BIGCOUCH_VIEW}
-    chown ${BIGCOUCH_USER} ${D}/${BIGCOUCH_VIEW}
-    install -d ${D}/${BIGCOUCH_LOG}
-    chown ${BIGCOUCH_USER} ${D}/${BIGCOUCH_LOG}
+
+    chown ${BIGCOUCH_USER} ${D}/${BIGCOUCH_DATA} \
+			   ${D}/${BIGCOUCH_VIEW} \
+			   ${D}/${BIGCOUCH_LOG}
+
+    install -m 644 ${WORKDIR}/*.service ${D}/${systemd_unitdir}/system
 }
 
 addtask rebar_fetch after do_unpack before do_patch

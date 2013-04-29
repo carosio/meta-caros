@@ -47,6 +47,7 @@ from bb.ui.crumbs.hig.deployimagedialog import DeployImageDialog
 from bb.ui.crumbs.hig.layerselectiondialog import LayerSelectionDialog
 from bb.ui.crumbs.hig.imageselectiondialog import ImageSelectionDialog
 from bb.ui.crumbs.hig.parsingwarningsdialog import ParsingWarningsDialog
+from bb.ui.crumbs.hig.propertydialog import PropertyDialog
 
 hobVer = 20120808
 
@@ -55,7 +56,7 @@ class Configuration:
 
     @classmethod
     def parse_proxy_string(cls, proxy):
-        pattern = "^\s*((http|https|ftp|git|cvs)://)?((\S+):(\S+)@)?([^\s:]+)(:(\d+))?/?"
+        pattern = "^\s*((http|https|ftp|socks|cvs)://)?((\S+):(\S+)@)?([^\s:]+)(:(\d+))?/?"
         match = re.search(pattern, proxy)
         if match:
             return match.group(2), match.group(4), match.group(5), match.group(6), match.group(8)
@@ -123,7 +124,7 @@ class Configuration:
             "http"  : [None, None, None, "", ""],  # protocol : [prot, user, passwd, host, port]
             "https" : [None, None, None, "", ""],
             "ftp"   : [None, None, None, "", ""],
-            "git"   : [None, None, None, "", ""],
+            "socks" : [None, None, None, "", ""],
             "cvs"   : [None, None, None, "", ""],
         }
 
@@ -180,13 +181,13 @@ class Configuration:
         self.default_task = params["default_task"]
 
         # proxy settings
-        self.enable_proxy = params["http_proxy"] != "" or params["https_proxy"] != "" or params["ftp_proxy"] != "" \
-            or params["git_proxy_host"] != "" or params["git_proxy_port"] != ""                                    \
+        self.enable_proxy = params["http_proxy"] != "" or params["https_proxy"] != "" \
+            or params["ftp_proxy"] != "" or params["socks_proxy"] != "" \
             or params["cvs_proxy_host"] != "" or params["cvs_proxy_port"] != ""
         self.split_proxy("http", params["http_proxy"])
         self.split_proxy("https", params["https_proxy"])
         self.split_proxy("ftp", params["ftp_proxy"])
-        self.split_proxy("git", params["git_proxy_host"] + ":" + params["git_proxy_port"])
+        self.split_proxy("socks", params["socks_proxy"])
         self.split_proxy("cvs", params["cvs_proxy_host"] + ":" + params["cvs_proxy_port"])
 
     def load(self, template):
@@ -214,7 +215,7 @@ class Configuration:
         self.split_proxy("http", template.getVar("http_proxy"))
         self.split_proxy("https", template.getVar("https_proxy"))
         self.split_proxy("ftp", template.getVar("ftp_proxy"))
-        self.split_proxy("git", template.getVar("GIT_PROXY_HOST") + ":" + template.getVar("GIT_PROXY_PORT"))
+        self.split_proxy("socks", template.getVar("all_proxy"))
         self.split_proxy("cvs", template.getVar("CVS_PROXY_HOST") + ":" + template.getVar("CVS_PROXY_PORT"))
 
     def save(self, handler, template, defaults=False):
@@ -257,8 +258,7 @@ class Configuration:
         template.setVar("http_proxy", self.combine_proxy("http"))
         template.setVar("https_proxy", self.combine_proxy("https"))
         template.setVar("ftp_proxy", self.combine_proxy("ftp"))
-        template.setVar("GIT_PROXY_HOST", self.combine_host_only("git"))
-        template.setVar("GIT_PROXY_PORT", self.combine_port_only("git"))
+        template.setVar("all_proxy", self.combine_proxy("socks"))
         template.setVar("CVS_PROXY_HOST", self.combine_host_only("cvs"))
         template.setVar("CVS_PROXY_PORT", self.combine_port_only("cvs"))
 
@@ -273,8 +273,8 @@ class Configuration:
             (self.lconf_version, self.extra_setting, self.toolchain_build, self.image_fstypes, self.selected_image)
         s += "DEPENDS: '%s', IMAGE_INSTALL: '%s', enable_proxy: '%s', use_same_proxy: '%s', http_proxy: '%s', " % \
             (self.selected_recipes, self.user_selected_packages, self.enable_proxy, self.same_proxy, self.combine_proxy("http"))
-        s += "https_proxy: '%s', ftp_proxy: '%s', GIT_PROXY_HOST: '%s', GIT_PROXY_PORT: '%s', CVS_PROXY_HOST: '%s', CVS_PROXY_PORT: '%s'" % \
-            (self.combine_proxy("https"), self.combine_proxy("ftp"),self.combine_host_only("git"), self.combine_port_only("git"),
+        s += "https_proxy: '%s', ftp_proxy: '%s', all_proxy: '%s', CVS_PROXY_HOST: '%s', CVS_PROXY_PORT: '%s'" % \
+            (self.combine_proxy("https"), self.combine_proxy("ftp"), self.combine_proxy("socks"),
              self.combine_host_only("cvs"), self.combine_port_only("cvs"))
         return s
 
@@ -469,8 +469,6 @@ class Builder(gtk.Window):
         self.handler.connect("recipe-populated",         self.handler_recipe_populated_cb)
         self.handler.connect("package-populated",        self.handler_package_populated_cb)
 
-        self.handler.set_config_filter(hob_conf_filter)
-
         self.initiate_new_build_async()
 
     def create_visual_elements(self):
@@ -549,10 +547,10 @@ class Builder(gtk.Window):
 
     def initiate_new_build_async(self):
         self.switch_page(self.MACHINE_SELECTION)
-        self.show_sanity_check_page()
         self.handler.init_cooker()
         self.handler.set_extra_inherit("image_types")
         self.generate_configuration()
+        self.load_template(TemplateMgr.convert_to_template_pathfilename("default", ".hob/"))
 
     def update_config_async(self):
         self.switch_page(self.MACHINE_SELECTION)
@@ -661,8 +659,7 @@ class Builder(gtk.Window):
             if not os.path.exists(layer+'/conf/layer.conf'):
                 return False
 
-        self.save_defaults() # remember layers and settings
-        self.update_config_async()
+        self.set_user_config_extra()
         return True
 
     def save_template(self, path, defaults=False):
@@ -757,14 +754,25 @@ class Builder(gtk.Window):
             self.handler.set_http_proxy(self.configuration.combine_proxy("http"))
             self.handler.set_https_proxy(self.configuration.combine_proxy("https"))
             self.handler.set_ftp_proxy(self.configuration.combine_proxy("ftp"))
-            self.handler.set_git_proxy(self.configuration.combine_host_only("git"), self.configuration.combine_port_only("git"))
+            self.handler.set_socks_proxy(self.configuration.combine_proxy("socks"))
             self.handler.set_cvs_proxy(self.configuration.combine_host_only("cvs"), self.configuration.combine_port_only("cvs"))
         elif self.configuration.enable_proxy == False:
             self.handler.set_http_proxy("")
             self.handler.set_https_proxy("")
             self.handler.set_ftp_proxy("")
-            self.handler.set_git_proxy("", "")
+            self.handler.set_socks_proxy("")
             self.handler.set_cvs_proxy("", "")
+
+    def set_user_config_extra(self):
+        self.handler.set_rootfs_size(self.configuration.image_rootfs_size)
+        self.handler.set_extra_size(self.configuration.image_extra_size)
+        self.handler.set_incompatible_license(self.configuration.incompat_license)
+        self.handler.set_sdk_machine(self.configuration.curr_sdk_machine)
+        self.handler.set_image_fstypes(self.configuration.image_fstypes)
+        self.handler.set_extra_config(self.configuration.extra_setting)
+        self.handler.set_extra_inherit("packageinfo")
+        self.handler.set_extra_inherit("image_types")
+        self.set_user_config_proxies()
 
     def set_user_config(self):
         self.handler.init_cooker()
@@ -779,15 +787,7 @@ class Builder(gtk.Window):
         self.handler.set_sstate_mirrors(self.configuration.sstatemirror)
         self.handler.set_pmake(self.configuration.pmake)
         self.handler.set_bbthreads(self.configuration.bbthread)
-        self.handler.set_rootfs_size(self.configuration.image_rootfs_size)
-        self.handler.set_extra_size(self.configuration.image_extra_size)
-        self.handler.set_incompatible_license(self.configuration.incompat_license)
-        self.handler.set_sdk_machine(self.configuration.curr_sdk_machine)
-        self.handler.set_image_fstypes(self.configuration.image_fstypes)
-        self.handler.set_extra_config(self.configuration.extra_setting)
-        self.handler.set_extra_inherit("packageinfo")
-        self.handler.set_extra_inherit("image_types")
-        self.set_user_config_proxies()
+        self.set_user_config_extra()
 
     def update_recipe_model(self, selected_image, selected_recipes):
         self.recipe_model.set_selected_image(selected_image)
@@ -1024,10 +1024,12 @@ class Builder(gtk.Window):
             fraction = 0.9
         elif self.current_step == self.IMAGE_GENERATING:
             fraction = 1.0
+            version = ""
             self.parameters.image_names = []
             selected_image = self.recipe_model.get_selected_image()
             if selected_image == self.recipe_model.__custom_image__:
-                version = self.recipe_model.get_custom_image_version()
+                if self.configuration.initial_selected_image != selected_image:
+                    version = self.recipe_model.get_custom_image_version()
                 linkname = 'hob-image' + version+ "-" + self.configuration.curr_mach
             else:
                 linkname = selected_image + '-' + self.configuration.curr_mach
@@ -1203,11 +1205,37 @@ class Builder(gtk.Window):
 
         self.fast_generate_image_async(True)
 
-    def show_binb_dialog(self, binb):
-        markup = "<b>Brought in by:</b>\n%s" % binb
-        ptip = PersistentTooltip(markup, self)
+    def show_recipe_property_dialog(self, properties):
+        information = {}
+        dialog = PropertyDialog(title = properties["name"] +' '+ "properties",
+                      parent = self,
+                      information = properties,
+                      flags = gtk.DIALOG_DESTROY_WITH_PARENT
+                          | gtk.DIALOG_NO_SEPARATOR)
 
-        ptip.show()
+        dialog.set_modal(False)
+
+        button = dialog.add_button("Close", gtk.RESPONSE_NO)
+        HobAltButton.style_button(button)
+        button.connect("clicked", lambda w: dialog.destroy())
+
+        dialog.run()
+
+    def show_packages_property_dialog(self, properties):
+        information = {}
+        dialog = PropertyDialog(title = properties["name"] +' '+ "properties",
+                      parent = self,
+                      information = properties,
+                      flags = gtk.DIALOG_DESTROY_WITH_PARENT
+                          | gtk.DIALOG_NO_SEPARATOR)
+
+        dialog.set_modal(False)
+
+        button = dialog.add_button("Close", gtk.RESPONSE_NO)
+        HobAltButton.style_button(button)
+        button.connect("clicked", lambda w: dialog.destroy())
+
+        dialog.run()
 
     def show_layer_selection_dialog(self):
         dialog = LayerSelectionDialog(title = "Layers",
@@ -1229,39 +1257,6 @@ class Builder(gtk.Window):
             # DO refresh layers
             if dialog.layers_changed:
                 self.update_config_async()
-        dialog.destroy()
-
-    def show_load_template_dialog(self):
-        dialog = gtk.FileChooserDialog("Load Template Files", self,
-                                       gtk.FILE_CHOOSER_ACTION_OPEN)
-        button = dialog.add_button("Cancel", gtk.RESPONSE_NO)
-        HobAltButton.style_button(button)
-        button = dialog.add_button("Open", gtk.RESPONSE_YES)
-        HobButton.style_button(button)
-        filter = gtk.FileFilter()
-        filter.set_name("Hob Files")
-        filter.add_pattern("*.hob")
-        dialog.add_filter(filter)
-
-        response = dialog.run()
-        path = None
-        if response == gtk.RESPONSE_YES:
-            path = dialog.get_filename()
-        dialog.destroy()
-        return response == gtk.RESPONSE_YES, path
-
-    def show_save_template_dialog(self):
-        dialog = gtk.FileChooserDialog("Save Template Files", self,
-                                       gtk.FILE_CHOOSER_ACTION_SAVE)
-        button = dialog.add_button("Cancel", gtk.RESPONSE_NO)
-        HobAltButton.style_button(button)
-        button = dialog.add_button("Save", gtk.RESPONSE_YES)
-        HobButton.style_button(button)
-        dialog.set_current_name("hob")
-        response = dialog.run()
-        if response == gtk.RESPONSE_YES:
-            path = dialog.get_filename()
-            self.save_template(path)
         dialog.destroy()
 
     def get_image_extension(self):

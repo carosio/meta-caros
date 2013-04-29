@@ -3,15 +3,13 @@
 #
 
 ROOTFS_PKGMANAGE = "rpm smartpm"
+ROOTFS_PKGMANAGE_BOOTSTRAP = "rpm-postinsts"
 
 # Add 50Meg of extra space for Smart
 IMAGE_ROOTFS_EXTRA_SPACE_append = "${@base_contains("PACKAGE_INSTALL", "smartpm", " + 51200", "" ,d)}"
 
 # Smart is python based, so be sure python-native is available to us.
 EXTRANATIVEPATH += "python-native"
-
-# Postinstalls on device are handled within this class at present
-ROOTFS_PKGMANAGE_BOOTSTRAP = ""
 
 do_rootfs[depends] += "rpm-native:do_populate_sysroot"
 do_rootfs[depends] += "rpmresolve-native:do_populate_sysroot"
@@ -24,15 +22,10 @@ do_rootfs[depends] += "opkg-native:do_populate_sysroot"
 do_rootfs[depends] += "createrepo-native:do_populate_sysroot"
 
 do_rootfs[recrdeptask] += "do_package_write_rpm"
-do_rootfs[vardepsexclude] += "BUILDNAME"
+rootfs_rpm_do_rootfs[vardepsexclude] += "BUILDNAME"
 
 RPM_PREPROCESS_COMMANDS = "package_update_index_rpm; "
 RPM_POSTPROCESS_COMMANDS = "rpm_setup_smart_target_config; "
-
-# 
-# Allow distributions to alter when [postponed] package install scripts are run
-#
-POSTINSTALL_INITPOSITION ?= "98"
 
 rpmlibdir = "/var/lib/rpm"
 opkglibdir = "${localstatedir}/lib/opkg"
@@ -50,7 +43,7 @@ fakeroot rootfs_rpm_do_rootfs () {
 	# install packages
 	# This needs to work in the same way as populate_sdk_rpm.bbclass!
 	export INSTALL_ROOTFS_RPM="${IMAGE_ROOTFS}"
-	export INSTALL_PLATFORM_RPM="${TARGET_ARCH}"
+	export INSTALL_PLATFORM_RPM="$(echo ${TARGET_ARCH} | tr - _)${TARGET_VENDOR}-${TARGET_OS}"
 	export INSTALL_PACKAGES_RPM="${PACKAGE_INSTALL}"
 	export INSTALL_PACKAGES_ATTEMPTONLY_RPM="${PACKAGE_INSTALL_ATTEMPTONLY}"
 	export INSTALL_PACKAGES_LINGUAS_RPM="${LINGUAS_INSTALL}"
@@ -62,18 +55,38 @@ fakeroot rootfs_rpm_do_rootfs () {
 	mkdir -p ${INSTALL_ROOTFS_RPM}/etc/rpm/
 
 	# List must be prefered to least preferred order
+	default_extra_rpm=""
 	INSTALL_PLATFORM_EXTRA_RPM=""
-	for i in ${MULTILIB_PREFIX_LIST} ; do
+	for os in ${MULTILIB_OS_LIST} ; do
 		old_IFS="$IFS"
 		IFS=":"
-		set $i
+		set -- $os
 		IFS="$old_IFS"
-		shift #remove mlib
-		while [ -n "$1" ]; do  
-			INSTALL_PLATFORM_EXTRA_RPM="$INSTALL_PLATFORM_EXTRA_RPM $1"
-			shift
+		mlib=$1
+		mlib_os=$2
+		for prefix in ${MULTILIB_PREFIX_LIST} ; do
+			old_IFS="$IFS"
+			IFS=":"
+			set -- $prefix
+			IFS="$old_IFS"
+			if [ "$mlib" != "$1" ]; then
+				continue
+			fi
+			shift #remove mlib
+			while [ -n "$1" ]; do
+				platform="$(echo $1 | tr - _)-.*-$mlib_os"
+				if [ "$mlib" = "${BBEXTENDVARIANT}" ]; then
+					default_extra_rpm="$default_extra_rpm $platform"
+				else
+					INSTALL_PLATFORM_EXTRA_RPM="$INSTALL_PLATFORM_EXTRA_RPM $platform"
+				fi
+				shift
+			done
 		done
 	done
+	if [ -n "$default_extra_rpm" ]; then
+		INSTALL_PLATFORM_EXTRA_RPM="$default_extra_rpm $INSTALL_PLATFORM_EXTRA_RPM"
+	fi
 	export INSTALL_PLATFORM_EXTRA_RPM
 
 	package_install_internal_rpm
@@ -87,6 +100,19 @@ fakeroot rootfs_rpm_do_rootfs () {
 
 	${ROOTFS_POSTINSTALL_COMMAND}
 
+	# Report delayed package scriptlets
+	for i in ${IMAGE_ROOTFS}/etc/rpm-postinsts/*; do
+		if [ -f $i ]; then
+			echo "Delayed package scriptlet: `head -n 3 $i | tail -n 1`"
+		fi
+	done
+
+	install -d ${IMAGE_ROOTFS}/${sysconfdir}
+	echo ${BUILDNAME} > ${IMAGE_ROOTFS}/${sysconfdir}/version
+
+	${RPM_POSTPROCESS_COMMANDS}
+	${ROOTFS_POSTPROCESS_COMMAND}
+
 	if ${@base_contains("IMAGE_FEATURES", "read-only-rootfs", "true", "false" ,d)}; then
 		if [ -d ${IMAGE_ROOTFS}/etc/rpm-postinsts ] ; then
 			if [ "`ls -A ${IMAGE_ROOTFS}/etc/rpm-postinsts`" != "" ] ; then
@@ -96,37 +122,6 @@ fakeroot rootfs_rpm_do_rootfs () {
 		fi
 	fi
 
-	# Report delayed package scriptlets
-	for i in ${IMAGE_ROOTFS}/etc/rpm-postinsts/*; do
-		if [ -f $i ]; then
-			echo "Delayed package scriptlet: `head -n 3 $i | tail -n 1`"
-		fi
-	done
-
-	install -d ${IMAGE_ROOTFS}/${sysconfdir}/rcS.d
-	# Stop $i getting expanded below...
-	i=\$i
-	cat > ${IMAGE_ROOTFS}${sysconfdir}/rcS.d/S${POSTINSTALL_INITPOSITION}run-postinsts << EOF
-#!/bin/sh
-for i in \`ls /etc/rpm-postinsts/\`; do
-	i=/etc/rpm-postinsts/$i
-	echo "Running postinst $i..."
-	if [ -f $i ] && $i; then
-		rm $i
-	else
-		echo "ERROR: postinst $i failed."
-	fi
-done
-rm -f ${sysconfdir}/rcS.d/S${POSTINSTALL_INITPOSITION}run-postinsts
-EOF
-	chmod 0755 ${IMAGE_ROOTFS}${sysconfdir}/rcS.d/S${POSTINSTALL_INITPOSITION}run-postinsts
-
-	install -d ${IMAGE_ROOTFS}/${sysconfdir}
-	echo ${BUILDNAME} > ${IMAGE_ROOTFS}/${sysconfdir}/version
-
-	${RPM_POSTPROCESS_COMMANDS}
-	${ROOTFS_POSTPROCESS_COMMAND}
-	
 	rm -rf ${IMAGE_ROOTFS}/var/cache2/
 	rm -rf ${IMAGE_ROOTFS}/var/run2/
 	rm -rf ${IMAGE_ROOTFS}/var/log2/
@@ -159,22 +154,6 @@ rpm_setup_smart_target_config() {
 	rm -f ${IMAGE_ROOTFS}/var/lib/smart/config.old
 }
 
-RPM_QUERY_CMD = '${RPM} --root $INSTALL_ROOTFS_RPM -D "_dbpath ${rpmlibdir}"'
-
-list_installed_packages() {
-	if [ "$1" = "arch" ]; then
-		${RPM_QUERY_CMD} -qa --qf "[%{NAME} %{ARCH}\n]" | translate_smart_to_oe arch
-	elif [ "$1" = "file" ]; then
-		${RPM_QUERY_CMD} -qa --qf "[%{NAME} %{ARCH} %{PACKAGEORIGIN}\n]" | translate_smart_to_oe
-	else
-		${RPM_QUERY_CMD} -qa --qf "[%{NAME} %{ARCH}\n]" | translate_smart_to_oe
-	fi
-}
-
-rootfs_list_installed_depends() {
-	rpmresolve -t $INSTALL_ROOTFS_RPM/${rpmlibdir}
-}
-
 rootfs_install_packages() {
 	# Note - we expect the variables not set here to already have been set
 	export INSTALL_PACKAGES_RPM=""
@@ -201,7 +180,9 @@ python () {
     # package_arch order is reversed.  This ensures the -best- match is listed first!
     package_archs = d.getVar("PACKAGE_ARCHS", True) or ""
     package_archs = ":".join(package_archs.split()[::-1])
+    package_os = d.getVar("TARGET_OS", True) or ""
     ml_prefix_list = "%s:%s" % ('default', package_archs)
+    ml_os_list = "%s:%s" % ('default', package_os)
     multilibs = d.getVar('MULTILIBS', True) or ""
     for ext in multilibs.split():
         eext = ext.split(':')
@@ -210,8 +191,12 @@ python () {
             default_tune = localdata.getVar("DEFAULTTUNE_virtclass-multilib-" + eext[1], False)
             if default_tune:
                 localdata.setVar("DEFAULTTUNE", default_tune)
+                bb.data.update_data(localdata)
             package_archs = localdata.getVar("PACKAGE_ARCHS", True) or ""
             package_archs = ":".join([i in "all noarch any".split() and i or eext[1]+"_"+i for i in package_archs.split()][::-1])
+            package_os = localdata.getVar("TARGET_OS", True) or ""
             ml_prefix_list += " %s:%s" % (eext[1], package_archs)
+            ml_os_list += " %s:%s" % (eext[1], package_os)
     d.setVar('MULTILIB_PREFIX_LIST', ml_prefix_list)
+    d.setVar('MULTILIB_OS_LIST', ml_os_list)
 }

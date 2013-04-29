@@ -41,6 +41,8 @@ populate_sdk_ipk() {
 
 	package_install_internal_ipk
 
+	${POPULATE_SDK_POST_HOST_COMMAND}
+
 	#post clean up
 	install -d ${SDK_OUTPUT}/${SDKTARGETSYSROOT}/${sysconfdir}
 	install -m 0644 ${IPKGCONF_TARGET} ${IPKGCONF_SDK} ${SDK_OUTPUT}/${SDKTARGETSYSROOT}/${sysconfdir}/
@@ -53,4 +55,26 @@ populate_sdk_ipk() {
 	rm -Rf ${SDK_OUTPUT}/var
 
 	populate_sdk_log_check populate_sdk
+}
+
+list_installed_packages() {
+	if [ "$1" = "arch" ] ; then
+		opkg-cl ${OPKG_ARGS} status | opkg-query-helper.py -a
+	elif [ "$1" = "file" ] ; then
+		opkg-cl ${OPKG_ARGS} status | opkg-query-helper.py -f | while read pkg pkgfile
+		do
+			fullpath=`find ${DEPLOY_DIR_IPK} -name "$pkgfile" || true`
+			if [ "$fullpath" = "" ] ; then
+				echo "$pkg $pkgfile"
+			else
+				echo "$pkg $fullpath"
+			fi
+		done
+	else
+		opkg-cl ${OPKG_ARGS} list_installed | awk '{ print $1 }'
+	fi
+}
+
+rootfs_list_installed_depends() {
+	opkg-cl ${OPKG_ARGS} status | opkg-query-helper.py
 }

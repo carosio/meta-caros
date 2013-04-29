@@ -458,27 +458,6 @@ def preserved_envvars_exported():
         'USER',
     ]
 
-def preserved_envvars_exported_interactive():
-    """Variables which are taken from the environment and placed in and exported
-    from the metadata, for interactive tasks"""
-    return [
-        'COLORTERM',
-        'DBUS_SESSION_BUS_ADDRESS',
-        'DESKTOP_SESSION',
-        'DESKTOP_STARTUP_ID',
-        'DISPLAY',
-        'GNOME_KEYRING_PID',
-        'GNOME_KEYRING_SOCKET',
-        'GPG_AGENT_INFO',
-        'GTK_RC_FILES',
-        'SESSION_MANAGER',
-        'KRB5CCNAME',
-        'SSH_AUTH_SOCK',
-        'XAUTHORITY',
-        'XDG_DATA_DIRS',
-        'XDG_SESSION_COOKIE',
-    ]
-
 def preserved_envvars():
     """Variables which are taken from the environment and placed in the metadata"""
     v = [
@@ -487,7 +466,7 @@ def preserved_envvars():
         'BB_ENV_WHITELIST',
         'BB_ENV_EXTRAWHITE',
     ]
-    return v + preserved_envvars_exported() + preserved_envvars_exported_interactive()
+    return v + preserved_envvars_exported()
 
 def filter_environment(good_vars):
     """
@@ -495,23 +474,19 @@ def filter_environment(good_vars):
     are not known and may influence the build in a negative way.
     """
 
-    removed_vars = []
+    removed_vars = {}
     for key in os.environ.keys():
         if key in good_vars:
             continue
 
-        removed_vars.append(key)
+        removed_vars[key] = os.environ[key]
         os.unsetenv(key)
         del os.environ[key]
 
     if len(removed_vars):
-        logger.debug(1, "Removed the following variables from the environment: %s", ", ".join(removed_vars))
+        logger.debug(1, "Removed the following variables from the environment: %s", ", ".join(removed_vars.keys()))
 
     return removed_vars
-
-def create_interactive_env(d):
-    for k in preserved_envvars_exported_interactive():
-        os.setenv(k, d.getVar(k, True))
 
 def approved_variables():
     """
@@ -521,10 +496,13 @@ def approved_variables():
     approved = []
     if 'BB_ENV_WHITELIST' in os.environ:
         approved = os.environ['BB_ENV_WHITELIST'].split()
+        approved.extend(['BB_ENV_WHITELIST'])
     else:
         approved = preserved_envvars()
     if 'BB_ENV_EXTRAWHITE' in os.environ:
         approved.extend(os.environ['BB_ENV_EXTRAWHITE'].split())
+        if 'BB_ENV_EXTRAWHITE' not in approved:
+            approved.extend(['BB_ENV_EXTRAWHITE'])
     return approved
 
 def clean_environment():
@@ -534,7 +512,9 @@ def clean_environment():
     """
     if 'BB_PRESERVE_ENV' not in os.environ:
         good_vars = approved_variables()
-        filter_environment(good_vars)
+        return filter_environment(good_vars)
+
+    return {}
 
 def empty_environment():
     """
@@ -558,14 +538,17 @@ def remove(path, recurse=False):
     """Equivalent to rm -f or rm -rf"""
     if not path:
         return
-    import os, errno, shutil, glob
+    if recurse:
+        import subprocess, glob
+        # shutil.rmtree(name) would be ideal but its too slow
+        subprocess.call(['rm', '-rf'] + glob.glob(path))
+        return
+    import os, errno, glob
     for name in glob.glob(path):
         try:
             os.unlink(name)
         except OSError as exc:
-            if recurse and exc.errno == errno.EISDIR:
-                shutil.rmtree(name)
-            elif exc.errno != errno.ENOENT:
+            if exc.errno != errno.ENOENT:
                 raise
 
 def prunedir(topdir):
@@ -839,4 +822,12 @@ def process_profilelog(fn):
     pout.flush()
     pout.close()  
 
+#
+# Work around multiprocessing pool bugs in python < 2.7.3
+#
+def multiprocessingpool(*args, **kwargs):
+    if sys.version_info < (2, 7, 3):
+        return bb.compat.Pool(*args, **kwargs)
+    else:
+        return multiprocessing.pool.Pool(*args, **kwargs)
 

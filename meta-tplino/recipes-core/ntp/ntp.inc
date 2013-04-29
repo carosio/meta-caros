@@ -21,7 +21,7 @@ SRC_URI = "http://www.eecis.udel.edu/~ntp/ntp_spool/ntp4/ntp-4.2/ntp-${PV}.tar.g
 	   file://ntpd.service \
            "
 
-inherit autotools update-rc.d
+inherit autotools 
 
 # The ac_cv_header_readline_history is to stop ntpdc depending on either
 # readline or curses

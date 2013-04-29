@@ -12,7 +12,7 @@ LIC_FILES_CHKSUM = "file://LICENSE;md5=3a5b0c2f0d0c49dfde9558ae2036683c"
 inherit autotools systemd
 
 DEPENDS = "zlib"
-RPROVIDES = "ssh sshd"
+RPROVIDES_${PN} = "ssh sshd"
 DEPENDS += "${@base_contains('DISTRO_FEATURES', 'pam', 'libpam', '', d)}"
 
 SRC_URI = "http://matt.ucc.asn.au/dropbear/releases/dropbear-${PV}.tar.gz \
@@ -39,8 +39,7 @@ EXTRA_OEMAKE = 'MULTI=1 SCPPROGRESS=1 PROGRAMS="${SBINCOMMANDS} ${BINCOMMANDS}"'
 EXTRA_OECONF += "\
  ${@base_contains('DISTRO_FEATURES', 'pam', '--enable-pam', '--disable-pam', d)}"
 
-SYSTEMD_PACKAGES = "${PN}-systemd"
-SYSTEMD_SERVICE_${PN}-systemd = "dropbear.socket"
+SYSTEMD_SERVICE_${PN} = "dropbear.socket dropbearkey.service"
 
 do_install() {
 	install -d ${D}${sysconfdir} \
@@ -48,9 +47,10 @@ do_install() {
 		   ${D}${sysconfdir}/dropbear \
                    ${D}${bindir} \
 		   ${D}${sbindir} \
-		   ${D}${localstatedir}
+		   ${D}${localstatedir} \
+		   ${D}${systemd_unitdir}/system
 
-	install -m 0755 dropbearmulti ${D}${sbindir}/
+	install -m 755 dropbearmulti ${D}${sbindir}/
 	ln -s ${sbindir}/dropbearmulti ${D}${bindir}/dbclient
 	
 	for i in ${SBINCOMMANDS}
@@ -64,6 +64,9 @@ do_install() {
 			install -m 0644 ${WORKDIR}/dropbear  ${D}${sysconfdir}/pam.d/
 		fi
 	done
+
+	install -m 644 ${WORKDIR}/*.service ${D}/${systemd_unitdir}/system
+	install -m 644 ${WORKDIR}/*.socket ${D}/${systemd_unitdir}/system
 }
 
 inherit update-alternatives

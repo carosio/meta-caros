@@ -1,7 +1,7 @@
-inherit linux-kernel-base module_strip
+inherit linux-kernel-base module_strip kernel-module-split
 
 PROVIDES += "virtual/kernel"
-DEPENDS += "virtual/${TARGET_PREFIX}gcc kmod-native"
+DEPENDS += "virtual/${TARGET_PREFIX}gcc kmod-native depmodwrapper-cross"
 
 # we include gcc above, we dont need virtual/libc
 INHIBIT_DEFAULT_DEPS = "1"
@@ -57,6 +57,9 @@ PACKAGE_ARCH = "${MACHINE_ARCH}"
 UBOOT_ENTRYPOINT ?= "20008000"
 UBOOT_LOADADDRESS ?= "${UBOOT_ENTRYPOINT}"
 
+# Some Linux kenrel configurations need additional parameters on the command line
+KERNEL_EXTRA_ARGS ?= ""
+
 # For the kernel, we don't want the '-e MAKEFLAGS=' in EXTRA_OEMAKE.
 # We don't want to override kernel Makefile variables from the environment
 EXTRA_OEMAKE = ""
@@ -71,7 +74,7 @@ KERNEL_IMAGETYPE_FOR_MAKE = "${@(lambda s: s[:-3] if s[-3:] == ".gz" else s)(d.g
 
 kernel_do_compile() {
 	unset CFLAGS CPPFLAGS CXXFLAGS LDFLAGS MACHINE
-	oe_runmake ${KERNEL_IMAGETYPE_FOR_MAKE} ${KERNEL_ALT_IMAGETYPE} CC="${KERNEL_CC}" LD="${KERNEL_LD}"
+	oe_runmake ${KERNEL_IMAGETYPE_FOR_MAKE} ${KERNEL_ALT_IMAGETYPE} CC="${KERNEL_CC}" LD="${KERNEL_LD}" ${KERNEL_EXTRA_ARGS}
 	if test "${KERNEL_IMAGETYPE_FOR_MAKE}.gz" = "${KERNEL_IMAGETYPE}"; then
 		gzip -9c < "${KERNEL_IMAGETYPE_FOR_MAKE}" > "${KERNEL_OUTPUT}"
 	fi
@@ -80,12 +83,12 @@ kernel_do_compile() {
 do_compile_kernelmodules() {
 	unset CFLAGS CPPFLAGS CXXFLAGS LDFLAGS MACHINE
 	if (grep -q -i -e '^CONFIG_MODULES=y$' .config); then
-		oe_runmake ${PARALLEL_MAKE} modules CC="${KERNEL_CC}" LD="${KERNEL_LD}"
+		oe_runmake ${PARALLEL_MAKE} modules CC="${KERNEL_CC}" LD="${KERNEL_LD}" ${KERNEL_EXTRA_ARGS}
 	else
 		bbnote "no modules to compile"
 	fi
 }
-addtask compile_kernelmodules after do_compile before do_install
+addtask compile_kernelmodules after do_compile before do_strip
 
 kernel_do_install() {
 	#
@@ -94,8 +97,6 @@ kernel_do_install() {
 	unset CFLAGS CPPFLAGS CXXFLAGS LDFLAGS MACHINE
 	if (grep -q -i -e '^CONFIG_MODULES=y$' .config); then
 		oe_runmake DEPMOD=echo INSTALL_MOD_PATH="${D}" modules_install
-		rm -f "${D}/lib/modules/${KERNEL_VERSION}/modules.order"
-		rm -f "${D}/lib/modules/${KERNEL_VERSION}/modules.builtin"
 		rm "${D}/lib/modules/${KERNEL_VERSION}/build"
 		rm "${D}/lib/modules/${KERNEL_VERSION}/source"
 	else
@@ -199,6 +200,7 @@ kernel_do_install() {
 		sed -i 's#-I/usr/include/slang#-I=/usr/include/slang#g' $kerneldir/tools/perf/Makefile
 	fi
 }
+do_install[prefuncs] += "package_get_auto_pr"
 
 sysroot_stage_all_append() {
 	sysroot_stage_dir ${D}${KERNEL_SRC_PATH} ${SYSROOT_DESTDIR}${KERNEL_SRC_PATH}
@@ -251,6 +253,7 @@ EXPORT_FUNCTIONS do_compile do_install do_configure
 # kernel-image becomes kernel-image-${KERNEL_VERISON}
 PACKAGES = "kernel kernel-base kernel-vmlinux kernel-image kernel-dev kernel-modules"
 FILES = ""
+FILES_kernel-base = "/lib/modules/${KERNEL_VERSION}/modules.order /lib/modules/${KERNEL_VERSION}/modules.builtin"
 FILES_kernel-image = "/boot/${KERNEL_IMAGETYPE}*"
 FILES_kernel-dev = "/boot/System.map* /boot/Module.symvers* /boot/config* ${KERNEL_SRC_PATH}"
 FILES_kernel-vmlinux = "/boot/vmlinux*"
@@ -273,221 +276,69 @@ if [ ! -e "$D/lib/modules/${KERNEL_VERSION}" ]; then
 	mkdir -p $D/lib/modules/${KERNEL_VERSION}
 fi
 if [ -n "$D" ]; then
-	depmod -a -b $D -F ${STAGING_KERNEL_DIR}/System.map-${KERNEL_VERSION} ${KERNEL_VERSION}
+	depmodwrapper -a -b $D ${KERNEL_VERSION}
 else
 	depmod -a ${KERNEL_VERSION}
 fi
 }
 
-pkg_postinst_modules () {
-if [ -z "$D" ]; then
-	depmod -a ${KERNEL_VERSION}
-else
-	depmod -a -b $D -F ${STAGING_KERNEL_DIR}/System.map-${KERNEL_VERSION} ${KERNEL_VERSION}
-fi
-}
+PACKAGESPLITFUNCS_prepend = "split_kernel_packages "
 
-pkg_postrm_modules () {
-if [ -z "$D" ]; then
-	depmod -a ${KERNEL_VERSION}
-else
-	depmod -a -b $D -F ${STAGING_KERNEL_DIR}/System.map-${KERNEL_VERSION} ${KERNEL_VERSION}
-fi
-}
-
-autoload_postinst_fragment() {
-if [ x"$D" = "x" ]; then
-	modprobe %s || true
-fi
-}
-
-python populate_packages_prepend () {
-    def extract_modinfo(file):
-        import tempfile, re, subprocess
-        tempfile.tempdir = d.getVar("WORKDIR", True)
-        tf = tempfile.mkstemp()
-        tmpfile = tf[1]
-        cmd = "PATH=\"%s\" %sobjcopy -j .modinfo -O binary %s %s" % (d.getVar("PATH", True), d.getVar("HOST_PREFIX", True) or "", file, tmpfile)
-        subprocess.call(cmd, shell=True)
-        f = open(tmpfile)
-        l = f.read().split("\000")
-        f.close()
-        os.close(tf[0])
-        os.unlink(tmpfile)
-        exp = re.compile("([^=]+)=(.*)")
-        vals = {}
-        for i in l:
-            m = exp.match(i)
-            if not m:
-                continue
-            vals[m.group(1)] = m.group(2)
-        return vals
-    
-    def parse_depmod():
-        import re
-
-        dvar = d.getVar('PKGD', True)
-        if not dvar:
-            bb.error("PKGD not defined")
-            return
-
-        kernelver = d.getVar('KERNEL_VERSION', True)
-        kernelver_stripped = kernelver
-        m = re.match('^(.*-hh.*)[\.\+].*$', kernelver)
-        if m:
-            kernelver_stripped = m.group(1)
-        path = d.getVar("PATH", True)
-
-        cmd = "PATH=\"%s\" depmod -n -a -b %s -F %s/boot/System.map-%s %s" % (path, dvar, dvar, kernelver, kernelver_stripped)
-        f = os.popen(cmd, 'r')
-
-        deps = {}
-        pattern0 = "^(.*\.k?o):..*$"
-        pattern1 = "^(.*\.k?o):\s*(.*\.k?o)\s*$"
-        pattern2 = "^(.*\.k?o):\s*(.*\.k?o)\s*\\\$"
-        pattern3 = "^\t(.*\.k?o)\s*\\\$"
-        pattern4 = "^\t(.*\.k?o)\s*$"
-
-        line = f.readline()
-        while line:
-            if not re.match(pattern0, line):
-                line = f.readline()
-                continue
-            m1 = re.match(pattern1, line)
-            if m1:
-                deps[m1.group(1)] = m1.group(2).split()
-            else:
-                m2 = re.match(pattern2, line)
-                if m2:
-                    deps[m2.group(1)] = m2.group(2).split()
-                    line = f.readline()
-                    m3 = re.match(pattern3, line)
-                    while m3:
-                        deps[m2.group(1)].extend(m3.group(1).split())
-                        line = f.readline()
-                        m3 = re.match(pattern3, line)
-                    m4 = re.match(pattern4, line)
-                    deps[m2.group(1)].extend(m4.group(1).split())
-            line = f.readline()
-        f.close()
-        return deps
-    
-    def get_dependencies(file, pattern, format):
-        # file no longer includes PKGD
-        file = file.replace(d.getVar('PKGD', True) or '', '', 1)
-        # instead is prefixed with /lib/modules/${KERNEL_VERSION}
-        file = file.replace("/lib/modules/%s/" % d.getVar('KERNEL_VERSION', True) or '', '', 1)
-
-        if module_deps.has_key(file):
-            import re
-            dependencies = []
-            for i in module_deps[file]:
-                m = re.match(pattern, os.path.basename(i))
-                if not m:
-                    continue
-                on = legitimize_package_name(m.group(1))
-                dependency_pkg = format % on
-                dependencies.append(dependency_pkg)
-            return dependencies
-        return []
-
-    def frob_metadata(file, pkg, pattern, format, basename):
-        import re
-        vals = extract_modinfo(file)
-
-        dvar = d.getVar('PKGD', True)
-
-        # If autoloading is requested, output /etc/modules-load.d/<name>.conf and append
-        # appropriate modprobe commands to the postinst
-        autoload = d.getVar('module_autoload_%s' % basename, True)
-        if autoload:
-            name = '%s/etc/modules-load.d/%s.conf' % (dvar, basename)
-            f = open(name, 'w')
-            for m in autoload.split():
-                f.write('%s\n' % m)
-            f.close()
-            postinst = d.getVar('pkg_postinst_%s' % pkg, True)
-            if not postinst:
-                bb.fatal("pkg_postinst_%s not defined" % pkg)
-            postinst += d.getVar('autoload_postinst_fragment', True) % autoload
-            d.setVar('pkg_postinst_%s' % pkg, postinst)
-
-        # Write out any modconf fragment
-        modconf = d.getVar('module_conf_%s' % basename, True)
-        if modconf:
-            name = '%s/etc/modprobe.d/%s.conf' % (dvar, basename)
-            f = open(name, 'w')
-            f.write("%s\n" % modconf)
-            f.close()
-
-        files = d.getVar('FILES_%s' % pkg, True)
-        files = "%s /etc/modules-load.d/%s.conf /etc/modprobe.d/%s.conf" % (files, basename, basename)
-        d.setVar('FILES_%s' % pkg, files)
-
-        if vals.has_key("description"):
-            old_desc = d.getVar('DESCRIPTION_' + pkg, True) or ""
-            d.setVar('DESCRIPTION_' + pkg, old_desc + "; " + vals["description"])
-
-        rdepends = bb.utils.explode_dep_versions2(d.getVar('RDEPENDS_' + pkg, True) or "")
-        for dep in get_dependencies(file, pattern, format):
-            if not dep in rdepends:
-                rdepends[dep] = []
-        d.setVar('RDEPENDS_' + pkg, bb.utils.join_deps(rdepends, commasep=False))
-
-    module_deps = parse_depmod()
-    module_regex = '^(.*)\.k?o$'
-    module_pattern = 'kernel-module-%s'
-
-    postinst = d.getVar('pkg_postinst_modules', True)
-    postrm = d.getVar('pkg_postrm_modules', True)
-
+python split_kernel_packages () {
     do_split_packages(d, root='/lib/firmware', file_regex='^(.*)\.bin$', output_pattern='kernel-firmware-%s', description='Firmware for %s', recursive=True, extra_depends='')
     do_split_packages(d, root='/lib/firmware', file_regex='^(.*)\.fw$', output_pattern='kernel-firmware-%s', description='Firmware for %s', recursive=True, extra_depends='')
     do_split_packages(d, root='/lib/firmware', file_regex='^(.*)\.cis$', output_pattern='kernel-firmware-%s', description='Firmware for %s', recursive=True, extra_depends='')
-    do_split_packages(d, root='/lib/modules', file_regex=module_regex, output_pattern=module_pattern, description='%s kernel module', postinst=postinst, postrm=postrm, recursive=True, hook=frob_metadata, extra_depends='kernel-%s' % (d.getVar("KERNEL_VERSION", True)))
-
-    # If modules-load.d and modprobe.d are empty at this point, remove them to
-    # avoid warnings. removedirs only raises an OSError if an empty
-    # directory cannot be removed.
-    dvar = d.getVar('PKGD', True)
-    for dir in ["%s/etc/modprobe.d" % (dvar), "%s/etc/modules-load.d" % (dvar), "%s/etc" % (dvar)]:
-        if len(os.listdir(dir)) == 0:
-            os.rmdir(dir)
-
-    import re
-    metapkg = "kernel-modules"
-    blacklist = [ 'kernel-dev', 'kernel-image', 'kernel-base', 'kernel-vmlinux' ]
-    for l in module_deps.values():
-        for i in l:
-            pkg = module_pattern % legitimize_package_name(re.match(module_regex, os.path.basename(i)).group(1))
-            blacklist.append(pkg)
-    metapkg_rdepends = []
-    packages = d.getVar('PACKAGES', True).split()
-    for pkg in packages[1:]:
-        if not pkg in blacklist and not pkg in metapkg_rdepends:
-            metapkg_rdepends.append(pkg)
-    d.setVar('RDEPENDS_' + metapkg, ' '.join(metapkg_rdepends))
 }
+
+do_strip() {
+	if [ -n "${KERNEL_IMAGE_STRIP_EXTRA_SECTIONS}" ]; then
+		if [[ "${KERNEL_IMAGETYPE}" != "vmlinux" ]]; then
+			bbwarn "image type will not be stripped (not supported): ${KERNEL_IMAGETYPE}"
+			return
+		fi
+
+		cd ${B}
+		headers=`"$CROSS_COMPILE"readelf -S ${KERNEL_OUTPUT} | \
+			  grep "^ \{1,\}\[[0-9 ]\{1,\}\] [^ ]" | \
+			  sed "s/^ \{1,\}\[[0-9 ]\{1,\}\] //" | \
+			  gawk '{print $1}'`
+
+		for str in ${KERNEL_IMAGE_STRIP_EXTRA_SECTIONS}; do {
+			if [[ "$headers" != *"$str"* ]]; then
+				bbwarn "Section not found: $str";
+			fi
+
+			"$CROSS_COMPILE"strip -s -R $str ${KERNEL_OUTPUT}
+		}; done
+
+		bbnote "KERNEL_IMAGE_STRIP_EXTRA_SECTIONS is set, stripping sections:" \
+			"${KERNEL_IMAGE_STRIP_EXTRA_SECTIONS}"
+	fi;
+}
+do_strip[dirs] = "${B}"
+
+addtask do_strip before do_sizecheck after do_kernel_link_vmlinux
 
 # Support checking the kernel size since some kernels need to reside in partitions
 # with a fixed length or there is a limit in transferring the kernel to memory
 do_sizecheck() {
 	if [ ! -z "${KERNEL_IMAGE_MAXSIZE}" ]; then
-		size=`ls -l ${KERNEL_OUTPUT} | awk '{ print $5}'`
+		cd ${B}
+		size=`ls -lL ${KERNEL_OUTPUT} | awk '{ print $5}'`
 		if [ $size -ge ${KERNEL_IMAGE_MAXSIZE} ]; then
-			rm ${KERNEL_OUTPUT}
 			die "This kernel (size=$size > ${KERNEL_IMAGE_MAXSIZE}) is too big for your device. Please reduce the size of the kernel by making more of it modular."
 		fi
 	fi
 }
+do_sizecheck[dirs] = "${B}"
 
-addtask sizecheck before do_install after do_compile
+addtask sizecheck before do_install after do_strip
 
-KERNEL_IMAGE_BASE_NAME ?= "${KERNEL_IMAGETYPE}-${PE}-${PV}-${PR}-${MACHINE}-${DATETIME}"
+KERNEL_IMAGE_BASE_NAME ?= "${KERNEL_IMAGETYPE}-${PKGE}-${PKGV}-${PKGR}-${MACHINE}-${DATETIME}"
 # Don't include the DATETIME variable in the sstate package signatures
 KERNEL_IMAGE_BASE_NAME[vardepsexclude] = "DATETIME"
 KERNEL_IMAGE_SYMLINK_NAME ?= "${KERNEL_IMAGETYPE}-${MACHINE}"
-MODULE_IMAGE_BASE_NAME ?= "modules-${PE}-${PV}-${PR}-${MACHINE}-${DATETIME}"
+MODULE_IMAGE_BASE_NAME ?= "modules-${PKGE}-${PKGV}-${PKGR}-${MACHINE}-${DATETIME}"
 MODULE_IMAGE_BASE_NAME[vardepsexclude] = "DATETIME"
 MODULE_TARBALL_BASE_NAME ?= "${MODULE_IMAGE_BASE_NAME}.tgz"
 # Don't include the DATETIME variable in the sstate package signatures
@@ -522,6 +373,7 @@ addtask uboot_mkimage before do_install after do_compile
 kernel_do_deploy() {
 	install -m 0644 ${KERNEL_OUTPUT} ${DEPLOYDIR}/${KERNEL_IMAGE_BASE_NAME}.bin
 	if [ ${MODULE_TARBALL_DEPLOY} = "1" ] && (grep -q -i -e '^CONFIG_MODULES=y$' .config); then
+		mkdir -p ${D}/lib
 		tar -cvzf ${DEPLOYDIR}/${MODULE_TARBALL_BASE_NAME} -C ${D} lib
 		ln -sf ${MODULE_TARBALL_BASE_NAME}.bin ${MODULE_TARBALL_SYMLINK_NAME}
 	fi
@@ -532,8 +384,10 @@ kernel_do_deploy() {
 	ln -sf ${KERNEL_IMAGE_BASE_NAME}.bin ${KERNEL_IMAGETYPE}
 
 	cp ${COREBASE}/meta/files/deploydir_readme.txt ${DEPLOYDIR}/README_-_DO_NOT_DELETE_FILES_IN_THIS_DIRECTORY.txt
+	cd -
 }
 do_deploy[dirs] = "${DEPLOYDIR} ${B}"
+do_deploy[prefuncs] += "package_get_auto_pr"
 
 addtask deploy before do_build after do_install
 

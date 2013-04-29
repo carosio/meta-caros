@@ -246,7 +246,7 @@ python checkpkg_eventhandler() {
 
         lf = bb.utils.lockfile("%s.lock" % logfile)
         f = open(logfile, "a")
-        f.write("Package\tVersion\tUpver\tLicense\tSection\tHome\tRelease\tDepends\tBugTracker\tPE\tDescription\tStatus\tTracking\tURI\tMAINTAINER\n")
+        f.write("Package\tVersion\tUpver\tLicense\tSection\tHome\tRelease\tDepends\tBugTracker\tPE\tDescription\tStatus\tTracking\tURI\tMAINTAINER\tNoUpReason\n")
         f.close()
         bb.utils.unlockfile(lf)
     elif bb.event.getName(e) == "BuildCompleted":
@@ -291,8 +291,8 @@ python do_checkpkg() {
         suffix = "(tar\.gz|tgz|tar\.bz2|zip|xz|rpm|bz2|orig\.tar\.gz|tar\.xz|src\.tar\.gz|src\.tgz|svnr\d+\.tar\.bz2|stable\.tar\.gz|src\.rpm)"
 
         suffixtuple = ("tar.gz", "tgz", "zip", "tar.bz2", "tar.xz", "bz2", "orig.tar.gz", "src.tar.gz", "src.rpm", "src.tgz", "svnr\d+.tar.bz2", "stable.tar.gz", "src.rpm")
-        sinterstr = "(?P<name>%s?)v?(?P<ver>%s)(source)?" % (prefix, ver_regex)
-        sdirstr = "(?P<name>%s)\.?v?(?P<ver>%s)(source)?[\.\-](?P<type>%s$)" % (prefix, ver_regex, suffix)
+        sinterstr = "(?P<name>%s?)v?(?P<ver>%s)(\-source)?" % (prefix, ver_regex)
+        sdirstr = "(?P<name>%s)\.?v?(?P<ver>%s)(\-source)?[\.\-](?P<type>%s$)" % (prefix, ver_regex, suffix)
 
         def parse_inter(s):
                 m = re.search(sinterstr, s)
@@ -504,7 +504,7 @@ python do_checkpkg() {
                                 status = "ErrParseDir"
                         else:
                                 """newver still contains a full package name string"""
-                                status = newver[1]
+                                status = re.sub('_', '.', newver[1])
                 elif not len(fhtml):
                         status = "ErrHostNoDir"
 
@@ -670,16 +670,22 @@ python do_checkpkg() {
                 if tmp:
                         tmpline = tmp.split("\n")
                         verflag = 0
+                        phash = tmpline[0].rsplit("\t")[0]
+                        pupver = pversion
                         for line in tmpline:
                                 if len(line)==0:
                                         break;
                                 puptag = line.split("/")[-1]
-                                puptag = re.search("[0-9][0-9|\.|_]+[0-9]", puptag)
+                                upstr_regex = d.getVar('REGEX', True)
+                                if upstr_regex:
+                                        puptag = re.search(upstr_regex, puptag)
+                                else:
+                                        puptag = re.search("([0-9][\.|_]?)+", puptag)
                                 if puptag == None:
                                         continue;
                                 puptag = puptag.group()
                                 puptag = re.sub("_",".",puptag)
-                                plocaltag = pversion.split("+")[0]
+                                plocaltag = pupver.split("+git")[0]
                                 if "git" in plocaltag:
                                         plocaltag = plocaltag.split("-")[0]
                                 result = bb.utils.vercmp(("0", puptag, ""), ("0", plocaltag, ""))
@@ -687,18 +693,33 @@ python do_checkpkg() {
                                         verflag = 1
                                         pstatus = "UPDATE"
                                         pupver = puptag
+                                        phash = line.split("\t")[0]
                                 elif verflag == 0 :
                                         pupver = plocaltag
                                         pstatus = "MATCH"
                 #This is for those no tag repo
                 elif tmp2:
                         pupver = tmp2.split("\t")[0]
+                        phash = pupver
                         if pupver in pversion:
                                 pstatus = "MATCH"
                         else:
                                 pstatus = "UPDATE"
                 else:
                         pstatus = "ErrGitAccess"
+
+                tmp3 = re.search('(?P<git_ver>(\d+[\.-]?)+)(?P<git_prefix>(\+git[r|\-|]?)AUTOINC\+)(?P<head_md5>(.+))', pversion)
+                if tmp3:
+                        pversion = tmp3.group('git_ver') + tmp3.group('git_prefix') + tmp3.group('head_md5')[:7]
+                        git_prefix = tmp3.group('git_prefix')
+                        if not (git_prefix in pupver):
+                                if len(pupver) < 40:
+                                        """This is not the HEAD of the repository"""
+                                        pupver = pupver + tmp3.group('git_prefix') + phash[:7]
+                                else:
+                                        """This is the HEAD of the repository"""
+                                        pupver = tmp3.group('git_ver') + tmp3.group('git_prefix') + phash[:7]
+
         elif type == 'svn':
                 options = []
                 if user:
@@ -714,6 +735,10 @@ python do_checkpkg() {
                 svncmd = "svn info %s %s://%s%s/%s/ 2>&1" % (" ".join(options), svnproto, host, path, parm["module"])
                 print svncmd
                 svninfo = os.popen(svncmd).read()
+                if "Can't connect to host " in svninfo or "Connection timed out" in svninfo:
+                        svncmd = "svn info %s %s://%s%s/%s/ 2>&1" % (" ".join(options), "http",
+                                       host, path, parm["module"])
+                        svninfo = os.popen(svncmd).read()
                 for line in svninfo.split("\n"):
                         if re.search("^Last Changed Rev:", line):
                                 pupver = line.split(" ")[-1]
@@ -751,10 +776,11 @@ python do_checkpkg() {
         psrcuri = psrcuri.split()[0]
         pdepends = "".join(pdepends.split("\t"))
         pdesc = "".join(pdesc.split("\t"))
+        no_upgr_reason = d.getVar('RECIPE_NO_UPDATE_REASON', True)
         lf = bb.utils.lockfile("%s.lock" % logfile)
         f = open(logfile, "a")
-        f.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % \
-                  (pname,pversion,pupver,plicense,psection, phome,prelease, pdepends,pbugtracker,ppe,pdesc,pstatus,pmver,psrcuri,maintainer))
+        f.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % \
+                  (pname,pversion,pupver,plicense,psection, phome,prelease, pdepends,pbugtracker,ppe,pdesc,pstatus,pmver,psrcuri,maintainer, no_upgr_reason))
         f.close()
         bb.utils.unlockfile(lf)
 }

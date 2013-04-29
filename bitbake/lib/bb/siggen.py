@@ -98,6 +98,7 @@ class SignatureGeneratorBasic(SignatureGenerator):
                 bb.error("Task %s from %s seems to be empty?!" % (task, fn))
                 data = ''
 
+            gendeps[task] -= self.basewhitelist
             newdeps = gendeps[task]
             seen = set()
             while newdeps:
@@ -107,12 +108,12 @@ class SignatureGeneratorBasic(SignatureGenerator):
                 for dep in nextdeps:
                     if dep in self.basewhitelist:
                         continue
+                    gendeps[dep] -= self.basewhitelist
                     newdeps |= gendeps[dep]
                 newdeps -= seen
 
-            alldeps = seen - self.basewhitelist
-
-            for dep in sorted(alldeps):
+            alldeps = sorted(seen)
+            for dep in alldeps:
                 data = data + dep
                 if dep in lookupcache:
                     var = lookupcache[dep]
@@ -126,7 +127,7 @@ class SignatureGeneratorBasic(SignatureGenerator):
                 if var:
                     data = data + str(var)
             self.basehash[fn + "." + task] = hashlib.md5(data).hexdigest()
-            taskdeps[task] = sorted(alldeps)
+            taskdeps[task] = alldeps
 
         self.taskdeps[fn] = taskdeps
         self.gendeps[fn] = gendeps
@@ -330,12 +331,12 @@ def compare_sigfiles(a, b, recursecb = None):
         return changed, added, removed
 
     if 'basewhitelist' in a_data and a_data['basewhitelist'] != b_data['basewhitelist']:
-        output.append("basewhitelist changed from %s to %s" % (a_data['basewhitelist'], b_data['basewhitelist']))
+        output.append("basewhitelist changed from '%s' to '%s'" % (a_data['basewhitelist'], b_data['basewhitelist']))
         if a_data['basewhitelist'] and b_data['basewhitelist']:
             output.append("changed items: %s" % a_data['basewhitelist'].symmetric_difference(b_data['basewhitelist']))
 
     if 'taskwhitelist' in a_data and a_data['taskwhitelist'] != b_data['taskwhitelist']:
-        output.append("taskwhitelist changed from %s to %s" % (a_data['taskwhitelist'], b_data['taskwhitelist']))
+        output.append("taskwhitelist changed from '%s' to '%s'" % (a_data['taskwhitelist'], b_data['taskwhitelist']))
         if a_data['taskwhitelist'] and b_data['taskwhitelist']:
             output.append("changed items: %s" % a_data['taskwhitelist'].symmetric_difference(b_data['taskwhitelist']))
 
@@ -348,7 +349,7 @@ def compare_sigfiles(a, b, recursecb = None):
     changed, added, removed = dict_diff(a_data['gendeps'], b_data['gendeps'], a_data['basewhitelist'] & b_data['basewhitelist'])
     if changed:
         for dep in changed:
-            output.append("List of dependencies for variable %s changed from %s to %s" % (dep, a_data['gendeps'][dep], b_data['gendeps'][dep]))
+            output.append("List of dependencies for variable %s changed from '%s' to '%s'" % (dep, a_data['gendeps'][dep], b_data['gendeps'][dep]))
             if a_data['gendeps'][dep] and b_data['gendeps'][dep]:
                 output.append("changed items: %s" % a_data['gendeps'][dep].symmetric_difference(b_data['gendeps'][dep]))
     if added:
@@ -362,7 +363,7 @@ def compare_sigfiles(a, b, recursecb = None):
     changed, added, removed = dict_diff(a_data['varvals'], b_data['varvals'])
     if changed:
         for dep in changed:
-            output.append("Variable %s value changed from %s to %s" % (dep, a_data['varvals'][dep], b_data['varvals'][dep]))
+            output.append("Variable %s value changed from '%s' to '%s'" % (dep, a_data['varvals'][dep], b_data['varvals'][dep]))
 
     changed, added, removed = dict_diff(a_data['file_checksum_values'], b_data['file_checksum_values'])
     if changed:

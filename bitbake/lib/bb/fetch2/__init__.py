@@ -30,6 +30,10 @@ from __future__ import print_function
 import os, re
 import logging
 import urllib
+import urlparse
+if 'git' not in urlparse.uses_netloc:
+    urlparse.uses_netloc.append('git')
+from urlparse import urlparse
 import operator
 import bb.persist_data, bb.utils
 import bb.checksum
@@ -70,6 +74,9 @@ class FetchError(BBFetchException):
 
 class ChecksumError(FetchError):
     """Exception when mismatched checksum encountered"""
+    def __init__(self, message, url = None, checksum = None):
+        self.checksum = checksum
+        FetchError.__init__(self, message, url)
 
 class NoChecksumError(FetchError):
     """Exception when no checksum is specified, but BB_STRICT_CHECKSUM is set"""
@@ -119,6 +126,199 @@ class NetworkAccess(BBFetchException):
 class NonLocalMethod(Exception):
     def __init__(self):
         Exception.__init__(self)
+
+
+class URI(object):
+    """
+    A class representing a generic URI, with methods for
+    accessing the URI components, and stringifies to the
+    URI.
+
+    It is constructed by calling it with a URI, or setting
+    the attributes manually:
+
+     uri = URI("http://example.com/")
+
+     uri = URI()
+     uri.scheme = 'http'
+     uri.hostname = 'example.com'
+     uri.path = '/'
+
+    It has the following attributes:
+
+      * scheme (read/write)
+      * userinfo (authentication information) (read/write)
+        * username (read/write)
+        * password (read/write)
+
+        Note, password is deprecated as of RFC 3986.
+
+      * hostname (read/write)
+      * port (read/write)
+      * hostport (read only)
+        "hostname:port", if both are set, otherwise just "hostname"
+      * path (read/write)
+      * path_quoted (read/write)
+        A URI quoted version of path
+      * params (dict) (read/write)
+      * relative (bool) (read only)
+        True if this is a "relative URI", (e.g. file:foo.diff)
+
+    It stringifies to the URI itself.
+
+    Some notes about relative URIs: while it's specified that
+    a URI beginning with <scheme>:// should either be directly
+    followed by a hostname or a /, the old URI handling of the
+    fetch2 library did not comform to this. Therefore, this URI
+    class has some kludges to make sure that URIs are parsed in
+    a way comforming to bitbake's current usage. This URI class
+    supports the following:
+
+     file:relative/path.diff (IETF compliant)
+     git:relative/path.git (IETF compliant)
+     git:///absolute/path.git (IETF compliant)
+     file:///absolute/path.diff (IETF compliant)
+
+     file://relative/path.diff (not IETF compliant)
+
+    But it does not support the following:
+
+     file://hostname/absolute/path.diff (would be IETF compliant)
+
+    Note that the last case only applies to a list of
+    "whitelisted" schemes (currently only file://), that requires
+    its URIs to not have a network location.
+    """
+
+    _relative_schemes = ['file', 'git']
+    _netloc_forbidden = ['file']
+
+    def __init__(self, uri=None):
+        self.scheme = ''
+        self.userinfo = ''
+        self.hostname = ''
+        self.port = None
+        self._path = ''
+        self.params = {}
+        self.relative = False
+
+        if not uri:
+            return
+
+        urlp = urlparse(uri)
+        self.scheme = urlp.scheme
+
+        # Convert URI to be relative
+        if urlp.scheme in self._netloc_forbidden:
+            uri = re.sub("(?<=:)//(?!/)", "", uri, 1)
+            urlp = urlparse(uri)
+
+        # Identify if the URI is relative or not
+        if urlp.scheme in self._relative_schemes and \
+           re.compile("^\w+:(?!//)").match(uri):
+            self.relative = True
+
+        if not self.relative:
+            self.hostname = urlp.hostname or ''
+            self.port = urlp.port
+
+            self.userinfo += urlp.username or ''
+
+            if urlp.password:
+                self.userinfo += ':%s' % urlp.password
+
+        # Do support params even for URI schemes that Python's
+        # urlparse doesn't support params for.
+        path = ''
+        param_str = ''
+        if not urlp.params:
+            path, param_str = (list(urlp.path.split(";", 1)) + [None])[:2]
+        else:
+            path = urlp.path
+            param_str = urlp.params
+
+        self.path = urllib.unquote(path)
+
+        if param_str:
+            self.params = self._param_dict(param_str)
+
+    def __str__(self):
+        userinfo = self.userinfo
+        if userinfo:
+            userinfo += '@'
+
+        return "%s:%s%s%s%s%s" % (
+            self.scheme,
+            '' if self.relative else '//',
+            userinfo,
+            self.hostport,
+            self.path_quoted,
+            self._param_str)
+
+    @property
+    def _param_str(self):
+        ret = ''
+        for key, val in self.params.items():
+            ret += ";%s=%s" % (key, val)
+        return ret
+
+    def _param_dict(self, param_str):
+        parm = {}
+
+        for keyval in param_str.split(";"):
+            key, val = keyval.split("=", 1)
+            parm[key] = val
+
+        return parm
+
+    @property
+    def hostport(self):
+        if not self.port:
+            return self.hostname
+        return "%s:%d" % (self.hostname, self.port)
+
+    @property
+    def path_quoted(self):
+        return urllib.quote(self.path)
+
+    @path_quoted.setter
+    def path_quoted(self, path):
+        self.path = urllib.unquote(path)
+
+    @property
+    def path(self):
+        return self._path
+
+    @path.setter
+    def path(self, path):
+        self._path = path
+
+        if re.compile("^/").match(path):
+            self.relative = False
+        else:
+            self.relative = True
+
+    @property
+    def username(self):
+        if self.userinfo:
+            return (self.userinfo.split(":", 1))[0]
+        return ''
+
+    @username.setter
+    def username(self, username):
+        self.userinfo = username
+        if self.password:
+            self.userinfo += ":%s" % self.password
+
+    @property
+    def password(self):
+        if self.userinfo and ":" in self.userinfo:
+            return (self.userinfo.split(":", 1))[1]
+        return ''
+
+    @password.setter
+    def password(self, password):
+        self.userinfo = "%s:%s" % (self.username, password)
 
 def decodeurl(url):
     """Decodes an URL into the tokens (scheme, network location, path,
@@ -214,6 +414,8 @@ def uri_replace(ud, uri_find, uri_replace, replacements, d):
                         return None
             # Overwrite any specified replacement parameters
             for k in uri_replace_decoded[loc]:
+                for l in replacements:
+                    uri_replace_decoded[loc][k] = uri_replace_decoded[loc][k].replace(l, replacements[l])
                 result_decoded[loc][k] = uri_replace_decoded[loc][k]
         elif (re.match(regexp, uri_decoded[loc])):
             if not uri_replace_decoded[loc]:
@@ -362,7 +564,7 @@ def verify_checksum(u, ud, d):
         msg = msg + '\nIf this change is expected (e.g. you have upgraded to a new version without updating the checksums) then you can use these lines within the recipe:\nSRC_URI[%s] = "%s"\nSRC_URI[%s] = "%s"\nOtherwise you should retry the download and/or check with upstream to determine if the file has become corrupted or otherwise unexpectedly modified.\n' % (ud.md5_name, md5data, ud.sha256_name, sha256data)
 
     if len(msg):
-        raise ChecksumError('Checksum mismatch!%s' % msg, u)
+        raise ChecksumError('Checksum mismatch!%s' % msg, u, md5data)
 
 
 def update_stamp(u, ud, d):
@@ -458,11 +660,16 @@ def runfetchcmd(cmd, d, quiet = False, cleanup = []):
     # rather than host provided
     # Also include some other variables.
     # FIXME: Should really include all export varaiables?
-    exportvars = ['PATH', 'GIT_PROXY_COMMAND', 'GIT_PROXY_HOST',
-                  'GIT_PROXY_PORT', 'GIT_CONFIG', 'http_proxy', 'ftp_proxy',
-                  'https_proxy', 'no_proxy', 'ALL_PROXY', 'all_proxy',
-                  'SSH_AUTH_SOCK', 'SSH_AGENT_PID', 'HOME',
-                  'GIT_PROXY_IGNORE', 'SOCKS5_USER', 'SOCKS5_PASSWD']
+    exportvars = ['HOME', 'PATH',
+                  'HTTP_PROXY', 'http_proxy',
+                  'HTTPS_PROXY', 'https_proxy',
+                  'FTP_PROXY', 'ftp_proxy',
+                  'FTPS_PROXY', 'ftps_proxy',
+                  'NO_PROXY', 'no_proxy',
+                  'ALL_PROXY', 'all_proxy',
+                  'GIT_PROXY_COMMAND',
+                  'SSH_AUTH_SOCK', 'SSH_AGENT_PID',
+                  'SOCKS5_USER', 'SOCKS5_PASSWD']
 
     for var in exportvars:
         val = d.getVar(var, True)
@@ -577,6 +784,7 @@ def try_mirror_url(newuri, origud, ud, ld, check = False):
         dldir = ld.getVar("DL_DIR", True)
         if origud.mirrortarball and os.path.basename(ud.localpath) == os.path.basename(origud.mirrortarball) \
                 and os.path.basename(ud.localpath) != os.path.basename(origud.localpath):
+            bb.utils.mkdirhier(os.path.dirname(ud.donestamp))
             open(ud.donestamp, 'w').close()
             dest = os.path.join(dldir, os.path.basename(ud.localpath))
             if not os.path.exists(dest):
@@ -599,6 +807,7 @@ def try_mirror_url(newuri, origud, ud, ld, check = False):
         if isinstance(e, ChecksumError):
             logger.warn("Mirror checksum failure for url %s (original url: %s)\nCleaning and trying again." % (newuri, origud.url))
             logger.warn(str(e))
+            self.rename_bad_checksum(ud, e.checksum)
         elif isinstance(e, NoChecksumError):
             raise
         else:
@@ -650,11 +859,14 @@ def srcrev_internal_helper(ud, d, name):
         if not rev:
             rev = d.getVar("SRCREV_%s" % name, True)
     if not rev:
-       rev = d.getVar("SRCREV_pn-%s" % pn, True)
+        rev = d.getVar("SRCREV_pn-%s" % pn, True)
     if not rev:
         rev = d.getVar("SRCREV", True)
     if rev == "INVALID":
-        raise FetchError("Please set SRCREV to a valid value", ud.url)
+        var = "SRCREV_pn-%s" % pn
+        if name != '':
+            var = "SRCREV_%s_pn-%s" % (name, pn)
+        raise FetchError("Please set %s to a valid value" % var, ud.url)
     if rev == "AUTOINC":
         rev = ud.method.latest_revision(ud.url, ud, d, name)
 
@@ -746,6 +958,7 @@ class FetchData(object):
         self.lockfile = None
         self.mirrortarball = None
         self.basename = None
+        self.basepath = None
         (self.type, self.host, self.path, self.user, self.pswd, self.parm) = decodeurl(data.expand(url, d))
         self.date = self.getSRCDate(d)
         self.url = url
@@ -802,8 +1015,14 @@ class FetchData(object):
         elif self.localfile:
             self.localpath = self.method.localpath(self.url, self, d)
 
-        # Note: These files should always be in DL_DIR whereas localpath may not be.
-        basepath = d.expand("${DL_DIR}/%s" % os.path.basename(self.localpath or self.basename))
+        dldir = d.getVar("DL_DIR", True)
+        # Note: .done and .lock files should always be in DL_DIR whereas localpath may not be.
+        if self.localpath and self.localpath.startswith(dldir):
+            basepath = self.localpath
+        elif self.localpath:
+            basepath = dldir + os.sep + os.path.basename(self.localpath)
+        else:
+            basepath = dldir + os.sep + (self.basepath or self.basename)
         self.donestamp = basepath + '.done'
         self.lockfile = basepath + '.lock'
 
@@ -1173,6 +1392,7 @@ class Fetch(object):
                         if isinstance(e, ChecksumError):
                             logger.warn("Checksum failure encountered with download of %s - will attempt other sources if available" % u)
                             logger.debug(1, str(e))
+                            self.rename_bad_checksum(ud, e.checksum)
                         elif isinstance(e, NoChecksumError):
                             raise
                         else:
@@ -1280,13 +1500,27 @@ class Fetch(object):
             if ud.lockfile:
                 bb.utils.unlockfile(lf)
 
+    def rename_bad_checksum(self, ud, suffix):
+        """
+        Renames files to have suffix from parameter
+        """
+
+        if ud.localpath is None:
+            return
+
+        new_localpath = "%s_bad-checksum_%s" % (ud.localpath, suffix)
+        bb.warn("Renaming %s to %s" % (ud.localpath, new_localpath))
+        bb.utils.movefile(ud.localpath, new_localpath)
+
 from . import cvs
 from . import git
+from . import gitsm
 from . import local
 from . import svn
 from . import wget
 from . import svk
 from . import ssh
+from . import sftp
 from . import perforce
 from . import bzr
 from . import hg
@@ -1297,9 +1531,11 @@ methods.append(local.Local())
 methods.append(wget.Wget())
 methods.append(svn.Svn())
 methods.append(git.Git())
+methods.append(gitsm.GitSM())
 methods.append(cvs.Cvs())
 methods.append(svk.Svk())
 methods.append(ssh.SSH())
+methods.append(sftp.SFTP())
 methods.append(perforce.Perforce())
 methods.append(bzr.Bzr())
 methods.append(hg.Hg())

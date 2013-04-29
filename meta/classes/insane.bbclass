@@ -60,6 +60,8 @@ def package_qa_get_machine_dict():
                         "s390":       (22,     0,    0,          False,         32),
                         "sh4":        (42,     0,    0,          True,          32),
                         "sparc":      ( 2,     0,    0,          False,         32),
+                        "microblaze":  (189,   0,    0,          False,         32),
+                        "microblazeel":(189,   0,    0,          True,          32),
                       },
             "linux-uclibc" : { 
                         "arm" :       (  40,    97,    0,          True,          32),
@@ -89,9 +91,6 @@ def package_qa_get_machine_dict():
                         "arm" :       (40,     0,    0,          True,          32),
                         "armeb" :     (40,     0,    0,          False,         32),
                       },
-            "linux-gnu" : {
-                        "powerpc":    (20,     0,    0,          False,         32),
-                      },
             "linux-gnuspe" : {
                         "powerpc":    (20,     0,    0,          False,         32),
                       },
@@ -99,22 +98,22 @@ def package_qa_get_machine_dict():
                         "powerpc":    (20,     0,    0,          False,         32),
                       },
             "linux-gnu" :       {
-                        "microblaze":   (47787,  0,    0,          False,         32),
-                        "microblazeel": (47787,  0,    0,          True,          32),
+                        "powerpc":    (20,     0,    0,          False,         32),
+                        "sh4":        (42,     0,    0,          True,          32),
                       },
             "linux-gnux32" :       {
                         "x86_64":     (62,     0,    0,          True,          32),
                       },
             "linux-gnun32" :       {
                         "mips64":       ( 8,     0,    0,          False,         32),
-                        "mipsel64":     ( 8,     0,    0,          True,          32),
+                        "mips64el":     ( 8,     0,    0,          True,          32),
                       },
         }
 
 
 # Currently not being used by default "desktop"
 WARN_QA ?= "ldflags useless-rpaths rpaths staticdev libdir xorg-driver-abi textrel"
-ERROR_QA ?= "dev-so debug-deps dev-deps debug-files arch la2 pkgconfig la perms dep-cmp"
+ERROR_QA ?= "dev-so debug-deps dev-deps debug-files arch la2 pkgconfig la perms dep-cmp pkgvarcheck"
 
 ALL_QA = "${WARN_QA} ${ERROR_QA}"
 
@@ -165,7 +164,6 @@ def package_qa_check_rpath(file,name, d, elf, messages):
         return
 
     bad_dirs = [d.getVar('TMPDIR', True) + "/work", d.getVar('STAGING_DIR_TARGET', True)]
-    bad_dir_test = d.getVar('TMPDIR', True)
 
     if not bad_dirs[0] in d.getVar('WORKDIR', True):
         bb.fatal("This class assumed that WORKDIR is ${TMPDIR}/work... Not doing any check")
@@ -218,7 +216,7 @@ def package_qa_check_dev(path, name, d, elf, messages):
     Check for ".so" library symlinks in non-dev packages
     """
 
-    if not name.endswith("-dev") and not name.endswith("-dbg") and not name.startswith("nativesdk-") and path.endswith(".so") and os.path.islink(path):
+    if not name.endswith("-dev") and not name.endswith("-dbg") and not name.endswith("-ptest") and not name.startswith("nativesdk-") and path.endswith(".so") and os.path.islink(path):
         messages.append("non -dev/-dbg/-nativesdk package contains symlink .so: %s path '%s'" % \
                  (name, package_qa_clean_path(path,d)))
 
@@ -231,7 +229,7 @@ def package_qa_check_staticdev(path, name, d, elf, messages):
     libgcc.a, libgcov.a will be skipped in their packages
     """
 
-    if not name.endswith("-pic") and not name.endswith("-staticdev") and path.endswith(".a") and not path.endswith("_nonshared.a"):
+    if not name.endswith("-pic") and not name.endswith("-staticdev") and not name.endswith("-ptest") and path.endswith(".a") and not path.endswith("_nonshared.a"):
         messages.append("non -staticdev package contains static .a library: %s path '%s'" % \
                  (name, package_qa_clean_path(path,d)))
 
@@ -275,7 +273,7 @@ def package_qa_check_dbg(path, name, d, elf, messages):
     Check for ".debug" files or directories outside of the dbg package
     """
 
-    if not "-dbg" in name:
+    if not "-dbg" in name and not "-ptest" in name:
         if '.debug' in path.split(os.path.sep):
             messages.append("non debug package contains .debug directory: %s path %s" % \
                      (name, package_qa_clean_path(path,d)))
@@ -836,6 +834,10 @@ python do_qa_staging() {
 python do_qa_configure() {
     import subprocess
 
+    ###########################################################################
+    # Check config.log for cross compile issues
+    ###########################################################################
+
     configs = []
     workdir = d.getVar('WORKDIR', True)
     bb.note("Checking autotools environment for common misconfiguration")
@@ -851,6 +853,10 @@ Rerun configure task after fixing this. The path was '%s'""" % root)
             configs.append(os.path.join(root,"configure.ac"))
         if "configure.in" in files:
             configs.append(os.path.join(root, "configure.in"))
+
+    ###########################################################################
+    # Check gettext configuration and dependencies are correct
+    ###########################################################################
 
     cnf = d.getVar('EXTRA_OECONF', True) or ""
     if "gettext" not in d.getVar('P', True) and "gcc-runtime" not in d.getVar('P', True) and "--disable-nls" not in cnf:
@@ -869,8 +875,13 @@ Rerun configure task after fixing this. The path was '%s'""" % root)
                     bb.fatal("""%s required but not in DEPENDS for file %s.
 Missing inherit gettext?""" % (gt, config))
 
+    ###########################################################################
+    # Check license variables
+    ###########################################################################
+
     if not package_qa_check_license(workdir, d):
         bb.fatal("Licensing Error: LIC_FILES_CHKSUM does not match, please fix")
+
 }
 # The Staging Func, to check all staging
 #addtask qa_staging after do_populate_sysroot before do_build
@@ -885,4 +896,19 @@ python () {
     tests = d.getVar('ALL_QA', True).split()
     if "desktop" in tests:
         d.appendVar("PACKAGE_DEPENDS", "desktop-file-utils-native")
+
+    ###########################################################################
+    # Check various variables
+    ###########################################################################
+
+    if d.getVar('do_stage', True) is not None:
+        bb.fatal("Legacy staging found for %s as it has a do_stage function. This will need conversion to a do_install or often simply removal to work with OE-core" % d.getVar("FILE", True))
+
+    issues = []
+    if (d.getVar('PACKAGES', True) or "").split():
+        for var in 'RDEPENDS', 'RRECOMMENDS', 'RSUGGESTS', 'RCONFLICTS', 'RPROVIDES', 'RREPLACES', 'FILES', 'pkg_preinst', 'pkg_postinst', 'pkg_prerm', 'pkg_postrm', 'ALLOW_EMPTY':
+            if d.getVar(var):
+                issues.append(var)
+    for i in issues:
+        package_qa_handle_error("pkgvarcheck", "%s: Variable %s is set as not being package specific, please fix this." % (d.getVar("FILE", True), i), d)
 }

@@ -8,7 +8,7 @@ SDK_DIR = "${WORKDIR}/sdk"
 SDK_OUTPUT = "${SDK_DIR}/image"
 SDK_DEPLOY = "${TMPDIR}/deploy/sdk"
 
-SDKTARGETSYSROOT = "${SDKPATH}/sysroots/${MULTIMACH_TARGET_SYS}"
+SDKTARGETSYSROOT = "${SDKPATH}/sysroots/${REAL_MULTIMACH_TARGET_SYS}"
 
 TOOLCHAIN_HOST_TASK ?= "nativesdk-packagegroup-sdk-host packagegroup-cross-canadian-${@' packagegroup-cross-canadian-'.join(all_multilib_tune_values(d, 'TRANSLATED_TARGET_ARCH').split())}"
 TOOLCHAIN_HOST_TASK_ATTEMPTONLY ?= ""
@@ -29,14 +29,10 @@ EXCLUDE_FROM_WORLD = "1"
 
 SDK_PACKAGING_FUNC ?= "create_shar"
 
-python () {
-    # If we don't do this we try and run the mapping hooks while parsing which is slow
-    # bitbake should really provide something to let us know this...
-    if bb.data.getVar('BB_WORKERCONTEXT', d, True) is not None:
-        runtime_mapping_rename("TOOLCHAIN_TARGET_TASK", d)
-}
-
 fakeroot python do_populate_sdk() {
+    pn = d.getVar('PN', True)
+    runtime_mapping_rename("TOOLCHAIN_TARGET_TASK", pn, d)
+
     bb.build.exec_func("populate_sdk_image", d)
 
     # Handle multilibs in the SDK environment, siteconfig, etc files...
@@ -91,6 +87,8 @@ fakeroot populate_sdk_image() {
 
 	# Link the ld.so.cache file into the hosts filesystem
 	ln -s /etc/ld.so.cache ${SDK_OUTPUT}/${SDKPATHNATIVE}/etc/ld.so.cache
+
+	${SDK_POSTPROCESS_COMMAND}
 }
 
 fakeroot create_sdk_files() {
@@ -136,7 +134,10 @@ DEFAULT_INSTALL_DIR="${SDKPATH}"
 SUDO_EXEC=""
 target_sdk_dir=""
 answer=""
-while getopts ":yd:" OPT; do
+relocate=1
+savescripts=0
+verbose=0
+while getopts ":yd:DRS" OPT; do
 	case $OPT in
 	y)
 		answer="Y"
@@ -145,14 +146,32 @@ while getopts ":yd:" OPT; do
 	d)
 		target_sdk_dir=$OPTARG
 		;;
+	D)
+		verbose=1
+		;;
+	R)
+		relocate=0
+		savescripts=1
+		;;
+	S)
+		savescripts=1
+		;;
 	*)
 		echo "Usage: $(basename $0) [-y] [-d <dir>]"
 		echo "  -y         Automatic yes to all prompts"
 		echo "  -d <dir>   Install the SDK to <dir>"
+		echo "======== Advanced DEBUGGING ONLY OPTIONS ========"
+		echo "  -S         Save relocation scripts"
+		echo "  -R         Do not relocate executables"
+		echo "  -D         use set -x to see what is going on"
 		exit 1
 		;;
 	esac
 done
+
+if [ $verbose = 1 ] ; then
+	set -x
+fi
 
 printf "Enter target directory for SDK (default: $DEFAULT_INSTALL_DIR): "
 if [ "$target_sdk_dir" = "" ]; then
@@ -231,10 +250,23 @@ if [ "$dl_path" = "" ] ; then
 	exit 1
 fi
 executable_files=$($SUDO_EXEC find $native_sysroot -type f -perm +111)
-$SUDO_EXEC ${env_setup_script%/*}/relocate_sdk.py $target_sdk_dir $dl_path $executable_files
-if [ $? -ne 0 ]; then
-	echo "SDK could not be set up. Relocate script failed. Abort!"
-	exit 1
+
+tdir=`mktemp -d`
+if [ x$tdir = x ] ; then
+   echo "SDK relocate failed, could not create a temporary directory"
+   exit 1
+fi
+echo "#!/bin/bash" > $tdir/relocate_sdk.sh
+echo exec ${env_setup_script%/*}/relocate_sdk.py $target_sdk_dir $dl_path $executable_files >> $tdir/relocate_sdk.sh
+$SUDO_EXEC mv $tdir/relocate_sdk.sh ${env_setup_script%/*}/relocate_sdk.sh
+$SUDO_EXEC chmod 755 ${env_setup_script%/*}/relocate_sdk.sh
+rm -rf $tdir
+if [ $relocate = 1 ] ; then
+	$SUDO_EXEC ${env_setup_script%/*}/relocate_sdk.sh
+	if [ $? -ne 0 ]; then
+		echo "SDK could not be set up. Relocate script failed. Abort!"
+		exit 1
+	fi
 fi
 
 # replace ${SDKPATH} with the new prefix in all text files: configs/scripts/etc
@@ -245,11 +277,20 @@ for l in $($SUDO_EXEC find $native_sysroot -type l); do
 	$SUDO_EXEC ln -sfn $(readlink $l|$SUDO_EXEC sed -e "s:$DEFAULT_INSTALL_DIR:$target_sdk_dir:") $l
 done
 
+# find out all perl scripts in $native_sysroot and modify them replacing the
+# host perl with SDK perl.
+for perl_script in $($SUDO_EXEC grep "^#!.*perl" -rl $native_sysroot); do
+	$SUDO_EXEC sed -i -e "s:^#! */usr/bin/perl.*:#! /usr/bin/env perl:g" -e \
+		"s: /usr/bin/perl: /usr/bin/env perl:g" $perl_script
+done
+
 echo done
 
 # delete the relocating script, so that user is forced to re-run the installer
 # if he/she wants another location for the sdk
-$SUDO_EXEC rm ${env_setup_script%/*}/relocate_sdk.py
+if [ $savescripts = 0 ] ; then
+	$SUDO_EXEC rm ${env_setup_script%/*}/relocate_sdk.py ${env_setup_script%/*}/relocate_sdk.sh
+fi
 
 echo "SDK has been successfully set up and is ready to be used."
 
@@ -257,6 +298,9 @@ exit 0
 
 MARKER:
 EOF
+	# add execution permission
+	chmod +x ${SDK_DEPLOY}/${TOOLCHAIN_OUTPUTNAME}.sh
+
 	# append the SDK tarball
 	cat ${SDK_DEPLOY}/${TOOLCHAIN_OUTPUTNAME}.tar.bz2 >> ${SDK_DEPLOY}/${TOOLCHAIN_OUTPUTNAME}.sh
 

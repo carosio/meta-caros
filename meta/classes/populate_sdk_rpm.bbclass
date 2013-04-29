@@ -39,7 +39,7 @@ populate_sdk_rpm () {
 	# This needs to work in the same way as rootfs_rpm.bbclass!
 	#
 	export INSTALL_ROOTFS_RPM="${SDK_OUTPUT}/${SDKTARGETSYSROOT}"
-	export INSTALL_PLATFORM_RPM="${TARGET_ARCH}"
+	export INSTALL_PLATFORM_RPM="$(echo ${TARGET_ARCH} | tr - _)${TARGET_VENDOR}-${TARGET_OS}"
 	export INSTALL_PACKAGES_RPM="${TOOLCHAIN_TARGET_TASK}"
 	export INSTALL_PACKAGES_ATTEMPTONLY_RPM="${TOOLCHAIN_TARGET_TASK_ATTEMPTONLY}"
 	export INSTALL_PACKAGES_LINGUAS_RPM=""
@@ -55,18 +55,38 @@ populate_sdk_rpm () {
 	mkdir -p ${INSTALL_ROOTFS_RPM}/etc/rpm/
 
 	# List must be prefered to least preferred order
+	default_extra_rpm=""
 	INSTALL_PLATFORM_EXTRA_RPM=""
-	for i in ${MULTILIB_PREFIX_LIST} ; do
+	for os in ${MULTILIB_OS_LIST} ; do
 		old_IFS="$IFS"
 		IFS=":"
-		set $i
+		set -- $os
 		IFS="$old_IFS"
-		shift #remove mlib
-		while [ -n "$1" ]; do
-			INSTALL_PLATFORM_EXTRA_RPM="$INSTALL_PLATFORM_EXTRA_RPM $1"
-			shift
+		mlib=$1
+		mlib_os=$2
+		for prefix in ${MULTILIB_PREFIX_LIST} ; do
+			old_IFS="$IFS"
+			IFS=":"
+			set -- $prefix
+			IFS="$old_IFS"
+			if [ "$mlib" != "$1" ]; then
+				continue
+			fi
+			shift #remove mlib
+			while [ -n "$1" ]; do
+				platform="$(echo $1 | tr - _)-.*-$mlib_os"
+				if [ "$mlib" = "${BBEXTENDVARIANT}" ]; then
+					default_extra_rpm="$default_extra_rpm $platform"
+				else
+					INSTALL_PLATFORM_EXTRA_RPM="$INSTALL_PLATFORM_EXTRA_RPM $platform"
+				fi
+				shift
+			done
 		done
 	done
+	if [ -n "$default_extra_rpm" ]; then
+		INSTALL_PLATFORM_EXTRA_RPM="$default_extra_rpm $INSTALL_PLATFORM_EXTRA_RPM"
+	fi
 	export INSTALL_PLATFORM_EXTRA_RPM
 
 	package_install_internal_rpm
@@ -76,7 +96,7 @@ populate_sdk_rpm () {
 	## install nativesdk ##
 	echo "Installing NATIVESDK packages"
 	export INSTALL_ROOTFS_RPM="${SDK_OUTPUT}"
-	export INSTALL_PLATFORM_RPM="${SDK_ARCH}"
+	export INSTALL_PLATFORM_RPM="$(echo ${TARGET_ARCH} | tr - _)${SDK_VENDOR}-${SDK_OS}"
 	export INSTALL_PACKAGES_RPM="${TOOLCHAIN_HOST_TASK}"
 	export INSTALL_PACKAGES_ATTEMPTONLY_RPM="${TOOLCHAIN_TARGET_HOST_ATTEMPTONLY}"
 	export INSTALL_PACKAGES_LINGUAS_RPM=""
@@ -87,11 +107,13 @@ populate_sdk_rpm () {
 	# List must be prefered to least preferred order
 	INSTALL_PLATFORM_EXTRA_RPM=""
 	for each_arch in ${SDK_PACKAGE_ARCHS} ; do
-		INSTALL_PLATFORM_EXTRA_RPM="$each_arch $INSTALL_PLATFORM_EXTRA_RPM"
+		platform="$(echo $each_arch | tr - _)-.*-${SDK_OS}"
+		INSTALL_PLATFORM_EXTRA_RPM="$platform $INSTALL_PLATFORM_EXTRA_RPM"
 	done
 	export INSTALL_PLATFORM_EXTRA_RPM
 
 	package_install_internal_rpm --sdk
+	${POPULATE_SDK_POST_HOST_COMMAND}
 	populate_sdk_post_rpm ${INSTALL_ROOTFS_RPM}
 
 	# move host RPM library data
@@ -112,7 +134,9 @@ python () {
     # package_arch order is reversed.  This ensures the -best- match is listed first!
     package_archs = d.getVar("PACKAGE_ARCHS", True) or ""
     package_archs = ":".join(package_archs.split()[::-1])
+    package_os = d.getVar("TARGET_OS", True) or ""
     ml_prefix_list = "%s:%s" % ('default', package_archs)
+    ml_os_list = "%s:%s" % ('default', package_os)
     multilibs = d.getVar('MULTILIBS', True) or ""
     for ext in multilibs.split():
         eext = ext.split(':')
@@ -121,9 +145,28 @@ python () {
             default_tune = localdata.getVar("DEFAULTTUNE_virtclass-multilib-" + eext[1], False)
             if default_tune:
                 localdata.setVar("DEFAULTTUNE", default_tune)
+                bb.data.update_data(localdata)
             package_archs = localdata.getVar("PACKAGE_ARCHS", True) or ""
             package_archs = ":".join([i in "all noarch any".split() and i or eext[1]+"_"+i for i in package_archs.split()][::-1])
+            package_os = localdata.getVar("TARGET_OS", True) or ""
             ml_prefix_list += " %s:%s" % (eext[1], package_archs)
+            ml_os_list += " %s:%s" % (eext[1], package_os)
     d.setVar('MULTILIB_PREFIX_LIST', ml_prefix_list)
+    d.setVar('MULTILIB_OS_LIST', ml_os_list)
 }
 
+RPM_QUERY_CMD = '${RPM} --root $INSTALL_ROOTFS_RPM -D "_dbpath ${rpmlibdir}"'
+
+list_installed_packages() {
+	if [ "$1" = "arch" ]; then
+		${RPM_QUERY_CMD} -qa --qf "[%{NAME} %{ARCH}\n]" | translate_smart_to_oe arch
+	elif [ "$1" = "file" ]; then
+		${RPM_QUERY_CMD} -qa --qf "[%{NAME} %{ARCH} %{PACKAGEORIGIN}\n]" | translate_smart_to_oe
+	else
+		${RPM_QUERY_CMD} -qa --qf "[%{NAME} %{ARCH}\n]" | translate_smart_to_oe
+	fi
+}
+
+rootfs_list_installed_depends() {
+	rpmresolve -t $INSTALL_ROOTFS_RPM/${rpmlibdir}
+}

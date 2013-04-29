@@ -10,6 +10,7 @@ inherit gzipnative
 
 LICENSE = "MIT"
 PACKAGES = ""
+DEPENDS += "${MLPREFIX}qemuwrapper-cross ${MLPREFIX}depmodwrapper-cross"
 RDEPENDS += "${IMAGE_INSTALL} ${LINGUAS_INSTALL} ${NORMAL_FEATURE_INSTALL} ${ROOTFS_BOOTSTRAP_INSTALL}"
 RRECOMMENDS += "${NORMAL_FEATURE_INSTALL_OPTIONAL}"
 
@@ -62,10 +63,8 @@ IMAGE_INSTALL_COMPLEMENTARY = '${@complementary_globs("IMAGE_FEATURES", d)}'
 SDKIMAGE_FEATURES ??= "dev-pkgs dbg-pkgs"
 SDKIMAGE_INSTALL_COMPLEMENTARY = '${@complementary_globs("SDKIMAGE_FEATURES", d)}'
 
-# "export IMAGE_BASENAME" not supported at this time
 IMAGE_INSTALL ?= ""
 IMAGE_INSTALL[type] = "list"
-IMAGE_BASENAME[export] = "1"
 export PACKAGE_INSTALL ?= "${IMAGE_INSTALL} ${ROOTFS_BOOTSTRAP_INSTALL} ${FEATURE_INSTALL}"
 PACKAGE_INSTALL_ATTEMPTONLY ?= "${FEATURE_INSTALL_OPTIONAL}"
 
@@ -116,6 +115,11 @@ python () {
 
     d.setVar('IMAGE_FEATURES', ' '.join(list(remain_features)))
 
+    if d.getVar('BB_WORKERCONTEXT', True) is not None:
+        pn = d.getVar('PN', True)
+        runtime_mapping_rename("PACKAGE_INSTALL", pn, d)
+        runtime_mapping_rename("PACKAGE_INSTALL_ATTEMPTONLY", pn, d)
+
     # Ensure we have the vendor list for complementary package handling
     ml_vendor_list = ""
     multilibs = d.getVar('MULTILIBS', True) or ""
@@ -127,19 +131,6 @@ python () {
             ml_vendor_list += " " + vendor
     d.setVar('MULTILIB_VENDORS', ml_vendor_list)
 }
-
-python image_handler () {
-    if not isinstance(e, bb.event.RecipeParsed):
-        return
-
-    # If we don't do this we try and run the mapping hooks while parsing which is slow
-    # bitbake should really provide something to let us know this...
-    if e.data.getVar('BB_WORKERCONTEXT', True) is not None:
-        runtime_mapping_rename("PACKAGE_INSTALL", e.data)
-        runtime_mapping_rename("PACKAGE_INSTALL_ATTEMPTONLY", e.data)
-
-}
-addhandler image_handler
 
 #
 # Get a list of files containing device tables to create.
@@ -193,11 +184,60 @@ run_intercept_scriptlets () {
 		cd ${WORKDIR}/intercept_scripts
 		echo "Running intercept scripts:"
 		for script in *; do
-			if [ "$script" = "*" ]; then break; fi
+			[ "$script" = "*" ] && break
+			[ "$script" = "postinst_intercept" ] || [ ! -x "$script" ] && continue
 			echo "> Executing $script"
-			chmod +x $script
-			./$script
+			./$script || { echo "WARNING: intercept script \"$script\" failed, falling back to running postinstalls at first boot" && continue; };
+			#
+			# If we got here, than the intercept was successful. Next, we must
+			# mark the postinstalls as "installed". For rpm is a little bit
+			# different, we just have to delete the saved postinstalls from
+			# /etc/rpm-postinsts
+			#
+			pkgs="$(cat ./$script|grep "^##PKGS"|cut -d':' -f2)" || continue
+			case ${IMAGE_PKGTYPE} in
+				"rpm")
+					for pi in ${IMAGE_ROOTFS}${sysconfdir}/rpm-postinsts/*; do
+						pkg_name="$(cat $pi|sed -n -e "s/^.*postinst_intercept $script \([^ ]*\).*/\1/p")"
+						if [ -n "$pkg_name" -a -n "$(echo "$pkgs"|grep " $pkg_name ")" ]; then
+							rm $pi
+						fi
+					done
+					# move to the next intercept script
+					continue
+					;;
+				"ipk")
+					status_file="${IMAGE_ROOTFS}${OPKGLIBDIR}/opkg/status"
+					;;
+				"deb")
+					status_file="${IMAGE_ROOTFS}/var/lib/dpkg/status"
+					;;
+			esac
+			# the next piece of code is run only for ipk/dpkg
+			sed_expr=""
+			for p in $pkgs; do
+				sed_expr="$sed_expr -e \"/^Package: ${p}$/,/^Status: install.* unpacked$/ {s/unpacked/installed/}\""
+			done
+			eval sed -i $sed_expr $status_file
 		done
+	fi
+}
+
+# A hook function to support read-only-rootfs IMAGE_FEATURES
+# Currently, it only supports sysvinit system.
+read_only_rootfs_hook () {
+	if ${@base_contains("DISTRO_FEATURES", "sysvinit", "true", "false", d)}; then
+	        # Tweak the mount option and fs_passno for rootfs in fstab
+		sed -i -e '/^[#[:space:]]*rootfs/{s/defaults/ro/;s/\([[:space:]]*[[:digit:]]\)\([[:space:]]*\)[[:digit:]]$/\1\20/}' ${IMAGE_ROOTFS}/etc/fstab
+	        # Change the value of ROOTFS_READ_ONLY in /etc/default/rcS to yes
+		if [ -e ${IMAGE_ROOTFS}/etc/default/rcS ]; then
+			sed -i 's/ROOTFS_READ_ONLY=no/ROOTFS_READ_ONLY=yes/' ${IMAGE_ROOTFS}/etc/default/rcS
+		fi
+	        # Run populate-volatile.sh at rootfs time to set up basic files
+	        # and directories to support read-only rootfs.
+		if [ -x ${IMAGE_ROOTFS}/etc/init.d/populate-volatile.sh ]; then
+			${IMAGE_ROOTFS}/etc/init.d/populate-volatile.sh
+		fi
 	fi
 }
 
@@ -218,6 +258,9 @@ fakeroot do_rootfs () {
 	mkdir -p ${DEPLOY_DIR_IMAGE}
 
 	cp ${COREBASE}/meta/files/deploydir_readme.txt ${DEPLOY_DIR_IMAGE}/README_-_DO_NOT_DELETE_FILES_IN_THIS_DIRECTORY.txt || true
+
+	# copy the intercept scripts
+	cp ${COREBASE}/scripts/postinst-intercepts/* ${WORKDIR}/intercept_scripts/
 
 	# If "${IMAGE_ROOTFS}/dev" exists, then the device had been made by
 	# the previous build
@@ -248,7 +291,7 @@ fakeroot do_rootfs () {
 		KERNEL_VERSION=`cat ${STAGING_KERNEL_DIR}/kernel-abiversion`
 
 		mkdir -p ${IMAGE_ROOTFS}/lib/modules/$KERNEL_VERSION
-		depmod -a -b ${IMAGE_ROOTFS} -F ${STAGING_KERNEL_DIR}/System.map-$KERNEL_VERSION $KERNEL_VERSION
+		depmodwrapper -a -b ${IMAGE_ROOTFS} $KERNEL_VERSION
 	fi
 
 	${IMAGE_PREPROCESS_COMMAND}

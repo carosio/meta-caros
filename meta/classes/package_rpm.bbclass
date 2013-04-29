@@ -8,19 +8,15 @@ RPMBUILD="rpmbuild"
 PKGWRITEDIRRPM = "${WORKDIR}/deploy-rpms"
 PKGWRITEDIRSRPM = "${DEPLOY_DIR}/sources/deploy-srpm"
 
-python package_rpm_fn () {
-    d.setVar('PKGFN', d.getVar('PKG'))
-}
-
-python package_rpm_install () {
-    bb.fatal("package_rpm_install not implemented!")
-}
+# Maintaining the perfile dependencies has singificant overhead when writing the 
+# packages. When set, this value merges them for efficiency.
+MERGEPERFILEDEPS = "1"
 
 #
 # Update the packages indexes ${DEPLOY_DIR_RPM}
 #
 package_update_index_rpm () {
-	if [ ! -z "${DEPLOY_KEEP_PACKAGES}" -o ! -e "${DEPLOY_DIR_RPM}" ]; then
+	if [ ! -z "${DEPLOY_KEEP_PACKAGES}" ]; then
 		return
 	fi
 
@@ -45,11 +41,16 @@ package_update_index_rpm () {
 		echo $arch
 	done | sort | uniq`
 
+	found=0
 	for arch in $archs; do
 		if [ -d ${DEPLOY_DIR_RPM}/$arch ] ; then
 			createrepo --update -q ${DEPLOY_DIR_RPM}/$arch
+			found=1
 		fi
 	done
+	if [ "$found" != "1" ]; then
+		bbfatal "There are no packages in ${DEPLOY_DIR_RPM}!"
+	fi
 }
 
 rpm_log_check() {
@@ -96,7 +97,8 @@ translate_smart_to_oe() {
 			while [ -n "$1" ]; do
 				cmp_arch=$1
 				shift
-				if [ "$arch" = "$cmp_arch" -o "$fixed_arch" = "$cmp_arch" ]; then
+				fixed_cmp_arch=`echo "$cmp_arch" | tr _ -`
+				if [ "$fixed_arch" = "$fixed_cmp_arch" ]; then
 					if [ "$mlib" = "default" ]; then
 						new_pkg="$pkg"
 						new_arch=$cmp_arch
@@ -117,7 +119,7 @@ translate_smart_to_oe() {
 					# break
 				fi
 			done
-			if [ "$found" = "1" ] && [ "$arch" = "$cmp_arch" -o "$fixed_arch" = "$cmp_arch" ]; then
+			if [ "$found" = "1" ] && [ "$fixed_arch" = "$fixed_cmp_arch" ]; then
 				break
 			fi
 		done
@@ -251,8 +253,6 @@ translate_oe_to_smart() {
 package_install_internal_rpm () {
 
 	local target_rootfs="$INSTALL_ROOTFS_RPM"
-	local platform="`echo $INSTALL_PLATFORM_RPM | sed 's#-#_#g'`"
-	local platform_extra="`echo $INSTALL_PLATFORM_EXTRA_RPM | sed 's#-#_#g'`"
 	local package_to_install="$INSTALL_PACKAGES_RPM"
 	local package_attemptonly="$INSTALL_PACKAGES_ATTEMPTONLY_RPM"
 	local package_linguas="$INSTALL_PACKAGES_LINGUAS_RPM"
@@ -276,29 +276,17 @@ package_install_internal_rpm () {
 		# Setup base system configuration
 		echo "Note: configuring RPM platform settings"
 		mkdir -p ${target_rootfs}/etc/rpm/
-		if [ -n "${sdk_mode}" ]; then
-			platform_vendor="${SDK_VENDOR}"
-			platform_os="${SDK_OS}"
-		else
-			platform_vendor="${TARGET_VENDOR}"
-			platform_os="${TARGET_OS}"
-		fi
+		echo "$INSTALL_PLATFORM_RPM" > ${target_rootfs}/etc/rpm/platform
 
-		echo "${platform}${platform_vendor}-${platform_os}" > ${target_rootfs}/etc/rpm/platform
-
-
-		if [ ! -z "$platform_extra" ]; then
-			for pt in $platform_extra ; do
+		if [ ! -z "$INSTALL_PLATFORM_EXTRA_RPM" ]; then
+			for pt in $INSTALL_PLATFORM_EXTRA_RPM ; do
 				channel_priority=$(expr $channel_priority + 5)
 				case $pt in
-					noarch | any | all)
-						os="`echo ${platform_os} | sed "s,-.*,,"`.*"
-						;;
-					*)
-						os="${platform_os}"
+					noarch-* | any-* | all-*)
+						pt=$(echo $pt | sed "s,-linux.*$,-linux\.*,")
 						;;
 				esac
-				echo "$pt-.*-$os" >> ${target_rootfs}/etc/rpm/platform
+				echo "$pt" >> ${target_rootfs}/etc/rpm/platform
 			done
 		fi
 
@@ -363,12 +351,13 @@ EOF
 		smart --data-dir=${target_rootfs}/var/lib/smart config --set rpm-extra-macros._tmppath=/install/tmp
 		# Optional debugging
 		#smart --data-dir=${target_rootfs}/var/lib/smart config --set rpm-log-level=debug
+		#smart --data-dir=${target_rootfs}/var/lib/smart config --set rpm-log-file=/tmp/smart-debug-logfile
 
 		# Delay this until later...
 		#smart --data-dir=${target_rootfs}/var/lib/smart channel --add rpmsys type=rpm-sys -y
 
-		platform_extra_fixed=`echo "$platform_extra" | tr - _`
-		for arch in $platform_extra_fixed ; do
+		for canonical_arch in $INSTALL_PLATFORM_EXTRA_RPM; do
+			arch=$(echo $canonical_arch | sed "s,\([^-]*\)-.*,\1,")
 			if [ -d ${DEPLOY_DIR_RPM}/$arch -a ! -e ${target_rootfs}/install/channel.$arch.stamp ] ; then
 				echo "Note: adding Smart channel $arch ($channel_priority)"
 				smart --data-dir=${target_rootfs}/var/lib/smart channel --add $arch type=rpm-md type=rpm-md baseurl=${DEPLOY_DIR_RPM}/$arch -y
@@ -377,11 +366,6 @@ EOF
 			fi
 			channel_priority=$(expr $channel_priority - 5)
 		done
-	fi
-
-	# Uclibc builds don't provide this stuff...
-	if [ x${TARGET_OS} != "xlinux" ] && [ x${TARGET_OS} != "xlinux-gnueabi" ] ; then
-		package_linguas=""
 	fi
 
 	# Construct install scriptlet wrapper
@@ -399,12 +383,11 @@ export NATIVE_ROOT=${STAGING_DIR_NATIVE}
 \$2 \$1/\$3 \$4
 if [ \$? -ne 0 ]; then
   mkdir -p \$1/etc/rpm-postinsts
-  num=100
-  while [ -e \$1/etc/rpm-postinsts/\${num} ]; do num=\$((num + 1)); done
-  echo "#!\$2" > \$1/etc/rpm-postinsts/\${num}
-  echo "# Arg: \$4" >> \$1/etc/rpm-postinsts/\${num}
-  cat \$1/\$3 >> \$1/etc/rpm-postinsts/\${num}
-  chmod +x \$1/etc/rpm-postinsts/\${num}
+  name=\`head -1 \$1/\$3 | cut -d' ' -f 2\`
+  echo "#!\$2" > \$1/etc/rpm-postinsts/\${name}
+  echo "# Arg: \$4" >> \$1/etc/rpm-postinsts/\${name}
+  cat \$1/\$3 >> \$1/etc/rpm-postinsts/\${name}
+  chmod +x \$1/etc/rpm-postinsts/\${name}
 fi
 EOF
 
@@ -475,6 +458,78 @@ EOF
 		done
 	fi
 }
+
+# Construct per file dependencies file
+def write_rpm_perfiledata(srcname, d):
+    workdir = d.getVar('WORKDIR', True)
+    packages = d.getVar('PACKAGES', True)
+    pkgd = d.getVar('PKGD', True)
+
+    def dump_filerdeps(varname, outfile, d):
+        outfile.write("#!/usr/bin/env python\n\n")
+        outfile.write("# Dependency table\n")
+        outfile.write('deps = {\n')
+        for pkg in packages.split():
+            dependsflist_key = 'FILE' + varname + 'FLIST' + "_" + pkg
+            dependsflist = (d.getVar(dependsflist_key, True) or "")
+            for dfile in dependsflist.split():
+                key = "FILE" + varname + "_" + dfile + "_" + pkg
+                depends_dict = bb.utils.explode_dep_versions(d.getVar(key, True) or "")
+                file = dfile.replace("@underscore@", "_")
+                file = file.replace("@closebrace@", "]")
+                file = file.replace("@openbrace@", "[")
+                file = file.replace("@tab@", "\t")
+                file = file.replace("@space@", " ")
+                file = file.replace("@at@", "@")
+                outfile.write('"' + pkgd + file + '" : "')
+                for dep in depends_dict:
+                    ver = depends_dict[dep]
+                    if dep and ver:
+                        ver = ver.replace("(","")
+                        ver = ver.replace(")","")
+                        outfile.write(dep + " " + ver + " ")
+                    else:
+                        outfile.write(dep + " ")
+                outfile.write('",\n')
+        outfile.write('}\n\n')
+        outfile.write("import sys\n")
+        outfile.write("while 1:\n")
+        outfile.write("\tline = sys.stdin.readline().strip()\n")
+        outfile.write("\tif not line:\n")
+        outfile.write("\t\tsys.exit(0)\n")
+        outfile.write("\tif line in deps:\n")
+        outfile.write("\t\tprint(deps[line] + '\\n')\n")
+
+    # OE-core dependencies a.k.a. RPM requires
+    outdepends = workdir + "/" + srcname + ".requires"
+
+    try:
+        from __builtin__ import file
+        dependsfile = file(outdepends, 'w')
+    except OSError:
+        raise bb.build.FuncFailed("unable to open spec file for writing.")
+
+    dump_filerdeps('RDEPENDS', dependsfile, d)
+
+    dependsfile.close()
+    os.chmod(outdepends, 0755)
+
+    # OE-core / RPM Provides
+    outprovides = workdir + "/" + srcname + ".provides"
+
+    try:
+        from __builtin__ import file
+        providesfile = file(outprovides, 'w')
+    except OSError:
+        raise bb.build.FuncFailed("unable to open spec file for writing.")
+
+    dump_filerdeps('RPROVIDES', providesfile, d)
+
+    providesfile.close()
+    os.chmod(outprovides, 0755)
+
+    return (outdepends, outprovides)
+
 
 python write_specfile () {
     import textwrap
@@ -547,9 +602,17 @@ python write_specfile () {
                     if '-' in ver:
                         subd = oe.packagedata.read_subpkgdata_dict(dep, d)
                         if 'PKGV' in subd:
-                            pv = subd['PKGV']
-                            reppv = pv.replace('-', '+')
-                            verlist.append(ver.replace(pv, reppv))
+                            pv = subd['PV']
+                            pkgv = subd['PKGV']
+                            reppv = pkgv.replace('-', '+')
+                            ver = ver.replace(pv, reppv).replace(pkgv, reppv)
+                        if 'PKGR' in subd:
+                            # Make sure PKGR rather than PR in ver
+                            pr = '-' + subd['PR']
+                            pkgr = '-' + subd['PKGR']
+                            if pkgr not in ver:
+                                ver = ver.replace(pr, pkgr)
+                        verlist.append(ver)
                     else:
                         verlist.append(ver)
                 newdeps_dict[dep] = verlist
@@ -591,6 +654,17 @@ python write_specfile () {
             pos = 0
         scr = scr[:pos] + 'if [ "$1" = "0" ] ; then\n' + scr[pos:] + '\nfi'
         return scr
+
+    def get_perfile(varname, pkg, d):
+        deps = []
+        dependsflist_key = 'FILE' + varname + 'FLIST' + "_" + pkg
+        dependsflist = (d.getVar(dependsflist_key, True) or "")
+        for dfile in dependsflist.split():
+            key = "FILE" + varname + "_" + dfile + "_" + pkg
+            depends = d.getVar(key, True)
+            if depends:
+                deps.append(depends)
+        return " ".join(deps)
 
     packages = d.getVar('PACKAGES', True)
     if not packages or packages == '':
@@ -641,6 +715,8 @@ python write_specfile () {
 
     spec_files_top = []
     spec_files_bottom = []
+
+    perfiledeps = (d.getVar("MERGEPERFILEDEPS", True) or "0") == "0"
 
     for pkg in packages.split():
         localdata = bb.data.createCopy(d)
@@ -694,6 +770,12 @@ python write_specfile () {
         splitrpostinst = localdata.getVar('pkg_postinst', True)
         splitrprerm    = localdata.getVar('pkg_prerm', True)
         splitrpostrm   = localdata.getVar('pkg_postrm', True)
+
+
+        if not perfiledeps:
+            # Add in summary of per file dependencies
+            splitrdepends = splitrdepends + " " + get_perfile('RDEPENDS', pkg, d)
+            splitrprovides = splitrprovides + " " + get_perfile('RPROVIDES', pkg, d)
 
         # Gather special src/first package data
         if srcname == splitname:
@@ -794,19 +876,23 @@ python write_specfile () {
         # Now process scriptlets
         if splitrpreinst:
             spec_scriptlets_bottom.append('%%pre -n %s' % splitname)
+            spec_scriptlets_bottom.append('# %s - preinst' % splitname)
             spec_scriptlets_bottom.append(splitrpreinst)
             spec_scriptlets_bottom.append('')
         if splitrpostinst:
             spec_scriptlets_bottom.append('%%post -n %s' % splitname)
+            spec_scriptlets_bottom.append('# %s - postinst' % splitname)
             spec_scriptlets_bottom.append(splitrpostinst)
             spec_scriptlets_bottom.append('')
         if splitrprerm:
             spec_scriptlets_bottom.append('%%preun -n %s' % splitname)
+            spec_scriptlets_bottom.append('# %s - prerm' % splitname)
             scriptvar = wrap_uninstall(splitrprerm)
             spec_scriptlets_bottom.append(scriptvar)
             spec_scriptlets_bottom.append('')
         if splitrpostrm:
             spec_scriptlets_bottom.append('%%postun -n %s' % splitname)
+            spec_scriptlets_bottom.append('# %s - postrm' % splitname)
             scriptvar = wrap_uninstall(splitrpostrm)
             spec_scriptlets_bottom.append(scriptvar)
             spec_scriptlets_bottom.append('')
@@ -989,69 +1075,9 @@ python do_package_rpm () {
     d.setVar('OUTSPECFILE', outspecfile)
     bb.build.exec_func('write_specfile', d)
 
-    # Construct per file dependencies file
-    def dump_filerdeps(varname, outfile, d):
-        outfile.write("#!/usr/bin/env python\n\n")
-        outfile.write("# Dependency table\n")
-        outfile.write('deps = {\n')
-        for pkg in packages.split():
-            dependsflist_key = 'FILE' + varname + 'FLIST' + "_" + pkg
-            dependsflist = (d.getVar(dependsflist_key, True) or "")
-            for dfile in dependsflist.split():
-                key = "FILE" + varname + "_" + dfile + "_" + pkg
-                depends_dict = bb.utils.explode_dep_versions(d.getVar(key, True) or "")
-                file = dfile.replace("@underscore@", "_")
-                file = file.replace("@closebrace@", "]")
-                file = file.replace("@openbrace@", "[")
-                file = file.replace("@tab@", "\t")
-                file = file.replace("@space@", " ")
-                file = file.replace("@at@", "@")
-                outfile.write('"' + pkgd + file + '" : "')
-                for dep in depends_dict:
-                    ver = depends_dict[dep]
-                    if dep and ver:
-                        ver = ver.replace("(","")
-                        ver = ver.replace(")","")
-                        outfile.write(dep + " " + ver + " ")
-                    else:
-                        outfile.write(dep + " ")
-                outfile.write('",\n')
-        outfile.write('}\n\n')
-        outfile.write("import sys\n")
-        outfile.write("while 1:\n")
-        outfile.write("\tline = sys.stdin.readline().strip()\n")
-        outfile.write("\tif not line:\n")
-        outfile.write("\t\tsys.exit(0)\n")
-        outfile.write("\tif line in deps:\n")
-        outfile.write("\t\tprint(deps[line] + '\\n')\n")
-
-    # OE-core dependencies a.k.a. RPM requires
-    outdepends = workdir + "/" + srcname + ".requires"
-
-    try:
-        from __builtin__ import file
-        dependsfile = file(outdepends, 'w')
-    except OSError:
-        raise bb.build.FuncFailed("unable to open spec file for writing.")
-
-    dump_filerdeps('RDEPENDS', dependsfile, d)
-
-    dependsfile.close()
-    os.chmod(outdepends, 0755)
-
-    # OE-core / RPM Provides
-    outprovides = workdir + "/" + srcname + ".provides"
-
-    try:
-        from __builtin__ import file
-        providesfile = file(outprovides, 'w')
-    except OSError:
-        raise bb.build.FuncFailed("unable to open spec file for writing.")
-
-    dump_filerdeps('RPROVIDES', providesfile, d)
-
-    providesfile.close()
-    os.chmod(outprovides, 0755)
+    perfiledeps = (d.getVar("MERGEPERFILEDEPS", True) or "0") == "0"
+    if perfiledeps:
+        outdepends, outprovides = write_rpm_perfiledata(srcname, d)
 
     # Setup the rpmbuild arguments...
     rpmbuild = d.getVar('RPMBUILD', True)
@@ -1074,8 +1100,12 @@ python do_package_rpm () {
     cmd = cmd + " --define '_topdir " + workdir + "' --define '_rpmdir " + pkgwritedir + "'"
     cmd = cmd + " --define '_build_name_fmt %%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm'"
     cmd = cmd + " --define '_use_internal_dependency_generator 0'"
-    cmd = cmd + " --define '__find_requires " + outdepends + "'"
-    cmd = cmd + " --define '__find_provides " + outprovides + "'"
+    if perfiledeps:
+        cmd = cmd + " --define '__find_requires " + outdepends + "'"
+        cmd = cmd + " --define '__find_provides " + outprovides + "'"
+    else:
+        cmd = cmd + " --define '__find_requires %{nil}'"
+        cmd = cmd + " --define '__find_provides %{nil}'"
     cmd = cmd + " --define '_unpackaged_files_terminate_build 0'"
     cmd = cmd + " --define 'debug_package %{nil}'"
     cmd = cmd + " --define '_rpmfc_magic_path " + magicfile + "'"
@@ -1129,6 +1159,6 @@ do_package_write_rpm[cleandirs] = "${PKGWRITEDIRRPM}"
 do_package_write_rpm[umask] = "022"
 addtask package_write_rpm before do_package_write after do_packagedata do_package
 
-PACKAGEINDEXES += "package_update_index_rpm; [ ! -e ${DEPLOY_DIR_RPM} ] || createrepo ${DEPLOY_DIR_RPM};"
+PACKAGEINDEXES += "[ ! -e ${DEPLOY_DIR_RPM} ] || package_update_index_rpm;"
 PACKAGEINDEXDEPS += "rpm-native:do_populate_sysroot"
 PACKAGEINDEXDEPS += "createrepo-native:do_populate_sysroot"

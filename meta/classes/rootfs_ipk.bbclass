@@ -11,7 +11,7 @@ ROOTFS_PKGMANAGE_BOOTSTRAP  = "run-postinsts"
 
 do_rootfs[depends] += "opkg-native:do_populate_sysroot opkg-utils-native:do_populate_sysroot"
 do_rootfs[recrdeptask] += "do_package_write_ipk"
-do_rootfs[vardepsexclude] += "BUILDNAME"
+rootfs_ipk_do_rootfs[vardepsexclude] += "BUILDNAME"
 
 do_rootfs[lockfiles] += "${WORKDIR}/ipk.lock"
 
@@ -19,14 +19,14 @@ OPKG_PREPROCESS_COMMANDS = "package_update_index_ipk; package_generate_ipkg_conf
 
 OPKG_POSTPROCESS_COMMANDS = "ipk_insert_feed_uris; "
 
-opkglibdir = "${localstatedir}/lib/opkg"
+OPKGLIBDIR = "${localstatedir}/lib"
 
 # Which packages to not install on the basis of a recommendation
 BAD_RECOMMENDATIONS ?= ""
-MULTILIBRE_ALLOW_REP = "${opkglibdir}"
+MULTILIBRE_ALLOW_REP = "${OPKGLIBDIR}/opkg"
 
 fakeroot rootfs_ipk_do_rootfs () {
-	set -x
+	#set -x
 
 	rm -f ${IPKGCONF_TARGET}
 	touch ${IPKGCONF_TARGET}
@@ -37,8 +37,8 @@ fakeroot rootfs_ipk_do_rootfs () {
  
 	export INSTALL_CONF_IPK="${IPKGCONF_TARGET}"
 	export INSTALL_ROOTFS_IPK="${IMAGE_ROOTFS}"
-	STATUS=${IMAGE_ROOTFS}${opkglibdir}/status
-	mkdir -p ${IMAGE_ROOTFS}${opkglibdir}
+	STATUS=${IMAGE_ROOTFS}${OPKGLIBDIR}/opkg/status
+	mkdir -p ${IMAGE_ROOTFS}${OPKGLIBDIR}/opkg
 
 	opkg-cl ${OPKG_ARGS} update
 
@@ -46,9 +46,13 @@ fakeroot rootfs_ipk_do_rootfs () {
 	for i in ${BAD_RECOMMENDATIONS}; do
 		pkginfo="`opkg-cl ${OPKG_ARGS} info $i`"
 		if [ ! -z "$pkginfo" ]; then
-			echo "$pkginfo" | grep -e '^Package:' -e '^Architecture:' -e '^Version:' >> $STATUS
-			echo "Status: deinstall hold not-installed" >> $STATUS
-			echo >> $STATUS
+			# Take just the first package stanza as otherwise only
+			# the last one will have the right Status line.
+			echo "$pkginfo" | awk "/^Package:/ { print } \
+                        		       /^Architecture:/ { print } \
+                        		       /^Version:/ { print } \
+                        		       /^$/ { exit } \
+                        		       END { print \"Status: deinstall hold not-installed\n\" }" - >> $STATUS
 		else
 			echo "Requested ignored recommendation $i is not a package"
 		fi
@@ -80,7 +84,12 @@ fakeroot rootfs_ipk_do_rootfs () {
 
 	${OPKG_POSTPROCESS_COMMANDS}
 	${ROOTFS_POSTINSTALL_COMMAND}
-	
+
+	install -d ${IMAGE_ROOTFS}/${sysconfdir}
+	echo ${BUILDNAME} > ${IMAGE_ROOTFS}/${sysconfdir}/version
+
+	${ROOTFS_POSTPROCESS_COMMAND}
+
 	if ${@base_contains("IMAGE_FEATURES", "read-only-rootfs", "true", "false" ,d)}; then
 		if grep Status:.install.ok.unpacked ${STATUS}; then
 			bberror "Some packages could not be configured offline and rootfs is read-only."
@@ -88,12 +97,7 @@ fakeroot rootfs_ipk_do_rootfs () {
 		fi
 	fi
 
-	install -d ${IMAGE_ROOTFS}/${sysconfdir}
-	echo ${BUILDNAME} > ${IMAGE_ROOTFS}/${sysconfdir}/version
-
-	${ROOTFS_POSTPROCESS_COMMAND}
-	
-	rm -f ${IMAGE_ROOTFS}${opkglibdir}/lists/*
+	rm -f ${IMAGE_ROOTFS}${OPKGLIBDIR}/opkg/lists/*
 	if ${@base_contains("IMAGE_FEATURES", "package-management", "false", "true", d)}; then
 		if ! grep Status:.install.ok.unpacked ${STATUS}; then
 			# All packages were successfully configured.
@@ -114,13 +118,12 @@ fakeroot rootfs_ipk_do_rootfs () {
 			remove_packaging_data_files
 		fi
 	fi
-	set +x
 	log_check rootfs
 }
 
 rootfs_ipk_write_manifest() {
 	manifest=${DEPLOY_DIR_IMAGE}/${IMAGE_NAME}.rootfs.manifest
-	cp ${IMAGE_ROOTFS}${opkglibdir}/status $manifest
+	cp ${IMAGE_ROOTFS}${OPKGLIBDIR}/opkg/status $manifest
 
 	sed '/Depends/d' -i $manifest
 	sed '/Status/d' -i $manifest
@@ -133,31 +136,9 @@ rootfs_ipk_write_manifest() {
 }
 
 remove_packaging_data_files() {
-	rm -rf ${IMAGE_ROOTFS}${opkglibdir}
+	rm -rf ${IMAGE_ROOTFS}${OPKGLIBDIR}/opkg
 	# We need the directory for the package manager lock
-	mkdir ${IMAGE_ROOTFS}${opkglibdir}
-}
-
-list_installed_packages() {
-	if [ "$1" = "arch" ] ; then
-		opkg-cl ${OPKG_ARGS} status | opkg-query-helper.py -a
-	elif [ "$1" = "file" ] ; then
-		opkg-cl ${OPKG_ARGS} status | opkg-query-helper.py -f | while read pkg pkgfile
-		do
-			fullpath=`find ${DEPLOY_DIR_IPK} -name "$pkgfile" || true`
-			if [ "$fullpath" = "" ] ; then
-				echo "$pkg $pkgfile"
-			else
-				echo "$pkg $fullpath"
-			fi
-		done
-	else
-		opkg-cl ${OPKG_ARGS} list_installed | awk '{ print $1 }'
-	fi
-}
-
-rootfs_list_installed_depends() {
-	opkg-cl ${OPKG_ARGS} status | opkg-query-helper.py
+	mkdir ${IMAGE_ROOTFS}${OPKGLIBDIR}/opkg
 }
 
 rootfs_install_packages() {

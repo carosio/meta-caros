@@ -35,7 +35,7 @@ class PackageListModel(gtk.ListStore):
     provide filtered views of the data.
     """
 
-    (COL_NAME, COL_VER, COL_REV, COL_RNM, COL_SEC, COL_SUM, COL_RDEP, COL_RPROV, COL_SIZE, COL_RCP, COL_BINB, COL_INC, COL_FADE_INC, COL_FONT) = range(14)
+    (COL_NAME, COL_VER, COL_REV, COL_RNM, COL_SEC, COL_SUM, COL_RDEP, COL_RPROV, COL_SIZE, COL_RCP, COL_BINB, COL_INC, COL_FADE_INC, COL_FONT, COL_FLIST) = range(15)
 
     __gsignals__ = {
         "package-selection-changed" : (gobject.SIGNAL_RUN_LAST,
@@ -61,6 +61,7 @@ class PackageListModel(gtk.ListStore):
                                 gobject.TYPE_STRING,
                                 gobject.TYPE_BOOLEAN,
                                 gobject.TYPE_BOOLEAN,
+                                gobject.TYPE_STRING,
                                 gobject.TYPE_STRING)
 
     """
@@ -85,34 +86,107 @@ class PackageListModel(gtk.ListStore):
     Helper function to determine whether an item is an item specified by filter
     """
     def tree_model_filter(self, model, it, filter):
-        for key in filter.keys():
-            if model.get_value(it, key) not in filter[key]:
-                return False
+        name = model.get_value(it, self.COL_NAME)
 
+        for key in filter.keys():
+            if key == self.COL_NAME:
+                if filter[key] != 'Search packages by name':
+                    if name and filter[key] not in name:
+                        return False
+            else:
+                if model.get_value(it, key) not in filter[key]:
+                    return False
+        self.filtered_nb += 1
         return True
 
     """
     Create, if required, and return a filtered gtk.TreeModelSort
     containing only the items specified by filter
     """
-    def tree_model(self, filter):
+    def tree_model(self, filter, excluded_items_ahead=False, included_items_ahead=False, search_data=None, initial=False):
         model = self.filter_new()
+        self.filtered_nb = 0
         model.set_visible_func(self.tree_model_filter, filter)
 
         sort = gtk.TreeModelSort(model)
-        sort.set_sort_column_id(RecipeListModel.COL_NAME, gtk.SORT_ASCENDING)
-        sort.set_default_sort_func(None)
+        if initial:
+            sort.set_sort_column_id(PackageListModel.COL_NAME, gtk.SORT_ASCENDING)
+            sort.set_default_sort_func(None)
+
+        if excluded_items_ahead:
+            sort.set_default_sort_func(self.exclude_item_sort_func, search_data)
+        elif included_items_ahead:
+            sort.set_default_sort_func(self.include_item_sort_func, search_data)
+        else:
+            if search_data and search_data!='Search recipes by name' and search_data!='Search package groups by name':
+                sort.set_default_sort_func(self.sort_func, search_data)
+            else:
+                sort.set_sort_column_id(PackageListModel.COL_NAME, gtk.SORT_ASCENDING)
+                sort.set_default_sort_func(None)
+
+        sort.set_sort_func(PackageListModel.COL_INC, self.sort_column, PackageListModel.COL_INC)
+        sort.set_sort_func(PackageListModel.COL_SIZE, self.sort_column, PackageListModel.COL_SIZE)
+        sort.set_sort_func(PackageListModel.COL_BINB, self.sort_column, PackageListModel.COL_BINB)
+        sort.set_sort_func(PackageListModel.COL_RCP, self.sort_column, PackageListModel.COL_RCP)
         return sort
 
-    def exclude_item_sort_func(self, model, iter1, iter2):
-        val1 = model.get_value(iter1, RecipeListModel.COL_FADE_INC)
-        val2 = model.get_value(iter2, RecipeListModel.COL_INC)
-        return ((val1 == True) and (val2 == False))
+    def sort_column(self, model, row1, row2, col):
+        value1 = model.get_value(row1, col)
+        value2 = model.get_value(row2, col)
+        if col==PackageListModel.COL_SIZE:
+            value1 = HobPage._string_to_size(value1)
+            value2 = HobPage._string_to_size(value2)
 
-    def include_item_sort_func(self, model, iter1, iter2):
-        val1 = model.get_value(iter1, RecipeListModel.COL_INC)
-        val2 = model.get_value(iter2, RecipeListModel.COL_INC)
-        return ((val1 == False) and (val2 == True))
+        cmp_res = cmp(value1, value2)
+        if cmp_res!=0:
+            if col==PackageListModel.COL_INC:
+                return -cmp_res
+            else:
+                return cmp_res
+        else:
+            name1 = model.get_value(row1, PackageListModel.COL_NAME)
+            name2 = model.get_value(row2, PackageListModel.COL_NAME)
+            return cmp(name1,name2)
+
+    def exclude_item_sort_func(self, model, iter1, iter2, user_data=None):
+        if user_data:
+            val1 = model.get_value(iter1, PackageListModel.COL_NAME)
+            val2 = model.get_value(iter2, PackageListModel.COL_NAME)
+            if val1.startswith(user_data) and not val2.startswith(user_data):
+                return -1
+            elif not val1.startswith(user_data) and val2.startswith(user_data):
+                return 1
+            else:
+                return 0
+        else:
+            val1 = model.get_value(iter1, PackageListModel.COL_FADE_INC)
+            val2 = model.get_value(iter2, PackageListModel.COL_INC)
+            return ((val1 == True) and (val2 == False))
+
+    def include_item_sort_func(self, model, iter1, iter2, user_data=None):
+        if user_data:
+            val1 = model.get_value(iter1, PackageListModel.COL_NAME)
+            val2 = model.get_value(iter2, PackageListModel.COL_NAME)
+            if val1.startswith(user_data) and not val2.startswith(user_data):
+                return -1
+            elif not val1.startswith(user_data) and val2.startswith(user_data):
+                return 1
+            else:
+                return 0
+        else:
+            val1 = model.get_value(iter1, PackageListModel.COL_INC)
+            val2 = model.get_value(iter2, PackageListModel.COL_INC)
+            return ((val1 == False) and (val2 == True))
+
+    def sort_func(self, model, iter1, iter2, user_data):
+        val1 = model.get_value(iter1, PackageListModel.COL_NAME)
+        val2 = model.get_value(iter2, PackageListModel.COL_NAME)
+        if val1.startswith(user_data) and not val2.startswith(user_data):
+            return -1
+        elif not val1.startswith(user_data) and val2.startswith(user_data):
+            return 1
+        else:
+            return 0
 
     def convert_vpath_to_path(self, view_model, view_path):
         # view_model is the model sorted
@@ -128,7 +202,7 @@ class PackageListModel(gtk.ListStore):
         it = view_model.get_iter_first()
         while it:
             name = self.find_item_for_path(path)
-            view_name = view_model.get_value(it, RecipeListModel.COL_NAME)
+            view_name = view_model.get_value(it, PackageListModel.COL_NAME)
             if view_name == name:
                 view_path = view_model.get_path(it)
                 return view_path
@@ -166,6 +240,7 @@ class PackageListModel(gtk.ListStore):
             rdep = getpkgvalue(pkginfo, 'RDEPENDS', pkg, "")
             rrec = getpkgvalue(pkginfo, 'RRECOMMENDS', pkg, "")
             rprov = getpkgvalue(pkginfo, 'RPROVIDES', pkg, "")
+            files_list = getpkgvalue(pkginfo, 'FILES_INFO', pkg, "")
             for i in rprov.split():
                 self.rprov_pkg[i] = pkg
 
@@ -178,14 +253,13 @@ class PackageListModel(gtk.ListStore):
 
             # pkgsize is in KB
             size = HobPage._size_to_string(HobPage._string_to_size(pkgsize + ' KB'))
-
             self.set(self.append(), self.COL_NAME, pkg, self.COL_VER, pkgv,
                      self.COL_REV, pkgr, self.COL_RNM, pkg_rename,
                      self.COL_SEC, section, self.COL_SUM, summary,
                      self.COL_RDEP, rdep + ' ' + rrec,
                      self.COL_RPROV, rprov, self.COL_SIZE, size,
                      self.COL_RCP, recipe, self.COL_BINB, "",
-                     self.COL_INC, False, self.COL_FONT, '10')
+                     self.COL_INC, False, self.COL_FONT, '10', self.COL_FLIST, files_list)
 
         self.pn_path = {}
         it = self.get_iter_first()
@@ -381,7 +455,8 @@ class RecipeListModel(gtk.ListStore):
     providing convenience functions to access gtk.TreeModel subclasses which
     provide filtered views of the data.
     """
-    (COL_NAME, COL_DESC, COL_LIC, COL_GROUP, COL_DEPS, COL_BINB, COL_TYPE, COL_INC, COL_IMG, COL_INSTALL, COL_PN, COL_FADE_INC) = range(12)
+    (COL_NAME, COL_DESC, COL_LIC, COL_GROUP, COL_DEPS, COL_BINB, COL_TYPE, COL_INC, COL_IMG, COL_INSTALL, COL_PN, COL_FADE_INC, COL_SUMMARY, COL_VERSION,
+     COL_REVISION, COL_HOMEPAGE, COL_BUGTRACKER) = range(17)
 
     __custom_image__ = "Create your own image"
 
@@ -406,7 +481,12 @@ class RecipeListModel(gtk.ListStore):
                                 gobject.TYPE_BOOLEAN,
                                 gobject.TYPE_STRING,
                                 gobject.TYPE_STRING,
-                                gobject.TYPE_BOOLEAN)
+                                gobject.TYPE_BOOLEAN,
+                                gobject.TYPE_STRING,
+                                gobject.TYPE_STRING,
+                                gobject.TYPE_STRING,
+                                gobject.TYPE_STRING,
+                                gobject.TYPE_STRING)
 
     """
     Find the model path for the item_name
@@ -438,38 +518,101 @@ class RecipeListModel(gtk.ListStore):
             return False
 
         for key in filter.keys():
-            if model.get_value(it, key) not in filter[key]:
-                return False
+            if key == self.COL_NAME:
+                if filter[key] != 'Search recipes by name' and filter[key] != 'Search package groups by name':
+                    if filter[key] not in name:
+                        return False
+            else:
+                if model.get_value(it, key) not in filter[key]:
+                    return False
+        self.filtered_nb += 1
 
         return True
 
-    def exclude_item_sort_func(self, model, iter1, iter2):
-        val1 = model.get_value(iter1, RecipeListModel.COL_FADE_INC)
-        val2 = model.get_value(iter2, RecipeListModel.COL_INC)
-        return ((val1 == True) and (val2 == False))
+    def exclude_item_sort_func(self, model, iter1, iter2, user_data=None):
+        if user_data:
+            val1 = model.get_value(iter1, RecipeListModel.COL_NAME)
+            val2 = model.get_value(iter2, RecipeListModel.COL_NAME)
+            if val1.startswith(user_data) and not val2.startswith(user_data):
+                return -1
+            elif not val1.startswith(user_data) and val2.startswith(user_data):
+                return 1
+            else:
+                return 0
+        else:
+            val1 = model.get_value(iter1, RecipeListModel.COL_FADE_INC)
+            val2 = model.get_value(iter2, RecipeListModel.COL_INC)
+            return ((val1 == True) and (val2 == False))
 
-    def include_item_sort_func(self, model, iter1, iter2):
-        val1 = model.get_value(iter1, RecipeListModel.COL_INC)
-        val2 = model.get_value(iter2, RecipeListModel.COL_INC)
-        return ((val1 == False) and (val2 == True))
+    def include_item_sort_func(self, model, iter1, iter2, user_data=None):
+        if user_data:
+            val1 = model.get_value(iter1, RecipeListModel.COL_NAME)
+            val2 = model.get_value(iter2, RecipeListModel.COL_NAME)
+            if val1.startswith(user_data) and not val2.startswith(user_data):
+                return -1
+            elif not val1.startswith(user_data) and val2.startswith(user_data):
+                return 1
+            else:
+                return 0
+        else:
+            val1 = model.get_value(iter1, RecipeListModel.COL_INC)
+            val2 = model.get_value(iter2, RecipeListModel.COL_INC)
+            return ((val1 == False) and (val2 == True))
+
+    def sort_func(self, model, iter1, iter2, user_data):
+        val1 = model.get_value(iter1, RecipeListModel.COL_NAME)
+        val2 = model.get_value(iter2, RecipeListModel.COL_NAME)
+        if val1.startswith(user_data) and not val2.startswith(user_data):
+            return -1
+        elif not val1.startswith(user_data) and val2.startswith(user_data):
+            return 1
+        else:
+            return 0
 
     """
     Create, if required, and return a filtered gtk.TreeModelSort
     containing only the items specified by filter
     """
-    def tree_model(self, filter, excluded_items_ahead=False, included_items_ahead=True):
+    def tree_model(self, filter, excluded_items_ahead=False, included_items_ahead=False, search_data=None, initial=False):
         model = self.filter_new()
+        self.filtered_nb = 0
         model.set_visible_func(self.tree_model_filter, filter)
 
         sort = gtk.TreeModelSort(model)
-        if excluded_items_ahead:
-            sort.set_default_sort_func(self.exclude_item_sort_func)
-        elif included_items_ahead:
-            sort.set_default_sort_func(self.include_item_sort_func)
-        else:
+        if initial:
             sort.set_sort_column_id(RecipeListModel.COL_NAME, gtk.SORT_ASCENDING)
             sort.set_default_sort_func(None)
+
+        if excluded_items_ahead:
+            sort.set_default_sort_func(self.exclude_item_sort_func, search_data)
+        elif included_items_ahead:
+            sort.set_default_sort_func(self.include_item_sort_func, search_data)
+        else:
+            if search_data and search_data!='Search recipes by name' and search_data!='Search package groups by name':
+                sort.set_default_sort_func(self.sort_func, search_data)
+            else:
+                sort.set_sort_column_id(RecipeListModel.COL_NAME, gtk.SORT_ASCENDING)
+                sort.set_default_sort_func(None)
+
+        sort.set_sort_func(RecipeListModel.COL_INC, self.sort_column, RecipeListModel.COL_INC)
+        sort.set_sort_func(RecipeListModel.COL_GROUP, self.sort_column, RecipeListModel.COL_GROUP)
+        sort.set_sort_func(RecipeListModel.COL_BINB, self.sort_column, RecipeListModel.COL_BINB)
+        sort.set_sort_func(RecipeListModel.COL_LIC, self.sort_column, RecipeListModel.COL_LIC)
         return sort
+
+    def sort_column(self, model, row1, row2, col):
+        value1 = model.get_value(row1, col)
+        value2 = model.get_value(row2, col)
+        cmp_res = cmp(value1, value2)
+        if cmp_res!=0:
+            if col==RecipeListModel.COL_INC:
+                return -cmp_res
+            else:
+                return cmp_res
+        else:
+            name1 = model.get_value(row1, RecipeListModel.COL_NAME)
+            name2 = model.get_value(row2, RecipeListModel.COL_NAME)
+            return cmp(name1,name2)
 
     def convert_vpath_to_path(self, view_model, view_path):
         filtered_model_path = view_model.convert_path_to_child_path(view_path)
@@ -505,7 +648,9 @@ class RecipeListModel(gtk.ListStore):
                  self.COL_LIC, "", self.COL_GROUP, "",
                  self.COL_DEPS, "", self.COL_BINB, "",
                  self.COL_TYPE, "image", self.COL_INC, False,
-                 self.COL_IMG, False, self.COL_INSTALL, "", self.COL_PN, self.__custom_image__)
+                 self.COL_IMG, False, self.COL_INSTALL, "", self.COL_PN, self.__custom_image__,
+                 self.COL_SUMMARY, "", self.COL_VERSION, "", self.COL_REVISION, "",
+                 self.COL_HOMEPAGE, "", self.COL_BUGTRACKER, "")
 
         for item in event_model["pn"]:
             name = item
@@ -513,6 +658,11 @@ class RecipeListModel(gtk.ListStore):
             lic = event_model["pn"][item]["license"]
             group = event_model["pn"][item]["section"]
             inherits = event_model["pn"][item]["inherits"]
+            summary = event_model["pn"][item]["summary"]
+            version = event_model["pn"][item]["version"]
+            revision = event_model["pn"][item]["revision"]
+            homepage = event_model["pn"][item]["homepage"]
+            bugtracker = event_model["pn"][item]["bugtracker"]
             install = []
 
             depends = event_model["depends"].get(item, []) + event_model["rdepends-pn"].get(item, [])
@@ -534,7 +684,9 @@ class RecipeListModel(gtk.ListStore):
                      self.COL_LIC, lic, self.COL_GROUP, group,
                      self.COL_DEPS, " ".join(depends), self.COL_BINB, "",
                      self.COL_TYPE, atype, self.COL_INC, False,
-                     self.COL_IMG, False, self.COL_INSTALL, " ".join(install), self.COL_PN, item)
+                     self.COL_IMG, False, self.COL_INSTALL, " ".join(install), self.COL_PN, item,
+                     self.COL_SUMMARY, summary, self.COL_VERSION, version, self.COL_REVISION, revision,
+                     self.COL_HOMEPAGE, homepage, self.COL_BUGTRACKER, bugtracker)
 
         self.pn_path = {}
         it = self.get_iter_first()

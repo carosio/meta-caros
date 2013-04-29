@@ -1,24 +1,17 @@
 FILES_${PN} += "${datadir}/icons/hicolor"
 
-DEPENDS += "${@['hicolor-icon-theme', '']['${BPN}' == 'hicolor-icon-theme']} gtk+-native"
+DEPENDS += "${@['hicolor-icon-theme', '']['${BPN}' == 'hicolor-icon-theme']} gtk-update-icon-cache-native"
 
+#
+# On host, the postinstall MUST return 1 because we do not know if the intercept
+# hook will succeed. If it does succeed, than the packages will be marked as
+# installed.
+#
 gtk_icon_cache_postinst() {
 if [ "x$D" != "x" ]; then
-    if [ ! -f $INTERCEPT_DIR/update_icon_cache ]; then
-        cat << "EOF" > $INTERCEPT_DIR/update_icon_cache
-#!/bin/sh
-
-# update native pixbuf loaders
-gdk-pixbuf-query-loaders --update-cache
-
-for icondir in $D/usr/share/icons/*/ ; do
-    if [ -d $icondir ] ; then
-        gtk-update-icon-cache -fqt  $icondir
-    fi
-done
-EOF
-    fi
-    exit 0
+    $INTERCEPT_DIR/postinst_intercept update_icon_cache ${PKG} libdir=${libdir} \
+        base_libdir=${base_libdir}
+    exit 1
 fi
 
 # Update the pixbuf loaders in case they haven't been registered yet
@@ -33,21 +26,10 @@ done
 
 gtk_icon_cache_postrm() {
 if [ "x$D" != "x" ]; then
-    if [ ! -f $INTERCEPT_DIR/update_icon_cache ]; then
-        cat << "EOF" > $INTERCEPT_DIR/update_icon_cache
-#!/bin/sh
+    $INTERCEPT_DIR/postinst_intercept update_icon_cache ${PKG} libdir=${libdir} \
+        base_libdir=${base_libdir}
 
-# update native pixbuf loaders
-gdk-pixbuf-query-loaders --update-cache
-
-for icondir in $D/usr/share/icons/*/ ; do
-    if [ -d $icondir ] ; then
-        gtk-update-icon-cache -fqt  $icondir
-    fi
-done
-EOF
-    fi
-    exit 0
+    exit 1
 fi
 
 for icondir in /usr/share/icons/* ; do
@@ -72,13 +54,13 @@ python populate_packages_append () {
     
         bb.note("adding gtk-icon-cache postinst and postrm scripts to %s" % pkg)
         
-        postinst = d.getVar('pkg_postinst_%s' % pkg, True) or d.getVar('pkg_postinst', True)
+        postinst = d.getVar('pkg_postinst_%s' % pkg, True)
         if not postinst:
             postinst = '#!/bin/sh\n'
         postinst += d.getVar('gtk_icon_cache_postinst', True)
         d.setVar('pkg_postinst_%s' % pkg, postinst)
 
-        postrm = d.getVar('pkg_postrm_%s' % pkg, True) or d.getVar('pkg_postrm', True)
+        postrm = d.getVar('pkg_postrm_%s' % pkg, True)
         if not postrm:
             postrm = '#!/bin/sh\n'
         postrm += d.getVar('gtk_icon_cache_postrm', True)

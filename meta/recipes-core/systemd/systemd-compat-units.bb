@@ -5,6 +5,8 @@ LIC_FILES_CHKSUM = "file://${COREBASE}/LICENSE;md5=3f40d7994397109285ec7b81fdeb3
 
 PR = "r18"
 
+DEPENDS = "systemd-systemctl-native"
+
 inherit allarch
 
 SRC_URI = "file://*.service"
@@ -32,6 +34,7 @@ SYSTEMD_DISABLED_SYSV_SERVICES = " \
   hwclock \
   networking \
   syslog.busybox \
+  dbus-1 \
 "
 
 pkg_postinst_${PN} () {

@@ -12,61 +12,7 @@ OPKGBUILDCMD ??= "opkg-build"
 
 OPKG_ARGS = "-f $INSTALL_CONF_IPK -o $INSTALL_ROOTFS_IPK --force_postinstall --prefer-arch-to-version"
 
-python package_ipk_fn () {
-    d.setVar('PKGFN', d.getVar('PKG'))
-}
-
-python package_ipk_install () {
-    import subprocess
-
-    pkg = d.getVar('PKG', True)
-    pkgfn = d.getVar('PKGFN', True)
-    rootfs = d.getVar('IMAGE_ROOTFS', True)
-    ipkdir = d.getVar('DEPLOY_DIR_IPK', True)
-    stagingdir = d.getVar('STAGING_DIR', True)
-    tmpdir = d.getVar('TMPDIR', True)
-
-    if None in (pkg,pkgfn,rootfs):
-        raise bb.build.FuncFailed("missing variables (one or more of PKG, PKGFN, IMAGEROOTFS)")
-    try:
-        bb.mkdirhier(rootfs)
-        os.chdir(rootfs)
-    except OSError:
-        import sys
-        (type, value, traceback) = sys.exc_info()
-        print value
-        raise bb.build.FuncFailed
-
-    # Generate ipk.conf if it or the stamp doesnt exist
-    conffile = os.path.join(stagingdir,"ipkg.conf")
-    if not os.access(conffile, os.R_OK):
-        ipkg_archs = d.getVar('PACKAGE_ARCHS')
-        if ipkg_archs is None:
-            bb.error("PACKAGE_ARCHS missing")
-            raise FuncFailed
-        ipkg_archs = ipkg_archs.split()
-        arch_priority = 1
-
-        f = open(conffile,"w")
-        for arch in ipkg_archs:
-            f.write("arch %s %s\n" % ( arch, arch_priority ))
-            arch_priority += 1
-        f.write("src local file:%s" % ipkdir)
-        f.close()
-
-
-    if not os.access(os.path.join(ipkdir,"Packages"), os.R_OK) or not os.access(os.path.join(tmpdir, "stamps", "IPK_PACKAGE_INDEX_CLEAN"),os.R_OK):
-        ret = subprocess.call('opkg-make-index -p %s %s ' % (os.path.join(ipkdir, "Packages"), ipkdir), shell=True)
-        if (ret != 0 ):
-            raise bb.build.FuncFailed
-        f = open(os.path.join(tmpdir, "stamps", "IPK_PACKAGE_INDEX_CLEAN"),"w")
-        f.close()
-
-    ret = subprocess.call('opkg-cl  -o %s -f %s update' % (rootfs, conffile), shell=True)
-    ret = subprocess.call('opkg-cl  -o %s -f %s install %s' % (rootfs, conffile, pkgfn), shell=True)
-    if (ret != 0 ):
-        raise bb.build.FuncFailed
-}
+OPKGLIBDIR = "${localstatedir}/lib"
 
 package_tryout_install_multilib_ipk() {
 	#try install multilib
@@ -138,20 +84,16 @@ package_install_internal_ipk() {
 	local package_to_install="${INSTALL_PACKAGES_NORMAL_IPK}"
 	local package_multilib="${INSTALL_PACKAGES_MULTILIB_IPK}"
 
-	mkdir -p ${target_rootfs}${localstatedir}/lib/opkg/
+	mkdir -p ${target_rootfs}${OPKGLIBDIR}/opkg
+	touch ${target_rootfs}${OPKGLIBDIR}/opkg/status
 
 	local ipkg_args="${OPKG_ARGS}"
 
 	opkg-cl ${ipkg_args} update
 
-	# Uclibc builds don't provide this stuff...
-	if [ x${TARGET_OS} = "xlinux" ] || [ x${TARGET_OS} = "xlinux-gnueabi" ] ; then
-		if [ ! -z "${package_linguas}" ]; then
-			for i in ${package_linguas}; do
-				opkg-cl ${ipkg_args} install $i
-			done
-		fi
-	fi
+	for i in ${package_linguas}; do
+		opkg-cl ${ipkg_args} install $i
+	done
 
 	if [ ! -z "${package_to_install}" ]; then
 		opkg-cl ${ipkg_args} install ${package_to_install}
@@ -196,7 +138,7 @@ ipk_log_check() {
 # Update the Packages index files in ${DEPLOY_DIR_IPK}
 #
 package_update_index_ipk () {
-	set -x
+	#set -x
 
 	ipkgarchs="${ALL_MULTILIB_PACKAGE_ARCHS} ${SDK_PACKAGE_ARCHS}"
 
@@ -214,12 +156,17 @@ package_update_index_ipk () {
 		packagedirs="$packagedirs ${DEPLOY_DIR_IPK}/$arch"
 	done
 
+	found=0
 	for pkgdir in $packagedirs; do
 		if [ -e $pkgdir/ ]; then
+			found=1
 			touch $pkgdir/Packages
 			flock $pkgdir/Packages.flock -c "opkg-make-index -r $pkgdir/Packages -p $pkgdir/Packages -m $pkgdir/"
 		fi
 	done
+	if [ "$found" != "1" ]; then
+		bbfatal "There are no packages in ${DEPLOY_DIR_IPK}!"
+	fi
 }
 
 #
@@ -438,7 +385,8 @@ python do_package_ipk () {
                 bb.utils.unlockfile(lf)
                 raise bb.build.FuncFailed("unable to open conffiles for writing.")
             for f in conffiles_str.split():
-                conffiles.write('%s\n' % f)
+                if os.path.exists(oe.path.join(root, f)):
+                    conffiles.write('%s\n' % f)
             conffiles.close()
 
         os.chdir(basedir)
@@ -480,6 +428,6 @@ do_package_write_ipk[cleandirs] = "${PKGWRITEDIRIPK}"
 do_package_write_ipk[umask] = "022"
 addtask package_write_ipk before do_package_write after do_packagedata do_package
 
-PACKAGEINDEXES += "package_update_index_ipk;"
+PACKAGEINDEXES += "[ ! -e ${DEPLOY_DIR_IPK} ] || package_update_index_ipk;"
 PACKAGEINDEXDEPS += "opkg-utils-native:do_populate_sysroot"
 PACKAGEINDEXDEPS += "opkg-native:do_populate_sysroot"

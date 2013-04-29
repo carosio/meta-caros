@@ -10,7 +10,7 @@ inherit utility-tasks
 inherit metadata_scm
 inherit logging
 
-OE_IMPORTS += "os sys time oe.path oe.utils oe.data oe.packagegroup oe.sstatesig oe.lsb"
+OE_IMPORTS += "os sys time oe.path oe.utils oe.data oe.package oe.packagegroup oe.sstatesig oe.lsb oe.cachedpath"
 OE_IMPORTS[type] = "list"
 
 def oe_import(d):
@@ -54,7 +54,6 @@ die() {
 }
 
 oe_runmake() {
-	if [ x"$MAKE" = x ]; then MAKE=make; fi
 	bbnote ${MAKE} ${EXTRA_OEMAKE} "$@"
 	${MAKE} ${EXTRA_OEMAKE} "$@" || die "oe_runmake failed"
 }
@@ -133,26 +132,6 @@ python base_do_unpack() {
         raise bb.build.FuncFailed(e)
 }
 
-GIT_CONFIG_PATH = "${STAGING_DIR_NATIVE}/etc"
-GIT_CONFIG = "${GIT_CONFIG_PATH}/gitconfig"
-
-def generate_git_config(e):
-    if e.data.getVar('GIT_CORE_CONFIG', True):
-        gitconfig_path = e.data.getVar('GIT_CONFIG', True)
-        proxy_command = "    gitProxy = %s\n" % e.data.getVar('OE_GIT_PROXY_COMMAND', True)
-
-        bb.mkdirhier(e.data.expand("${GIT_CONFIG_PATH}"))
-        if (os.path.exists(gitconfig_path)):
-            os.remove(gitconfig_path)
-
-        f = open(gitconfig_path, 'w')
-        f.write("[core]\n")
-        ignore_hosts = e.data.getVar('GIT_PROXY_IGNORE', True).split()
-        for ignore_host in ignore_hosts:
-            f.write("    gitProxy = none for %s\n" % ignore_host)
-        f.write(proxy_command)
-        f.close
-
 def pkgarch_mapping(d):
     # Compatibility mappings of TUNE_PKGARCH (opt in)
     if d.getVar("PKGARCHCOMPAT_ARMV7A", True):
@@ -160,7 +139,7 @@ def pkgarch_mapping(d):
             d.setVar("TUNE_PKGARCH", "armv7a")
 
 def preferred_ml_updates(d):
-    # If any PREFERRED_PROVIDER or PREFERRED_VERSIONS are set,
+    # If any PREFERRED_PROVIDER or PREFERRED_VERSION are set,
     # we need to mirror these variables in the multilib case;
     # likewise the PNBLACKLIST flags.
     multilibs = d.getVar('MULTILIBS', True) or ""
@@ -183,7 +162,7 @@ def preferred_ml_updates(d):
             providers.append(v)
 
     for pkg, reason in blacklists.items():
-        if pkg.endswith(("-native", "-crosssdk")) or pkg.startswith("nativesdk-") or 'cross-canadian' in pkg:
+        if pkg.endswith(("-native", "-crosssdk")) or pkg.startswith(("nativesdk-", "virtual/nativesdk-")) or 'cross-canadian' in pkg:
             continue
         for p in prefixes:
             newpkg = p + "-" + pkg
@@ -193,7 +172,7 @@ def preferred_ml_updates(d):
     for v in versions:
         val = d.getVar(v, False)
         pkg = v.replace("PREFERRED_VERSION_", "")
-        if pkg.endswith(("-native", "-crosssdk")) or pkg.startswith("nativesdk-"):
+        if pkg.endswith(("-native", "-crosssdk")) or pkg.startswith(("nativesdk-", "virtual/nativesdk-")):
             continue
         if 'cross-canadian' in pkg:
             for p in prefixes:
@@ -203,8 +182,12 @@ def preferred_ml_updates(d):
                 bb.data.update_data(localdata)
                 newname = localdata.expand(v)
                 if newname != v:
-                    newval = localdata.getVar(v, True)
+                    newval = localdata.expand(val)
                     d.setVar(newname, newval)
+            # Avoid future variable key expansion
+            vexp = d.expand(v)
+            if v != vexp and d.getVar(v, False):
+                d.renameVar(v, vexp)
             continue
         for p in prefixes:
             newname = "PREFERRED_VERSION_" + p + "-" + pkg
@@ -214,7 +197,7 @@ def preferred_ml_updates(d):
     for prov in providers:
         val = d.getVar(prov, False)
         pkg = prov.replace("PREFERRED_PROVIDER_", "")
-        if pkg.endswith(("-native", "-crosssdk")) or pkg.startswith("nativesdk-"):
+        if pkg.endswith(("-native", "-crosssdk")) or pkg.startswith(("nativesdk-", "virtual/nativesdk-")):
             continue
         if 'cross-canadian' in pkg:
             for p in prefixes:
@@ -226,6 +209,10 @@ def preferred_ml_updates(d):
                 if newname != prov:
                     newval = localdata.expand(val)
                     d.setVar(newname, newval)
+            # Avoid future variable key expansion
+            provexp = d.expand(prov)
+            if prov != provexp and d.getVar(prov, False):
+                d.renameVar(prov, provexp)
             continue
         virt = ""
         if pkg.startswith("virtual/"):
@@ -241,19 +228,23 @@ def preferred_ml_updates(d):
             localdata.setVar("OVERRIDES", localdata.getVar("OVERRIDES", False) + override)
             bb.data.update_data(localdata)
             newname = localdata.expand(prov)
-            if newname != prov:
+            if newname != prov and not d.getVar(newname, False):
                 d.setVar(newname, localdata.expand(val))
 
             # implement alternative multilib name
             newname = localdata.expand("PREFERRED_PROVIDER_" + virt + p + "-" + pkg)
             if not d.getVar(newname, False):
                 d.setVar(newname, val)
+        # Avoid future variable key expansion
+        provexp = d.expand(prov)
+        if prov != provexp and d.getVar(prov, False):
+            d.renameVar(prov, provexp)
 
 
     mp = (d.getVar("MULTI_PROVIDER_WHITELIST", True) or "").split()
     extramp = []
     for p in mp:
-        if p.endswith(("-native", "-crosssdk")) or p.startswith("nativesdk-") or 'cross-canadian' in p:
+        if p.endswith(("-native", "-crosssdk")) or p.startswith(("nativesdk-", "virtual/nativesdk-")) or 'cross-canadian' in p:
             continue
         virt = ""
         if p.startswith("virtual/"):
@@ -311,11 +302,10 @@ addhandler base_eventhandler
 python base_eventhandler() {
     if isinstance(e, bb.event.ConfigParsed):
         e.data.setVar('BB_VERSION', bb.__version__)
-        generate_git_config(e)
         pkgarch_mapping(e.data)
         preferred_ml_updates(e.data)
-        e.data.appendVar('DISTRO_FEATURES', oe.utils.features_backfill("DISTRO_FEATURES", e.data))
-        e.data.appendVar('MACHINE_FEATURES', oe.utils.features_backfill("MACHINE_FEATURES", e.data))
+        oe.utils.features_backfill("DISTRO_FEATURES", e.data)
+        oe.utils.features_backfill("MACHINE_FEATURES", e.data)
 
     if isinstance(e, bb.event.BuildStarted):
         statuslines = []
@@ -511,6 +501,8 @@ python () {
         d.setVarFlag('do_package', 'fakeroot', 1)
         d.setVarFlag('do_package', 'umask', 022)
         d.setVarFlag('do_package_setscene', 'fakeroot', 1)
+        d.setVarFlag('do_devshell', 'fakeroot', 1)
+        d.appendVarFlag('do_devshell', 'depends', ' virtual/fakeroot-native:do_populate_sysroot')
     source_mirror_fetch = d.getVar('SOURCE_MIRROR_FETCH', 0)
     if not source_mirror_fetch:
         need_host = d.getVar('COMPATIBLE_HOST', True)
@@ -523,11 +515,12 @@ python () {
         need_machine = d.getVar('COMPATIBLE_MACHINE', True)
         if need_machine:
             import re
-            this_machine = d.getVar('MACHINE', True)
-            if this_machine and not re.match(need_machine, this_machine):
-                this_soc_family = d.getVar('SOC_FAMILY', True)
-                if (this_soc_family and not re.match(need_machine, this_soc_family)) or not this_soc_family:
-                    raise bb.parse.SkipPackage("incompatible with machine %s (not in COMPATIBLE_MACHINE)" % this_machine)
+            compat_machines = (d.getVar('MACHINEOVERRIDES', True) or "").split(":")
+            for m in compat_machines:
+                if re.match(need_machine, m):
+                    break
+            else:
+                raise bb.parse.SkipPackage("incompatible with machine %s (not in COMPATIBLE_MACHINE)" % d.getVar('MACHINE', True))
 
 
         bad_licenses = (d.getVar('INCOMPATIBLE_LICENSE', True) or "").split()

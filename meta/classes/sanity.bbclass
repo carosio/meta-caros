@@ -4,8 +4,34 @@
 
 SANITY_REQUIRED_UTILITIES ?= "patch diffstat makeinfo git bzip2 tar gzip gawk chrpath wget cpio"
 
-python check_bblayers_conf() {
-    bblayers_fn = os.path.join(d.getVar('TOPDIR', True), 'conf/bblayers.conf')
+def bblayers_conf_file(d):
+    return os.path.join(d.getVar('TOPDIR', True), 'conf/bblayers.conf')
+
+def sanity_conf_read(fn):
+    with open(fn, 'r') as f:
+        lines = f.readlines()
+    return lines
+
+def sanity_conf_find_line(pattern, lines):
+    import re
+    return next(((index, line)
+        for index, line in enumerate(lines)
+        if re.search(pattern, line)), (None, None))
+
+def sanity_conf_update(fn, lines, version_var_name, new_version):
+    index, line = sanity_conf_find_line(version_var_name, lines)
+    lines[index] = '%s = "%d"\n' % (version_var_name, new_version)
+    with open(fn, "w") as f:
+        f.write(''.join(lines))
+
+EXPORT_FUNCTIONS bblayers_conf_file sanity_conf_read sanity_conf_find_line sanity_conf_update
+
+# Functions added to this variable MUST throw an exception (or sys.exit()) unless they
+# successfully changed LCONF_VERSION in bblayers.conf
+BBLAYERS_CONF_UPDATE_FUNCS += "oecore_update_bblayers"
+
+python oecore_update_bblayers() {
+    # bblayers.conf is out of date, so see if we can resolve that
 
     current_lconf = int(d.getVar('LCONF_VERSION', True))
     if not current_lconf:
@@ -13,21 +39,15 @@ python check_bblayers_conf() {
     lconf_version = int(d.getVar('LAYER_CONF_VERSION', True))
     lines = []
 
-    import re
-    def find_line(pattern, lines):
-        return next(((index, line)
-            for index, line in enumerate(lines)
-            if re.search(pattern, line)), (None, None))
-
     if current_lconf < 4:
         sys.exit()
 
-    with open(bblayers_fn, 'r') as f:
-        lines = f.readlines()
+    bblayers_fn = bblayers_conf_file(d)
+    lines = sanity_conf_read(bblayers_fn)
 
-    if current_lconf == 4:
+    if current_lconf == 4 and lconf_version > 4:
         topdir_var = '$' + '{TOPDIR}'
-        index, bbpath_line = find_line('BBPATH', lines)
+        index, bbpath_line = sanity_conf_find_line('BBPATH', lines)
         if bbpath_line:
             start = bbpath_line.find('"')
             if start != -1 and (len(bbpath_line) != (start + 1)):
@@ -41,17 +61,17 @@ python check_bblayers_conf() {
             else:
                 sys.exit()
         else:
-            index, bbfiles_line = find_line('BBFILES', lines)
+            index, bbfiles_line = sanity_conf_find_line('BBFILES', lines)
             if bbfiles_line:
                 lines.insert(index, 'BBPATH = "' + topdir_var + '"\n')
             else:
                 sys.exit()
 
-        index, line = find_line('LCONF_VERSION', lines)
         current_lconf += 1
-        lines[index] = 'LCONF_VERSION = "%d"\n' % current_lconf
-        with open(bblayers_fn, "w") as f:
-            f.write(''.join(lines))
+        sanity_conf_update(bblayers_fn, lines, 'LCONF_VERSION', current_lconf)
+        return
+
+    sys.exit()
 }
 
 def raise_sanity_error(msg, d, network_error=False):
@@ -226,7 +246,7 @@ def check_create_long_filename(filepath, pathname):
 
 def check_path_length(filepath, pathname, limit):
     if len(filepath) > limit:
-	return "The length of %s is longer than 410, this would cause unexpected errors, please use a shorter path.\n" % pathname
+        return "The length of %s is longer than 410, this would cause unexpected errors, please use a shorter path.\n" % pathname
     return ""
 
 def check_connectivity(d):
@@ -263,42 +283,11 @@ def check_supported_distro(sanity_data):
     if not tested_distros:
         return
 
-    if os.path.exists("/etc/redhat-release"):
-        f = open("/etc/redhat-release", "r")
-        try:
-            distro = f.readline().strip()
-        finally:
-            f.close()
-    elif os.path.exists("/etc/SuSE-release"):
-        import re
-        f = open("/etc/SuSE-release", "r")
-        try:
-            distro = f.readline()
-            # Remove the architecture suffix e.g. (i586)
-            distro = re.sub(r' \([a-zA-Z0-9\-_]*\)$', '', distro).strip()
-        finally:
-            f.close()
-    else:
-        # Use LSB method
-        import subprocess as sub
-        try:
-            p = sub.Popen(['lsb_release','-d','-s'],stdout=sub.PIPE,stderr=sub.PIPE)
-            out, err = p.communicate()
-            distro = out.rstrip()
-        except Exception:
-            distro = None
+    try:
+        distro = oe.lsb.distro_identifier()
+    except Exception:
+        distro = None
 
-        if not distro:
-            if os.path.exists("/etc/lsb-release"):
-                f = open("/etc/lsb-release", "r")
-                try:
-                    for line in f:
-                        lns = line.split('=')
-                        if lns[0] == "DISTRIB_DESCRIPTION":
-                            distro = lns[1].strip('"\n')
-                            break
-                finally:
-                    f.close()
     if distro:
         if distro not in [x.strip() for x in tested_distros.split('\\n')]:
             bb.warn('Host distribution "%s" has not been validated with this version of the build system; you may possibly experience unexpected failures. It is recommended that you use a tested distribution.' % distro)
@@ -340,10 +329,39 @@ def check_sanity_validmachine(sanity_data):
 
     return messages
 
+# Checks if necessary to add option march to host gcc
+def check_gcc_march(sanity_data):
+    result = False
+
+    # Check if -march not in BUILD_CFLAGS
+    if sanity_data.getVar("BUILD_CFLAGS",True).find("-march") < 0:
+
+        # Construct a test file
+        f = file("gcc_test.c", "w")
+        f.write("int main (){ __GCC_HAVE_SYNC_COMPARE_AND_SWAP_4; return 0;}\n")
+        f.close()
+        import commands
+
+        # Check if GCC could work without march
+        status,result = commands.getstatusoutput("${BUILD_PREFIX}gcc gcc_test.c -o gcc_test")
+        if status != 0:
+            # Check if GCC could work with march
+            status,result = commands.getstatusoutput("${BUILD_PREFIX}gcc -march=native gcc_test.c -o gcc_test")
+            if status == 0: 
+                result = True
+            else:
+                result = False
+
+        os.remove("gcc_test.c")
+        if os.path.exists("gcc_test"):
+            os.remove("gcc_test")
+
+    return result
 
 def check_sanity(sanity_data):
     import subprocess
 
+    reparse = False
     try:
         from distutils.version import LooseVersion
     except ImportError:
@@ -384,27 +402,30 @@ def check_sanity(sanity_data):
         messages = messages + 'Please set a MACHINE in your local.conf or environment\n'
         machinevalid = False
 
-    # Check we are using a valid lacal.conf
+    # Check we are using a valid local.conf
     current_conf  = sanity_data.getVar('CONF_VERSION', True)
     conf_version =  sanity_data.getVar('LOCALCONF_VERSION', True)
 
     if current_conf != conf_version:
-        messages = messages + "Your version of local.conf was generated from an older version of local.conf.sample and there have been updates made to this file. Please compare the two files and merge any changes before continuing.\nMatching the version numbers will remove this message.\n\"meld conf/local.conf ${COREBASE}/meta*/conf/local.conf.sample\" is a good way to visualise the changes.\n"
+        messages = messages + "Your version of local.conf was generated from an older/newer version of local.conf.sample and there have been updates made to this file. Please compare the two files and merge any changes before continuing.\nMatching the version numbers will remove this message.\n\"meld conf/local.conf ${COREBASE}/meta*/conf/local.conf.sample\" is a good way to visualise the changes.\n"
 
     # Check bblayers.conf is valid
     current_lconf = sanity_data.getVar('LCONF_VERSION', True)
     lconf_version = sanity_data.getVar('LAYER_CONF_VERSION', True)
     if current_lconf != lconf_version:
-        try:
-            bb.build.exec_func("check_bblayers_conf", sanity_data)
-            if sanity_data.getVar("SANITY_USE_EVENTS", True) == "1":
-                bb.event.fire(bb.event.SanityCheckFailed("Your conf/bblayers.conf has been automatically updated. Please close and re-run."), sanity_data)
-                return
-            else:
-                bb.note("Your conf/bblayers.conf has been automatically updated. Please re-run %s." % os.path.basename(sys.argv[0]))
-                sys.exit(0)
-        except Exception:
-            messages = messages + "Your version of bblayers.conf was generated from an older version of bblayers.conf.sample and there have been updates made to this file. Please compare the two files and merge any changes before continuing.\nMatching the version numbers will remove this message.\n\"meld conf/bblayers.conf ${COREBASE}/meta*/conf/bblayers.conf.sample\" is a good way to visualise the changes.\n"
+        funcs = sanity_data.getVar('BBLAYERS_CONF_UPDATE_FUNCS', True).split()
+        for func in funcs:
+            success = True
+            try:
+                bb.build.exec_func(func, sanity_data)
+            except Exception:
+                success = False
+            if success:
+                bb.note("Your conf/bblayers.conf has been automatically updated.")
+                reparse = True
+                break
+        if not reparse:
+            messages = messages + "Your version of bblayers.conf was generated from an older/newer version of bblayers.conf.sample and there have been updates made to this file. Please compare the two files and merge any changes before continuing.\nMatching the version numbers will remove this message.\n\"meld conf/bblayers.conf ${COREBASE}/meta*/conf/bblayers.conf.sample\" is a good way to visualise the changes.\n"
 
     # If we have a site.conf, check it's valid
     if check_conf_exists("conf/site.conf", sanity_data):
@@ -450,13 +471,17 @@ def check_sanity(sanity_data):
         if not check_app_exists("qemu-arm", sanity_data):
             messages = messages + "qemu-native was in ASSUME_PROVIDED but the QEMU binaries (qemu-arm) can't be found in PATH"
 
+    if check_gcc_march(sanity_data):
+        messages = messages + "Your gcc version is older than 4.5, please add the following param to local.conf\n \
+        BUILD_CFLAGS_append = \" -march=native\"\n"
+
     paths = sanity_data.getVar('PATH', True).split(":")
     if "." in paths or "" in paths:
         messages = messages + "PATH contains '.' or '' (empty element), which will break the build, please remove this.\n"
         messages = messages + "Parsed PATH is " + str(paths) + "\n"
 
     bbpaths = sanity_data.getVar('BBPATH', True).split(":")
-    if "." in bbpaths or "" in bbpaths:
+    if ("." in bbpaths or "" in bbpaths) and not reparse:
         # TODO: change the following message to fatal when all BBPATH issues
         # are fixed
         bb.warn("BBPATH references the current directory, either through "    \
@@ -499,8 +524,10 @@ def check_sanity(sanity_data):
             messages = messages + toolchain_msg + '\n'
 
     # Check if DISPLAY is set if IMAGETEST is set
-    if not sanity_data.getVar( 'DISPLAY', True ) and sanity_data.getVar( 'IMAGETEST', True ) == 'qemu':
-        messages = messages + 'qemuimagetest needs a X desktop to start qemu, please set DISPLAY correctly (e.g. DISPLAY=:1.0)\n'
+    if sanity_data.getVar( 'IMAGETEST', True ) == 'qemu':
+        display = sanity_data.getVar("BB_ORIGENV", False).getVar("DISPLAY", True)
+        if not display:
+            messages = messages + 'qemuimagetest needs a X desktop to start qemu, please set DISPLAY correctly (e.g. DISPLAY=:1.0)\n'
 
     omask = os.umask(022)
     if omask & 0755:
@@ -628,6 +655,7 @@ def check_sanity(sanity_data):
 
     if messages != "":
         raise_sanity_error(sanity_data.expand(messages), sanity_data, network_error)
+    return reparse
 
 # Create a copy of the datastore and finalise it to ensure appends and 
 # overrides are set - the datastore has yet to be finalised at ConfigParsed
@@ -640,11 +668,13 @@ addhandler check_sanity_eventhandler
 python check_sanity_eventhandler() {
     if bb.event.getName(e) == "ConfigParsed" and e.data.getVar("BB_WORKERCONTEXT", True) != "1" and e.data.getVar("DISABLE_SANITY_CHECKS", True) != "1":
         sanity_data = copy_data(e)
-        check_sanity(sanity_data)
+        reparse = check_sanity(sanity_data)
+        e.data.setVar("BB_INVALIDCONF", reparse)
     elif bb.event.getName(e) == "SanityCheck":
         sanity_data = copy_data(e)
         sanity_data.setVar("SANITY_USE_EVENTS", "1")
-        check_sanity(sanity_data)
+        reparse = check_sanity(sanity_data)
+        e.data.setVar("BB_INVALIDCONF", reparse)
         bb.event.fire(bb.event.SanityCheckPassed(), e.data)
     elif bb.event.getName(e) == "NetworkTest":
         sanity_data = copy_data(e)

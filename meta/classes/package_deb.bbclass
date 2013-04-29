@@ -10,57 +10,6 @@ DPKG_ARCH ?= "${TARGET_ARCH}"
 
 PKGWRITEDIRDEB = "${WORKDIR}/deploy-debs"
 
-python package_deb_fn () {
-    d.setVar('PKGFN', d.getVar('PKG'))
-}
-
-addtask package_deb_install
-python do_package_deb_install () {
-    pkg = d.getVar('PKG', True)
-    pkgfn = d.getVar('PKGFN', True)
-    rootfs = d.getVar('IMAGE_ROOTFS', True)
-    debdir = d.getVar('DEPLOY_DIR_DEB', True)
-    apt_config = d.expand('${STAGING_ETCDIR_NATIVE}/apt/apt.conf')
-    stagingbindir = d.getVar('STAGING_BINDIR_NATIVE', True)
-    tmpdir = d.getVar('TMPDIR', True)
-
-    if None in (pkg,pkgfn,rootfs):
-        raise bb.build.FuncFailed("missing variables (one or more of PKG, PKGFN, IMAGE_ROOTFS)")
-    try:
-        if not os.exists(rootfs):
-            os.makedirs(rootfs)
-        os.chdir(rootfs)
-    except OSError:
-        import sys
-        raise bb.build.FuncFailed(str(sys.exc_value))
-
-    # update packages file
-    (exitstatus, output) = commands.getstatusoutput('dpkg-scanpackages %s > %s/Packages' % (debdir, debdir))
-    if (exitstatus != 0 ):
-        raise bb.build.FuncFailed(output)
-
-    f = open(os.path.join(tmpdir, "stamps", "DEB_PACKAGE_INDEX_CLEAN"), "w")
-    f.close()
-
-    # NOTE: this env stuff is racy at best, we need something more capable
-    # than 'commands' for command execution, which includes manipulating the
-    # env of the fork+execve'd processs
-
-    # Set up environment
-    apt_config_backup = os.getenv('APT_CONFIG')
-    os.putenv('APT_CONFIG', apt_config)
-    path = os.getenv('PATH')
-    os.putenv('PATH', '%s:%s' % (stagingbindir, os.getenv('PATH')))
-
-    # install package
-    commands.getstatusoutput('apt-get update')
-    commands.getstatusoutput('apt-get install -y %s' % pkgfn)
-
-    # revert environment
-    os.putenv('APT_CONFIG', apt_config_backup)
-    os.putenv('PATH', path)
-}
-
 #
 # Update the Packages index files in ${DEPLOY_DIR_DEB}
 #
@@ -78,6 +27,7 @@ package_update_index_deb () {
 		fi
 	done
 
+	found=0
 	for arch in $debarchs; do
 		if [ ! -d ${DEPLOY_DIR_DEB}/$arch ]; then
 			continue;
@@ -85,7 +35,11 @@ package_update_index_deb () {
 		cd ${DEPLOY_DIR_DEB}/$arch
 		dpkg-scanpackages . | gzip > Packages.gz
 		echo "Label: $arch" > Release
+		found=1
 	done
+	if [ "$found" != "1" ]; then
+		bbfatal "There are no packages in ${DEPLOY_DIR_DEB}!"
+	fi
 }
 
 #
@@ -128,6 +82,9 @@ package_install_internal_deb () {
 
 	tac ${STAGING_ETCDIR_NATIVE}/apt/sources.list.rev > ${STAGING_ETCDIR_NATIVE}/apt/sources.list
 
+	# The params in deb package control don't allow character `_', so
+	# change the arch's `_' to `-' in it.
+	dpkg_arch=`echo ${dpkg_arch} | sed 's/_/-/g'`
 	cat "${STAGING_ETCDIR_NATIVE}/apt/apt.conf.sample" \
 		| sed -e "s#Architecture \".*\";#Architecture \"${dpkg_arch}\";#" \
 		| sed -e "s:#ROOTFS#:${target_rootfs}:g" \
@@ -143,29 +100,28 @@ package_install_internal_deb () {
 
 	apt-get update
 
-	# Uclibc builds don't provide this stuff..
-	if [ x${TARGET_OS} = "xlinux" ] || [ x${TARGET_OS} = "xlinux-gnueabi" ] ; then
-		if [ ! -z "${package_linguas}" ]; then
-			apt-get install glibc-localedata-i18n --force-yes --allow-unauthenticated
+	if [ ! -z "${package_linguas}" ]; then
+		for i in ${package_linguas}; do
+			apt-get install $i --force-yes --allow-unauthenticated
 			if [ $? -ne 0 ]; then
 				exit 1
 			fi
-			for i in ${package_linguas}; do
-				apt-get install $i --force-yes --allow-unauthenticated
-				if [ $? -ne 0 ]; then
-					exit 1
-				fi
-			done
-		fi
+		done
 	fi
 
 	# normal install
-	for i in ${package_to_install}; do
-		apt-get install $i --force-yes --allow-unauthenticated
+	if [ ! -z "${package_to_install}" ]; then
+		apt-get install ${package_to_install} --force-yes --allow-unauthenticated
 		if [ $? -ne 0 ]; then
 			exit 1
 		fi
-	done
+
+		# Attempt to correct the probable broken dependencies in place.
+		apt-get -f install
+		if [ $? -ne 0 ]; then
+			exit 1
+		fi
+	fi
 
 	rm -f `dirname ${BB_LOGFILE}`/log.do_${task}-attemptonly.${PID}
 	if [ ! -z "${package_attemptonly}" ]; then
@@ -305,6 +261,11 @@ python do_package_deb () {
                     raise KeyError(f)
                 if i == 'DPKG_ARCH' and d.getVar('PACKAGE_ARCH', True) == 'all':
                     data = 'all'
+                elif i == 'PACKAGE_ARCH' or i == 'DPKG_ARCH':
+                   # The params in deb package control don't allow character
+                   # `_', so change the arch's `_' to `-'. Such as `x86_64'
+                   # -->`x86-64'
+                   data = data.replace('_', '-')
                 l2.append(data)
             return l2
 
@@ -411,7 +372,8 @@ python do_package_deb () {
                 bb.utils.unlockfile(lf)
                 raise bb.build.FuncFailed("unable to open conffiles for writing.")
             for f in conffiles_str.split():
-                conffiles.write('%s\n' % f)
+                if os.path.exists(oe.path.join(root, f)):
+                    conffiles.write('%s\n' % f)
             conffiles.close()
 
         os.chdir(basedir)
@@ -443,8 +405,11 @@ python () {
         d.setVarFlag('do_package_write_deb_setscene', 'fakeroot', "1")
 
     # Map TARGET_ARCH to Debian's ideas about architectures
-    if d.getVar('DPKG_ARCH', True) in ["x86", "i486", "i586", "i686", "pentium"]:
-        d.setVar('DPKG_ARCH', 'i386')
+    darch = d.getVar('DPKG_ARCH', True)
+    if darch in ["x86", "i486", "i586", "i686", "pentium"]:
+         d.setVar('DPKG_ARCH', 'i386')
+    elif darch == "arm":
+         d.setVar('DPKG_ARCH', 'armel')
 }
 
 python do_package_write_deb () {
@@ -457,6 +422,6 @@ do_package_write_deb[umask] = "022"
 addtask package_write_deb before do_package_write after do_packagedata do_package
 
 
-PACKAGEINDEXES += "package_update_index_deb;"
+PACKAGEINDEXES += "[ ! -e ${DEPLOY_DIR_DEB} ] || package_update_index_deb;"
 PACKAGEINDEXDEPS += "dpkg-native:do_populate_sysroot"
 PACKAGEINDEXDEPS += "apt-native:do_populate_sysroot"
