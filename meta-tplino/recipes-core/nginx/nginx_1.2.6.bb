@@ -3,9 +3,12 @@ HOMEPAGE = "http://wiki.nginx.org"
 SECTION = "net"
 PRIORITY = "optional"
 LICENSE = "BSD"
+
+inherit systemd
+
 LIC_FILES_CHKSUM = "file://LICENSE;md5=0d645f970023c604645486fea08b22aa"
 
-PR = "r0"
+PR = "r1"
 
 SRC_URI = "http://nginx.org/download/nginx-${PV}.tar.gz \
            file://allow-cross.patch \
@@ -18,10 +21,7 @@ DEPENDS = "libpcre logrotate"
 
 FILES_${PN} += " /usr/local/nginx "
 
-inherit systemd
-
-SYSTEMD_PACKAGES = "${PN}-systemd"
-SYSTEMD_SERVICE_${PN}-systemd = "nginx.service"
+SYSTEMD_SERVICE_${PN} = "nginx.service"
 
 do_configure() {
     export cross_compiling="yes"
@@ -41,11 +41,13 @@ do_configure() {
 }
 
 do_install() {
-    install -d ${D}${localstatedir}/lib/nginx
-    install -d ${D}${localstatedir}/nginx
-    install -d ${D}${sysconfdir}/logrotate.d
+    install -d ${D}${localstatedir}/lib/nginx \
+	       ${D}${localstatedir}/nginx \
+	       ${D}${sysconfdir}/logrotate.d \
+	       ${D}${systemd_unitdir}/system
 
     install -m 0644 ${THISDIR}/files/nginx.logrotate ${D}${sysconfdir}/logrotate.d
+    install -m 644 ${WORKDIR}/*.service ${D}/${systemd_unitdir}/system
 
     oe_runmake DESTDIR=${D} install
 }
