@@ -3,8 +3,8 @@ SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://src/hello2.erl;beginline=1;endline=19;md5=8af7faa07f2606ede8e44010750a0093"
 
-SRCREV = "4800ff507fad4f11042de2ce00a716f36f07d29b"
-PR = "r0"
+SRCREV = "f906e752fba327fd7309c3196b420cbc233282a1"
+PR = "r1"
 
 SRC_URI = "git://git@git.tpip.net/hello2.git;protocol=ssh"
 
