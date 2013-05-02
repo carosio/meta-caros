@@ -8,7 +8,7 @@ inherit systemd
 
 LIC_FILES_CHKSUM = "file://LICENSE;md5=0d645f970023c604645486fea08b22aa"
 
-PR = "r1"
+PR = "r2"
 
 SRC_URI = "http://nginx.org/download/nginx-${PV}.tar.gz \
            file://allow-cross.patch \
@@ -17,7 +17,7 @@ SRC_URI = "http://nginx.org/download/nginx-${PV}.tar.gz \
 SRC_URI[md5sum] = "1350d26eb9b66364d9143fb3c4366ab6"
 SRC_URI[sha256sum] = "0510af71adac4b90484ac8caf3b8bd519a0f7126250c2799554d7a751a2db388"
 
-DEPENDS = "libpcre logrotate"
+DEPENDS = "libpcre logrotate openssl"
 
 FILES_${PN} += " /usr/local/nginx "
 
@@ -37,7 +37,8 @@ do_configure() {
     --http-proxy-temp-path=${localstatedir}/lib/nginx/proxy_temp \
     --http-fastcgi-temp-path=${localstatedir}/lib/nginx/fastcgi_temp \
     --http-uwsgi-temp-path=${localstatedir}/lib/nginx/uwsgi_temp \
-    --http-scgi-temp-path=${localstatedir}/lib/nginx/scgi_temp
+    --http-scgi-temp-path=${localstatedir}/lib/nginx/scgi_temp \
+    --with-http_ssl_module
 }
 
 do_install() {
