@@ -10,6 +10,8 @@ SRC_URI = "git://git@git.tpip.net/tetrapak_boss.git;protocol=ssh"
 
 S = "${WORKDIR}/git"
 
+DEPENDS_append = " erlang-boss "
+
 inherit tetrapak
 
 python () {
