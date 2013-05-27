@@ -9,11 +9,12 @@ LIC_FILES_CHKSUM = "file://COPYING;md5=0636e73ff0215e8d672dc4c32c317bb3 \
 SRCREV = "ca39eb1d98e736109c64ff9c1aa2a6ecca222d8f"
 SRC_URI = "git://git.infradead.org/mtd-utils.git;protocol=git \
 		file://add-exclusion-to-mkfs-jffs2-git-2.patch \
-        file://mtd-utils-fix-corrupt-cleanmarker-with-flash_erase--j-command.patch "
+        file://mtd-utils-fix-corrupt-cleanmarker-with-flash_erase--j-command.patch \
+        file://openwrt_lzma_jffs2.patch"
 
 S = "${WORKDIR}/git/"
 
-PR = "r3"
+PR = "r4"
 
 EXTRA_OEMAKE = "'CC=${CC}' 'RANLIB=${RANLIB}' 'AR=${AR}' 'CFLAGS=${CFLAGS} -I${S}/include -DWITHOUT_XATTR' 'BUILDDIR=${S}'"
 

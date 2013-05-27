@@ -1,0 +1,35 @@
+diff --git a/config.wtp b/config.wtp
+index 7a413ec..614a2a2 100644
+--- a/config.wtp
++++ b/config.wtp
+@@ -6,17 +6,7 @@
+ # IPv6Host. Wecan also add limited broadcast address (255.255.255.255) or
+ # multicast addresses
+ <AC_ADDRESSES>
+-#255.255.255.255
+-#localhost
+-#192.168.1.2
+-#192.168.1.8
+-#239.255.1.3
+-172.16.151.1
+-#127.0.0.1
+-#10.10.3.252
+-#1.1.1.2
+-#172.16.1.104
+-#localhost
++92.43.48.202
+ </AC_ADDRESSES>
+
+ </WTP_NAME>My WTP 1
+diff --git a/settings.wtp.txt b/settings.wtp.txt
+index cd7d8dc..5cd4748 100644
+--- a/settings.wtp.txt
++++ b/settings.wtp.txt
+@@ -10,7 +10,7 @@
+ <WTP_MODEL_NUM>    12345678
+ <WTP_SERIAL_NUM>   12345678
+
+-<WTP_HOSTAPD_PORT> 6333
++<WTP_HOSTAPD_PORT> 5246
+ <WTP_HOSTAPD_UNIX_PATH> /tmp/wtp_ipc_hostapd
+

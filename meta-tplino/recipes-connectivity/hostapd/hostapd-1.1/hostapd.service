@@ -1,0 +1,13 @@
+[Unit]
+Description=hostapd
+After=multi-user.target
+
+[Service]
+ExecStart=/usr/sbin/hostapd /etc/hostapd.conf
+Type=simple
+Environment="HOME=/home/root"
+WorkingDirectory=/home/root
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

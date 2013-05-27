@@ -24,6 +24,8 @@ SRC_URI[sha256sum] = "c28b36b14bddb014d9e9c97c52459852f97bd405f89113f30bee45ed92
 
 inherit autotools gettext
 
+EXTRA_OECONF = "${@['--disable-nls', ''][d.getVar('USE_NLS', True) != 'yes']}"
+
 do_install() {
 	install -d ${D}${bindir}/
 	install -m 0755 src/lrz src/lsz ${D}${bindir}/
