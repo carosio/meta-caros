@@ -1,0 +1,11 @@
+[Unit]
+Description=Activates all interfaces marked "auto" in /etc/network/interfaces
+
+[Service]
+Type=oneshot
+ExecStart=/sbin/ifup -a
+RemainAfterExit=true
+ExecStop=/sbin/ifdown -a
+
+[Install]
+WantedBy=multi-user.target

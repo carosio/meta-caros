@@ -16,5 +16,5 @@ DEPENDS_append = " erlang-cowboy erlang-yang-native erlang-erlzmq erlang-ex-uri 
 RDEPENDS_${PN}_append = " erlang-cowboy erlang-yang erlang-erlzmq erlang-ex-uri erlang-ibrowse "
 
 python () {
-    erlang_def_package("hello2", "hello2-*", "ebin priv", "src include README.md", d)
+    erlang_def_package("hello2", "hello2-*", "ebin priv", "src include README.md examples", d)
 }
