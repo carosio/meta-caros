@@ -4,7 +4,7 @@ require conf/machine/include/tune-core2.inc
 
 # Extra tune features
 TUNEVALID[gulftown] = "Enable gulftown specific processor optimizations"
-TUNE_CCARGS += "${@bb.utils.contains("TUNE_FEATURES", "gulftown", "-march=corei7 -maes -mfpmath=sse -mpclmul -mpopcnt -mcx16 -msahf -mtls-dialect=gnu2", "", d)}"
+TUNE_CCARGS += "${@bb.utils.contains("TUNE_FEATURES", "gulftown", "-march=corei7-avx -mfpmath=sse -mpclmul -mpopcnt -mcx16 -msahf -mtls-dialect=gnu2", "", d)}"
 
 # Extra tune selections
 AVAILTUNES += "gulftown"
