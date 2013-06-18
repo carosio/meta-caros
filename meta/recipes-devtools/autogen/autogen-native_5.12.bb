@@ -17,7 +17,7 @@ SRC_URI[sha256sum] = "37e885d6c8a58f33ab198d38bb972fa4c14236f951d628161dde6e2052
 PR = "r3"
 
 DEPENDS = "guile-native libtool-native libxml2-native"
-RDEPENDS = "automake pkgconfig"
+RDEPENDS_${PN} = "automake pkgconfig"
 
 inherit autotools native
 
