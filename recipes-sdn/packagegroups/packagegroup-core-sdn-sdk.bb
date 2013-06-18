@@ -4,7 +4,7 @@ LIC_FILES_CHKSUM = "file://${COREBASE}/LICENSE;md5=3f40d7994397109285ec7b81fdeb3
                     file://${COREBASE}/meta/COPYING.MIT;md5=3da9cfbcb788c80a0384361b4de20420"
 PR = "r0"
 
-ALLOW_EMPTY = "1"
+ALLOW_EMPTY_${PN} = "1"
 
 PACKAGES = "\
     packagrgroup-core-sdn-sdk \
@@ -12,7 +12,7 @@ PACKAGES = "\
     packagrgroup-core-sdn-sdk-dev \
     "
 
-ALLOW_EMPTY = "1"
+ALLOW_EMPTY_${PN} = "1"
 
 RDEPENDS_packagrgroup-core-sdn-sdk = "\
     erlang-flower \

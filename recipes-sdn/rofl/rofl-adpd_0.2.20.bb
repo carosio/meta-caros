@@ -4,7 +4,7 @@ LICENSE = "MPL-2.0"
 LIC_FILES_CHKSUM = "file://COPYRIGHT;md5=5d425c8f3157dbf212db2ec53d9e5132"
 
 DEPENDS = "rofl-core"
-RDEPENDS = "busybox-runit"
+RDEPENDS_${PN} = "busybox-runit"
 
 PR = "r0"
 
