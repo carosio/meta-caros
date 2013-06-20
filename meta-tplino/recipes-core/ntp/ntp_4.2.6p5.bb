@@ -11,9 +11,9 @@ PRINC := "${@int(PRINC) + 1}"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
-SYSTEMD_PACKAGES = "${PN}-systemd ntpdate-systemd"
-SYSTEMD_SERVICE_${PN}-systemd = "ntpd.service"
-SYSTEMD_SERVICE_ntpdate-systemd = "ntpdate.service"
+SYSTEMD_PACKAGES = "${PN} ntpdate"
+SYSTEMD_SERVICE_${PN}= "ntpd.service"
+SYSTEMD_SERVICE_ntpdate= "ntpdate.service"
 
 SRC_URI += " \
         file://ntpdate.service \
