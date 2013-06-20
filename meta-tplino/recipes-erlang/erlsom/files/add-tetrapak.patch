@@ -1,0 +1,25 @@
+From f3fb6703f219caa18cc96325fa809e920961ef95 Mon Sep 17 00:00:00 2001
+From: Tino Breddin <tb@traveling.com>
+Date: Tue, 18 Jun 2013 10:48:15 +0200
+Subject: [PATCH] Add tetrapak config
+
+---
+ tetrapak/config.ini | 6 ++++++
+ 1 file changed, 6 insertions(+)
+ create mode 100644 tetrapak/config.ini
+
+diff --git a/tetrapak/config.ini b/tetrapak/config.ini
+new file mode 100644
+index 0000000..dc0a241
+--- /dev/null
++++ b/tetrapak/config.ini
+@@ -0,0 +1,6 @@
++[build]
++version = "~t.~o~~~c"
++
++[package]
++maintainer  = "Travelping GmbH <info@travelping.com>"
++exclude     = "\\.gitignore|^rebar|^rebar\\.config|^make-upload|^Makefile|^vsn\\.mk|^\\.project|^make-release|^COPYING|^COPYING.LESSER|patches|\\.pc"
+-- 
+1.8.3.1
+
