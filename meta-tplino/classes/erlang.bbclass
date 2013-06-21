@@ -1,9 +1,3 @@
-#
-#
-#
-
-DEPENDS += "erlang-native"
-
 inherit package
 
 python () {
@@ -20,6 +14,13 @@ erlincludedir = "${includedir}"
 export STAGING_DIR_ERLANG_LIBS="${STAGING_DIR_TARGET}${erllibdir}"
 
 def erlang_def_package(app, appdir, inc, dev, d):
+    erlvsn = (d.getVar('ERLVSN', True) or '')
+    erl_native = 'erlang-native' + erlvsn
+    depends = (d.getVar('DEPENDS', True) or '')
+    if depends.find(erl_native) == -1:
+        depends += ' ' + erl_native + ' '
+    d.setVar('DEPENDS', depends)
+
     erllibdir = d.getVar('erllibdir', True)
     appdirs = appdir.split()
 
@@ -31,30 +32,33 @@ def erlang_def_package(app, appdir, inc, dev, d):
 
     packages = (d.getVar('PACKAGES', True) or "").split()
 
-    if 'erlang-' + app in packages:
-        packages.remove('erlang-' + app)
+    app_pkg = 'erlang' + erlvsn + '-' + app
+    app_pkg_dev = app_pkg + '-dev'
+    app_pkg_dbg = app_pkg + '-dbg'
+    if  app_pkg in packages:
+        packages.remove(app_pkg)
 
-    if 'erlang-' + app + '-dev' in packages:
-        packages.remove('erlang-' + app + '-dev')
+    if  app_pkg_dev in packages:
+        packages.remove(app_pkg_dev)
 
-    if 'erlang-' + app + '-dbg' in packages:
-        packages.remove('erlang-' + app + '-dbg')
+    if  app_pkg_dbg in packages:
+        packages.remove(app_pkg_dbg)
 
-    incdirs = (d.getVar('FILES_erlang-' + app, True) or "")
+    incdirs = (d.getVar('FILES_' + app_pkg, True) or "")
     incdirs = appendDirs(incdirs.split(), erllibdir, appdirs, inc)
-    packages.insert(0, 'erlang-' + app)
-    d.setVar('FILES_erlang-' + app, incdirs)
+    packages.insert(0, app_pkg)
+    d.setVar('FILES_' + app_pkg, incdirs)
 
-    devdirs = (d.getVar('FILES_erlang-' + app + '-dev', True) or "")
+    devdirs = (d.getVar('FILES_' + app_pkg_dev, True) or "")
     devdirs = appendDirs(devdirs.split(), erllibdir, appdirs, dev)
     if devdirs != "":
-        packages.insert(0, 'erlang-' + app + '-dev')
-    d.setVar('FILES_erlang-' + app + '-dev', devdirs)
+        packages.insert(0, app_pkg_dev)
+    d.setVar('FILES_' + app_pkg_dev, devdirs)
 
-    packages.insert(0, 'erlang-' + app + '-dbg')
-    dbgdirs = (d.getVar('FILES_erlang-' + app + '-dbg', True) or "")
+    packages.insert(0, app_pkg_dbg)
+    dbgdirs = (d.getVar('FILES_' + app_pkg_dbg, True) or "")
     dbgdirs = appendDirs(dbgdirs.split(), erllibdir, appdirs, "priv/.debug priv/lib/.debug priv/bin/.debug bin/.debug")
-    d.setVar('FILES_erlang-' + app + '-dbg', dbgdirs)
+    d.setVar('FILES_' + app_pkg_dbg, dbgdirs)
 
     d.setVar('PACKAGES', ' '.join(packages))
 
@@ -63,12 +67,13 @@ ERLRUN = "${STAGING_BINDIR_NATIVE}/erl -noshell"
 python emit_erlang_deps() {
 
     def pkg_add_erlang_deps(pkg, d):
-        def app_to_pkg(app):
-            return 'erlang-' + app.lower().replace('_', '-')
+        def app_to_pkg(prefix, app):
+            return prefix + app.lower().replace('_', '-')
 
         erlrun = d.expand("${ERLRUN}")
         pkgdest = d.getVar('PKGDEST', True)
         path = os.path.join(pkgdest, pkg)
+        pkg_prefix = pkg.split('-')[0]
 
         apps = []
         for root, dirs, files in os.walk(path):
@@ -84,12 +89,12 @@ python emit_erlang_deps() {
         for app in apps:
            escript = '{ok, C} = file:consult("'+app+'"), {_, AppName, Props} = lists:keyfind(application, 1, C), Apps = proplists:get_value(applications, Props, []), io:format("~s ~s~n", [AppName, string:join([atom_to_list(X) || X <- Apps], " ")]).'
            deps = os.popen(erlrun + " -eval '" + escript + "' -s erlang halt").readlines()[0].split()
-           appname = app_to_pkg(deps.pop(0))
+           appname = app_to_pkg(pkg_prefix, deps.pop(0))
            if appname not in provides:
                provides[appname] = ""
 
            for dep in deps:
-               dep = app_to_pkg(dep)
+               dep = app_to_pkg(pkg_prefix, dep)
                if dep not in depends:
                    depends[dep] = ""
 
@@ -98,12 +103,8 @@ python emit_erlang_deps() {
 
     packages = d.getVar('PACKAGES', True)
     expostfixs = (d.getVar('ERLDEPCHAIN_EXCLUDEPOST', True) or '-dev -dbg -staticdev -doc').split()
-    pkgs = packages.split()
     for pkg in packages.split():
         for postfix in expostfixs:
-            if pkg.endswith(postfix):
-                pkgs.remove(pkg)
-
-    for pkg in pkgs:
-        pkg_add_erlang_deps(pkg, d)
+            if not pkg.endswith(postfix):
+                pkg_add_erlang_deps(pkg, d)
 }

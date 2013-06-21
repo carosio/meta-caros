@@ -2,7 +2,7 @@ DESCRIPTION = "Dropbear is a lightweight SSH and SCP implementation"
 HOMEPAGE = "http://matt.ucc.asn.au/dropbear/dropbear.html"
 SECTION = "console/network"
 
-INC_PR = "r2"
+INC_PR = "r3"
 
 # some files are from other projects and have others license terms:
 #   public domain, OpenSSH 3.5p1, OpenSSH3.6.1p2, PuTTY
@@ -24,7 +24,8 @@ SRC_URI = "http://matt.ucc.asn.au/dropbear/releases/dropbear-${PV}.tar.gz \
 		 file://dropbearkey.service \
 		 file://dropbear@.service \
             	 file://dropbear.socket \
-                 ${@base_contains('DISTRO_FEATURES', 'pam', '${PAM_SRC_URI}', '', d)} "
+                 ${@base_contains('DISTRO_FEATURES', 'pam', '${PAM_SRC_URI}', '', d)} \
+		 ${@base_contains('DISTRO_FEATURES', 'x11', '', 'file://disable-x11fwd.patch', d)} "
 
 PAM_SRC_URI = "file://dropbear-enable-pam.patch \
                file://dropbear-configuration-file.patch \

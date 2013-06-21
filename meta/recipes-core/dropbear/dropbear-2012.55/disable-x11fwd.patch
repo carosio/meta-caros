@@ -1,0 +1,13 @@
+Index: dropbear-2012.55/options.h
+===================================================================
+--- dropbear-2012.55.orig/options.h	2013-06-12 22:10:55.999965367 +0200
++++ dropbear-2012.55/options.h	2013-06-20 09:55:30.072671817 +0200
+@@ -52,7 +52,7 @@
+ /*#define DROPBEAR_SMALL_CODE*/
+ 
+ /* Enable X11 Forwarding - server only */
+-#define ENABLE_X11FWD
++/* #define ENABLE_X11FWD */
+ 
+ /* Enable TCP Fowarding */
+ /* 'Local' is "-L" style (client listening port forwarded via server)

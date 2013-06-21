@@ -1,6 +1,7 @@
 inherit erlang
 
-DEPENDS += "tetrapak-native erlang"
+ERLVSN ?= ''
+DEPENDS += "tetrapak-native erlang${ERLVSN}"
 
 erllibs = "${STAGING_DIR_ERLANG_LIBS}:${TETRAPAK_ERL_LIBS}"
 
