@@ -17,7 +17,7 @@ OECMAKE_RPATH_class-native = "${libdir}"
 
 # When this class has packaging enabled, setting 
 # RPROVIDES becomes unnecessary.
-RPROVIDES = "${PN}"
+RPROVIDES_${PN} = "${PN}"
 
 TARGET_ARCH = "${BUILD_ARCH}"
 TARGET_OS = "${BUILD_OS}"
