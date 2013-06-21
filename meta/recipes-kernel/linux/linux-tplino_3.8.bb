@@ -1,17 +1,17 @@
-require recipes-kernel/linux/linux-yocto.inc
+require recipes-kernel/linux/linux-tplino.inc
 
 KBRANCH_DEFAULT = "standard/base"
 KBRANCH = "${KBRANCH_DEFAULT}"
 
-SRCREV_machine_qemuarm ?= "b5a80c6a46604d7636c18a3e1ad362d1e6ed234e"
-SRCREV_machine_qemumips  ?= "66bc662b2cd469a9807fbe838069d3f85cb01bd9"
-SRCREV_machine_qemuppc ?= "d771422df10af41ee61598f4aa06e3c3a018c323"
-SRCREV_machine_qemux86 ?= "59c2a9eb334c2def405c9d93ed6d8d4e822d1945"
-SRCREV_machine_qemux86-64 ?= "59c2a9eb334c2def405c9d93ed6d8d4e822d1945"
-SRCREV_machine ?= "59c2a9eb334c2def405c9d93ed6d8d4e822d1945"
-SRCREV_meta ?= "c0b3904d60830e24b3930b0fa606a48b2758d979"
+SRCREV_machine_qemuarm ?= "AUTOINC"
+SRCREV_machine_qemumips  ?= "AUTOINC"
+SRCREV_machine_qemuppc ?= "AUTOINC"
+SRCREV_machine_qemux86 ?= "AUTOINC"
+SRCREV_machine_qemux86-64 ?= "AUTOINC"
+SRCREV_machine ?= "AUTOINC"
+SRCREV_meta ?= "AUTOINC"
 
-SRC_URI = "git://git.yoctoproject.org/linux-yocto-3.4.git;protocol=git;bareclone=1;branch=${KBRANCH},${KMETA};name=machine,meta"
+SRC_URI = "git://git@git.tpip.net/tplino-linux-3.8;protocol=ssh;bareclone=1;branch=${KBRANCH},${KMETA};name=machine,meta"
 
 LINUX_VERSION ?= "3.8"
 
