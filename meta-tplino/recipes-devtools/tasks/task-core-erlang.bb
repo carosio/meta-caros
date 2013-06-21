@@ -10,8 +10,8 @@ PACKAGES = "\
     task-core-erlang-dev \
     "
 
-ALLOW_EMPTY = "1"
+ALLOW_EMPTY_${PN} = "1"
 
-RDEPENDS_task-core-erlang = "erlang"
-RDEPENDS_task-core-erlang-dbg = "erlang-dbg"
-RDEPENDS_task-core-erlang-dev = "erlang-dev"
+RDEPENDS_${PN} = "erlang"
+RDEPENDS_${PN}-dbg = "erlang-dbg"
+RDEPENDS_${PN}-dev = "erlang-dev"

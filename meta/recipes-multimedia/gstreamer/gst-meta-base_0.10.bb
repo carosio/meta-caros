@@ -14,7 +14,7 @@ PACKAGES = "\
     gst-meta-debug \
     gst-meta-video"
 
-ALLOW_EMPTY = "1"
+ALLOW_EMPTY-${PN} = "1"
 
 RDEPENDS_gst-meta-base = "\
     ${@base_contains('DISTRO_FEATURES', 'x11', 'gst-meta-x11-base', '', d)} \

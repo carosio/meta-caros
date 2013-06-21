@@ -4,17 +4,17 @@ LIC_FILES_CHKSUM = "file://${COREBASE}/LICENSE;md5=3f40d7994397109285ec7b81fdeb3
                     file://${COREBASE}/meta/COPYING.MIT;md5=3da9cfbcb788c80a0384361b4de20420"
 PR = "r0"
 
-ALLOW_EMPTY = "1"
+ALLOW_EMPTY_${PN} = "1"
 
 PACKAGES = "\
     task-core-erlang-sdk \
     task-core-erlang-sdk-dbg \
     task-core-erlang-sdk-dev \
     "
+ 
+ALLOW_EMPTY_${PN} = "1"
 
-ALLOW_EMPTY = "1"
-
-RDEPENDS_task-core-erlang-sdk = "\
+RDEPENDS_${PN}-sdk = "\
     erlang \
     erlang-appmon \
     erlang-asn1 \
