@@ -21,9 +21,9 @@ LCD_DEFAULT_DRIVER ?= "curses"
 
 EXTRA_OECONF = "--enable-drivers=${LCD_DRIVERS} --enable-libusb --disable-libpng"
 
-SYSTEMD_PACKAGES = "${PN}-systemd lcdd-systemd"
-SYSTEMD_SERVICE_${PN}-systemd = "lcdproc.service"
-SYSTEMD_SERVICE_lcdd-systemd = "LCDd.service"
+SYSTEMD_PACKAGES = "${PN} lcdd"
+SYSTEMD_SERVICE_${PN} = "lcdproc.service"
+SYSTEMD_SERVICE_lcdd = "LCDd.service"
 
 do_install () {
 	# binaries
@@ -42,14 +42,20 @@ do_install () {
 	for i in server/drivers/*.so; do
 		install -m 0644 $i ${D}${libdir}/lcdproc/
 	done
+  
+    install -d ${D}${systemd_unitdir}/system
+    install -m 644 ${WORKDIR}/*.service ${D}/${systemd_unitdir}/system
 }
 
 PACKAGES =+ "lcdd"
 
 RRECOMMENDS_${PN} = "lcdd"
 
-FILES_lcdd = "${sysconfdir}/lcdproc/LCDd.conf \
-	      ${sbindir}/LCDd"
+FILES_lcdd = " \
+    ${sysconfdir}/lcdproc/LCDd.conf \
+    ${sbindir}/LCDd \
+    ${systemd_unitdir}/system/LCDd.service \
+"
 
 CONFFILES_lcdd = "${sysconfdir}/lcdproc/LCDd.conf"
 CONFFILES_${PN} = "${sysconfdir}/lcdproc/lcdproc.conf"

@@ -19,4 +19,3 @@ do_install_append () {
 PACKAGES =+ "lcdvc"
 CONFFILES_lcdvc = "${sysconfdir}/lcdvc.conf"
 FILES_lcdvc = "${sysconfdir}/lcdvc.conf ${sbindir}/lcdvc"
-
