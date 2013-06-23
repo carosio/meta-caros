@@ -1,13 +1,11 @@
 require erlang-native.inc
 
 SRC_URI = "git://github.com/RoadRunnr/otp.git;protocol=git;branch=new_crypto_dtls"
-SRCREV = "9e02611a5b01e09eabbe6c7b6b0a911b42c935a8"
+SRCREV = "b163024d82cbae444e21f4ea37d1b25c4e375e0e"
 
 S = "${WORKDIR}/git"
 
-PR = "r0"
-
-RCONFLICTS_${PN} = "erlang-native"
+PR = "r1"
 
 do_configure_prepend() {
     ./otp_build autoconf

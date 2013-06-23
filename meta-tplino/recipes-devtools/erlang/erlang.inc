@@ -1,5 +1,9 @@
 require erlang-base.inc
 
+PROVIDES += "virtual/erlang"
+RPROVIDES_${PN} += "erlang-stdlib erlang-kernel erlang-sasl"
+RPROVIDES_virtal/kernel += "erlang-stdlib erlang-kernel erlang-sasl"
+
 DEPENDS += "openssl zlib ncurses"
 export OE_LDFLAGS="-lz"
 
@@ -142,7 +146,7 @@ FILES_${PN} = '${erlbindir}/erlc \
                /usr/bin/escript \
                /usr/bin/epmd'
 
-FILES_${PN}-dev += '/usr/bin/typer \
+FILES_${PN}-dev += "/usr/bin/typer \
                     /usr/bin/dialyzer \
                     /usr/bin/ct_run \
                     ${erldir}/usr/include \
@@ -156,7 +160,12 @@ FILES_${PN}-dev += '/usr/bin/typer \
                     ${erllibdir}/hipe-*/main \
                     ${erllibdir}/hipe-*/util \
                     ${erllibdir}/hipe-*/cerl \
-                    ${erllibdir}/hipe-*/flow'
+                    ${erllibdir}/hipe-*/flow \
+                    ${erldir}/erts-*/lib/internal/README \
+                    ${erldir}/erts-*/bin/start_erl.src \
+                    ${erldir}/erts-*/bin/start.src \
+                    ${erldir}/erts-*/bin/erl.src \
+"
 
 FILES_${PN}-doc += '${erldir}/erts-*/doc ${erldir}/erts-*/man'
 

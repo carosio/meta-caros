@@ -1,3 +1,5 @@
+DEPENDS += "virtual/erlang-native"
+
 inherit package
 
 python () {
@@ -14,12 +16,6 @@ erlincludedir = "${includedir}"
 export STAGING_DIR_ERLANG_LIBS="${STAGING_DIR_TARGET}${erllibdir}"
 
 def erlang_def_package(app, appdir, inc, dev, d):
-    erlvsn = (d.getVar('ERLVSN', True) or '')
-    erl_native = 'erlang-native' + erlvsn
-    depends = (d.getVar('DEPENDS', True) or '')
-    if depends.find(erl_native) == -1:
-        depends += ' ' + erl_native + ' '
-    d.setVar('DEPENDS', depends)
 
     erllibdir = d.getVar('erllibdir', True)
     appdirs = appdir.split()
@@ -32,7 +28,7 @@ def erlang_def_package(app, appdir, inc, dev, d):
 
     packages = (d.getVar('PACKAGES', True) or "").split()
 
-    app_pkg = 'erlang' + erlvsn + '-' + app
+    app_pkg = 'erlang' + '-' + app
     app_pkg_dev = app_pkg + '-dev'
     app_pkg_dbg = app_pkg + '-dbg'
     if  app_pkg in packages:
@@ -68,7 +64,7 @@ python emit_erlang_deps() {
 
     def pkg_add_erlang_deps(pkg, d):
         def app_to_pkg(prefix, app):
-            return prefix + app.lower().replace('_', '-')
+            return prefix + '-' + app.lower().replace('_', '-')
 
         erlrun = d.expand("${ERLRUN}")
         pkgdest = d.getVar('PKGDEST', True)

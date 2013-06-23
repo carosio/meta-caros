@@ -1,5 +1,7 @@
 require erlang-base.inc
 
+PROVIDES += "virtual/erlang-native"
+
 DEPENDS += "openssl"
 
 inherit autotools native

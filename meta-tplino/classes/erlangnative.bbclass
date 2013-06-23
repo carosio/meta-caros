@@ -1,6 +1,5 @@
 PATH_prepend = "${STAGING_BINDIR_NATIVE}/erlang-native:"
-ERLVSN ?= ''
-DEPENDS += "erlang-native${ERLVSN}"
+DEPENDS += "virtual/erlang-native"
 OECMAKE_ERLANGNATIVE_DIR = "${STAGING_BINDIR_NATIVE}/erlang-native"
 
 erldir = "${libdir}/erlang"
