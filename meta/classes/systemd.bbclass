@@ -62,7 +62,6 @@ python systemd_populate_packages() {
         if not pkg_systemd in packages.split():
             bb.error('%s does not appear in package list, please add it' % pkg_systemd)
 
-
     def systemd_generate_package_scripts(pkg):
         bb.debug(1, 'adding systemd calls to postinst/postrm for %s' % pkg)
 
