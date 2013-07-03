@@ -43,6 +43,6 @@ do_install_append(){
     install -p -m 755 examples/logrotate.cron ${D}${sysconfdir}/cron.daily/logrotate
     touch ${D}${localstatedir}/lib/logrotate.status
 
-    install -m 644 ${WORKDIR}/*.service ${D}/${systemd_unitdir}/system
-    install -m 644 ${WORKDIR}/*.timer ${D}/${systemd_unitdir}/system
+    install -m 644 ${WORKDIR}/*.service ${D}${systemd_unitdir}/system
+    install -m 644 ${WORKDIR}/*.timer ${D}${systemd_unitdir}/system
 }
