@@ -1,0 +1,634 @@
+From e4af2f5cef437f30c7c069d569fbae9459339de8 Mon Sep 17 00:00:00 2001
+From: Tino Breddin <tb@travelping.com>
+Date: Tue, 2 Jul 2013 16:43:06 +0200
+Subject: [PATCH] Use system genrandom
+
+---
+ bin/named/bindkeys.pl                        | 0
+ bin/named/convertxsl.pl                      | 0
+ bin/python/dnssec-coverage.py.in             | 0
+ bin/tests/dst/Makefile.in                    | 4 ++--
+ bin/tests/dst/gsstest.c                      | 0
+ bin/tests/system/autosign/prereq.sh          | 2 +-
+ bin/tests/system/autosign/setup.sh           | 2 +-
+ bin/tests/system/checkds/dig.sh              | 0
+ bin/tests/system/coverage/setup.sh           | 2 +-
+ bin/tests/system/dlv/ns1/sign.sh             | 0
+ bin/tests/system/dlv/ns2/sign.sh             | 0
+ bin/tests/system/dlv/ns3/sign.sh             | 0
+ bin/tests/system/dlv/ns6/sign.sh             | 0
+ bin/tests/system/dlv/setup.sh                | 2 +-
+ bin/tests/system/dlvauto/setup.sh            | 2 +-
+ bin/tests/system/dlzexternal/setup.sh        | 2 +-
+ bin/tests/system/dns64/setup.sh              | 2 +-
+ bin/tests/system/dnssec/prereq.sh            | 2 +-
+ bin/tests/system/dnssec/setup.sh             | 2 +-
+ bin/tests/system/ecdsa/setup.sh              | 2 +-
+ bin/tests/system/filter-aaaa/ns1/sign.sh     | 0
+ bin/tests/system/filter-aaaa/ns4/sign.sh     | 0
+ bin/tests/system/filter-aaaa/setup.sh        | 2 +-
+ bin/tests/system/gost/setup.sh               | 2 +-
+ bin/tests/system/ifconfig.sh                 | 0
+ bin/tests/system/inline/setup.sh             | 2 +-
+ bin/tests/system/masterformat/clean.sh       | 0
+ bin/tests/system/masterformat/ns1/compile.sh | 0
+ bin/tests/system/masterformat/setup.sh       | 0
+ bin/tests/system/masterformat/tests.sh       | 0
+ bin/tests/system/metadata/prereq.sh          | 2 +-
+ bin/tests/system/metadata/setup.sh           | 2 +-
+ bin/tests/system/metadata/tests.sh           | 2 +-
+ bin/tests/system/nsupdate/setup.sh           | 2 +-
+ bin/tests/system/pending/prereq.sh           | 2 +-
+ bin/tests/system/pending/setup.sh            | 2 +-
+ bin/tests/system/pkcs11/prereq.sh            | 2 +-
+ bin/tests/system/redirect/setup.sh           | 2 +-
+ bin/tests/system/resolver/setup.sh           | 2 +-
+ bin/tests/system/rpz/setup.sh                | 2 +-
+ bin/tests/system/rsabigexponent/ns1/sign.sh  | 0
+ bin/tests/system/rsabigexponent/ns2/sign.sh  | 0
+ bin/tests/system/rsabigexponent/prereq.sh    | 2 +-
+ bin/tests/system/rsabigexponent/setup.sh     | 2 +-
+ bin/tests/system/smartsign/prereq.sh         | 2 +-
+ bin/tests/system/smartsign/setup.sh          | 2 +-
+ bin/tests/system/staticstub/clean.sh         | 0
+ bin/tests/system/staticstub/ns3/sign.sh      | 0
+ bin/tests/system/staticstub/ns4/sign.sh      | 0
+ bin/tests/system/staticstub/setup.sh         | 2 +-
+ bin/tests/system/staticstub/tests.sh         | 0
+ bin/tests/system/tkey/prereq.sh              | 2 +-
+ bin/tests/system/tkey/setup.sh               | 2 +-
+ bin/tests/system/tsiggss/setup.sh            | 2 +-
+ bin/tests/system/unknown/setup.sh            | 2 +-
+ bin/tests/system/verify/setup.sh             | 2 +-
+ bin/tests/system/wildcard/ns1/sign.sh        | 0
+ bin/tests/system/wildcard/setup.sh           | 2 +-
+ bin/tests/virtual-time/autosign-ksk/setup.sh | 2 +-
+ bin/tests/virtual-time/autosign-zsk/setup.sh | 2 +-
+ 60 files changed, 38 insertions(+), 38 deletions(-)
+ mode change 100755 => 100644 bin/named/bindkeys.pl
+ mode change 100755 => 100644 bin/named/convertxsl.pl
+ mode change 100755 => 100644 bin/python/dnssec-coverage.py.in
+ mode change 100755 => 100644 bin/tests/dst/gsstest.c
+ mode change 100755 => 100644 bin/tests/system/checkds/dig.sh
+ mode change 100755 => 100644 bin/tests/system/dlv/ns1/sign.sh
+ mode change 100755 => 100644 bin/tests/system/dlv/ns2/sign.sh
+ mode change 100755 => 100644 bin/tests/system/dlv/ns3/sign.sh
+ mode change 100755 => 100644 bin/tests/system/dlv/ns6/sign.sh
+ mode change 100755 => 100644 bin/tests/system/filter-aaaa/ns1/sign.sh
+ mode change 100755 => 100644 bin/tests/system/filter-aaaa/ns4/sign.sh
+ mode change 100755 => 100644 bin/tests/system/ifconfig.sh
+ mode change 100755 => 100644 bin/tests/system/masterformat/clean.sh
+ mode change 100755 => 100644 bin/tests/system/masterformat/ns1/compile.sh
+ mode change 100755 => 100644 bin/tests/system/masterformat/setup.sh
+ mode change 100755 => 100644 bin/tests/system/masterformat/tests.sh
+ mode change 100755 => 100644 bin/tests/system/rsabigexponent/ns1/sign.sh
+ mode change 100755 => 100644 bin/tests/system/rsabigexponent/ns2/sign.sh
+ mode change 100755 => 100644 bin/tests/system/staticstub/clean.sh
+ mode change 100755 => 100644 bin/tests/system/staticstub/ns3/sign.sh
+ mode change 100755 => 100644 bin/tests/system/staticstub/ns4/sign.sh
+ mode change 100755 => 100644 bin/tests/system/staticstub/setup.sh
+ mode change 100755 => 100644 bin/tests/system/staticstub/tests.sh
+ mode change 100755 => 100644 bin/tests/system/wildcard/ns1/sign.sh
+
+diff --git a/bin/named/bindkeys.pl b/bin/named/bindkeys.pl
+old mode 100755
+new mode 100644
+diff --git a/bin/named/convertxsl.pl b/bin/named/convertxsl.pl
+old mode 100755
+new mode 100644
+diff --git a/bin/python/dnssec-coverage.py.in b/bin/python/dnssec-coverage.py.in
+old mode 100755
+new mode 100644
+diff --git a/bin/tests/dst/Makefile.in b/bin/tests/dst/Makefile.in
+index de66315..f1feaaa 100644
+--- a/bin/tests/dst/Makefile.in
++++ b/bin/tests/dst/Makefile.in
+@@ -58,11 +58,11 @@ gsstest@EXEEXT@: gsstest.@O@ ${DEPLIBS}
+ 		gsstest.@O@ ${LIBS}
+ 
+ test: t_dst@EXEEXT@ randomfile
+-	../../tools/genrandom@EXEEXT@ 100 randomfile
++	genrandom@EXEEXT@ 100 randomfile
+ 	-@ ./t_dst@EXEEXT@ -q 1800 -a
+ 
+ randomfile:
+-	../../tools/genrandom@EXEEXT@ 100 randomfile
++	genrandom@EXEEXT@ 100 randomfile
+ 
+ clean distclean::
+ 	rm -f ${TARGETS} randomfile
+diff --git a/bin/tests/dst/gsstest.c b/bin/tests/dst/gsstest.c
+old mode 100755
+new mode 100644
+diff --git a/bin/tests/system/autosign/prereq.sh b/bin/tests/system/autosign/prereq.sh
+index 34cd4a1..3f82f5a 100644
+--- a/bin/tests/system/autosign/prereq.sh
++++ b/bin/tests/system/autosign/prereq.sh
+@@ -19,7 +19,7 @@
+ SYSTEMTESTTOP=..
+ . $SYSTEMTESTTOP/conf.sh
+ 
+-../../../tools/genrandom 400 random.data
++genrandom 400 random.data
+ 
+ if $KEYGEN -q -a RSAMD5 -b 512 -n zone -r random.data foo > /dev/null 2>&1
+ then
+diff --git a/bin/tests/system/autosign/setup.sh b/bin/tests/system/autosign/setup.sh
+index 0f615d5..47b2ea6 100644
+--- a/bin/tests/system/autosign/setup.sh
++++ b/bin/tests/system/autosign/setup.sh
+@@ -22,6 +22,6 @@ SYSTEMTESTTOP=..
+ 
+ echo "I:generating keys and preparing zones"
+ 
+-../../../tools/genrandom 400 random.data
++genrandom 400 random.data
+ 
+ cd ns1 && sh keygen.sh
+diff --git a/bin/tests/system/checkds/dig.sh b/bin/tests/system/checkds/dig.sh
+old mode 100755
+new mode 100644
+diff --git a/bin/tests/system/coverage/setup.sh b/bin/tests/system/coverage/setup.sh
+index 95b35dd..7c3ac73 100644
+--- a/bin/tests/system/coverage/setup.sh
++++ b/bin/tests/system/coverage/setup.sh
+@@ -22,7 +22,7 @@ KEYGEN="$KEYGEN -qr random.data"
+ sh clean.sh
+ 
+ ln -s $CHECKZONE named-compilezone
+-../../../tools/genrandom 400 random.data
++genrandom 400 random.data
+ 
+ # Test 1: KSK goes inactive before successor is active
+ dir=01-ksk-inactive
+diff --git a/bin/tests/system/dlv/ns1/sign.sh b/bin/tests/system/dlv/ns1/sign.sh
+old mode 100755
+new mode 100644
+diff --git a/bin/tests/system/dlv/ns2/sign.sh b/bin/tests/system/dlv/ns2/sign.sh
+old mode 100755
+new mode 100644
+diff --git a/bin/tests/system/dlv/ns3/sign.sh b/bin/tests/system/dlv/ns3/sign.sh
+old mode 100755
+new mode 100644
+diff --git a/bin/tests/system/dlv/ns6/sign.sh b/bin/tests/system/dlv/ns6/sign.sh
+old mode 100755
+new mode 100644
+diff --git a/bin/tests/system/dlv/setup.sh b/bin/tests/system/dlv/setup.sh
+index 92ee8fc..e351a81 100644
+--- a/bin/tests/system/dlv/setup.sh
++++ b/bin/tests/system/dlv/setup.sh
+@@ -16,6 +16,6 @@
+ 
+ # $Id: setup.sh,v 1.8 2011/05/26 23:47:28 tbox Exp $
+ 
+-../../../tools/genrandom 400 random.data
++genrandom 400 random.data
+ 
+ (cd ns1 && sh -e sign.sh)
+diff --git a/bin/tests/system/dlvauto/setup.sh b/bin/tests/system/dlvauto/setup.sh
+index 6c9df26..43a997f 100644
+--- a/bin/tests/system/dlvauto/setup.sh
++++ b/bin/tests/system/dlvauto/setup.sh
+@@ -18,6 +18,6 @@
+ 
+ sh clean.sh 
+ 
+-../../../tools/genrandom 400 random.data
++genrandom 400 random.data
+ 
+ cd ns1 && sh sign.sh
+diff --git a/bin/tests/system/dlzexternal/setup.sh b/bin/tests/system/dlzexternal/setup.sh
+index f4bf9d0..2c2f4ef 100644
+--- a/bin/tests/system/dlzexternal/setup.sh
++++ b/bin/tests/system/dlzexternal/setup.sh
+@@ -19,5 +19,5 @@
+ SYSTEMTESTTOP=..
+ . $SYSTEMTESTTOP/conf.sh
+ 
+-../../../tools/genrandom 400 random.data
++genrandom 400 random.data
+ $DDNSCONFGEN -q -r random.data -z example.nil > ns1/ddns.key
+diff --git a/bin/tests/system/dns64/setup.sh b/bin/tests/system/dns64/setup.sh
+index c15357c..11a10b7 100644
+--- a/bin/tests/system/dns64/setup.sh
++++ b/bin/tests/system/dns64/setup.sh
+@@ -18,6 +18,6 @@
+ 
+ sh clean.sh
+ 
+-../../../tools/genrandom 400 random.data
++genrandom 400 random.data
+ 
+ cd ns1 && sh sign.sh
+diff --git a/bin/tests/system/dnssec/prereq.sh b/bin/tests/system/dnssec/prereq.sh
+index cb7c0c7..e5f3149 100644
+--- a/bin/tests/system/dnssec/prereq.sh
++++ b/bin/tests/system/dnssec/prereq.sh
+@@ -17,7 +17,7 @@
+ 
+ # $Id: prereq.sh,v 1.13 2009/10/28 00:27:10 marka Exp $
+ 
+-../../../tools/genrandom 400 random.data
++genrandom 400 random.data
+ 
+ if $KEYGEN -q -a RSAMD5 -b 512 -n zone -r random.data foo > /dev/null 2>&1
+ then
+diff --git a/bin/tests/system/dnssec/setup.sh b/bin/tests/system/dnssec/setup.sh
+index 4247929..1e5c936 100644
+--- a/bin/tests/system/dnssec/setup.sh
++++ b/bin/tests/system/dnssec/setup.sh
+@@ -19,7 +19,7 @@
+ 
+ sh clean.sh 
+ 
+-../../../tools/genrandom 400 random.data
++genrandom 400 random.data
+ 
+ cd ns1 && sh sign.sh
+ 
+diff --git a/bin/tests/system/ecdsa/setup.sh b/bin/tests/system/ecdsa/setup.sh
+index 6ba0f72..6b15d16 100644
+--- a/bin/tests/system/ecdsa/setup.sh
++++ b/bin/tests/system/ecdsa/setup.sh
+@@ -16,6 +16,6 @@
+ 
+ # $Id$
+ 
+-../../../tools/genrandom 400 random.data
++genrandom 400 random.data
+ 
+ cd ns1 && sh sign.sh
+diff --git a/bin/tests/system/filter-aaaa/ns1/sign.sh b/bin/tests/system/filter-aaaa/ns1/sign.sh
+old mode 100755
+new mode 100644
+diff --git a/bin/tests/system/filter-aaaa/ns4/sign.sh b/bin/tests/system/filter-aaaa/ns4/sign.sh
+old mode 100755
+new mode 100644
+diff --git a/bin/tests/system/filter-aaaa/setup.sh b/bin/tests/system/filter-aaaa/setup.sh
+index 173d990..5de82e6 100644
+--- a/bin/tests/system/filter-aaaa/setup.sh
++++ b/bin/tests/system/filter-aaaa/setup.sh
+@@ -18,7 +18,7 @@
+ 
+ sh clean.sh
+ 
+-../../../tools/genrandom 400 random.data
++genrandom 400 random.data
+ 
+ (cd ns1 && sh -e sign.sh)
+ (cd ns4 && sh -e sign.sh)
+diff --git a/bin/tests/system/gost/setup.sh b/bin/tests/system/gost/setup.sh
+index bfa5f3e..c8ea3c2 100644
+--- a/bin/tests/system/gost/setup.sh
++++ b/bin/tests/system/gost/setup.sh
+@@ -16,6 +16,6 @@
+ 
+ # $Id: setup.sh,v 1.2 2010/12/23 04:08:00 marka Exp $
+ 
+-../../../tools/genrandom 400 random.data
++genrandom 400 random.data
+ 
+ cd ns1 && sh sign.sh
+diff --git a/bin/tests/system/ifconfig.sh b/bin/tests/system/ifconfig.sh
+old mode 100755
+new mode 100644
+diff --git a/bin/tests/system/inline/setup.sh b/bin/tests/system/inline/setup.sh
+index 7ba3246..4656236 100644
+--- a/bin/tests/system/inline/setup.sh
++++ b/bin/tests/system/inline/setup.sh
+@@ -35,7 +35,7 @@ rm -f ns4/noixfr.db.jnl
+ 
+ cp ns5/named.conf.pre ns5/named.conf
+ 
+-../../../tools/genrandom 400 random.data
++genrandom 400 random.data
+ 
+ (cd ns3; sh -e sign.sh)
+ (cd ns1; sh -e sign.sh)
+diff --git a/bin/tests/system/masterformat/clean.sh b/bin/tests/system/masterformat/clean.sh
+old mode 100755
+new mode 100644
+diff --git a/bin/tests/system/masterformat/ns1/compile.sh b/bin/tests/system/masterformat/ns1/compile.sh
+old mode 100755
+new mode 100644
+diff --git a/bin/tests/system/masterformat/setup.sh b/bin/tests/system/masterformat/setup.sh
+old mode 100755
+new mode 100644
+diff --git a/bin/tests/system/masterformat/tests.sh b/bin/tests/system/masterformat/tests.sh
+old mode 100755
+new mode 100644
+diff --git a/bin/tests/system/metadata/prereq.sh b/bin/tests/system/metadata/prereq.sh
+index b7ce1ea..cf718f3 100644
+--- a/bin/tests/system/metadata/prereq.sh
++++ b/bin/tests/system/metadata/prereq.sh
+@@ -16,7 +16,7 @@
+ 
+ # $Id: prereq.sh,v 1.3 2009/11/30 23:48:02 tbox Exp $
+ 
+-../../../tools/genrandom 400 random.data
++genrandom 400 random.data
+ 
+ if $KEYGEN -q -r random.data foo > /dev/null 2>&1
+ then
+diff --git a/bin/tests/system/metadata/setup.sh b/bin/tests/system/metadata/setup.sh
+index d5b7689..e771171 100644
+--- a/bin/tests/system/metadata/setup.sh
++++ b/bin/tests/system/metadata/setup.sh
+@@ -25,7 +25,7 @@ RANDFILE=./random.data
+ pzone=parent.nil
+ czone=child.parent.nil
+ 
+-../../../tools/genrandom 400 $RANDFILE
++genrandom 400 $RANDFILE
+ 
+ echo "I:generating keys"
+ 
+diff --git a/bin/tests/system/metadata/tests.sh b/bin/tests/system/metadata/tests.sh
+index e2abe2f..d954d4a 100644
+--- a/bin/tests/system/metadata/tests.sh
++++ b/bin/tests/system/metadata/tests.sh
+@@ -37,7 +37,7 @@ rolling=`sed 's/^K'${czone}'.+005+0*\([0-9]\)/\1/' < rolling.key`
+ standby=`sed 's/^K'${czone}'.+005+0*\([0-9]\)/\1/' < standby.key`
+ zsk=`sed 's/^K'${czone}'.+005+0*\([0-9]\)/\1/' < zsk.key`
+ 
+-../../../tools/genrandom 400 $RANDFILE
++genrandom 400 $RANDFILE
+ 
+ echo "I:signing zones"
+ $SIGNER -Sg -o $czone $cfile > /dev/null 2>&1
+diff --git a/bin/tests/system/nsupdate/setup.sh b/bin/tests/system/nsupdate/setup.sh
+index bb01514..c4fe4d9 100644
+--- a/bin/tests/system/nsupdate/setup.sh
++++ b/bin/tests/system/nsupdate/setup.sh
+@@ -51,7 +51,7 @@ ns1.update.nil.         A       10.53.0.2
+ ns2.update.nil.		AAAA	::1
+ EOF
+ 
+-../../../tools/genrandom 400 random.data
++genrandom 400 random.data
+ $DDNSCONFGEN -q -r random.data -z example.nil > ns1/ddns.key
+ 
+ $DDNSCONFGEN -q -r random.data -a hmac-md5 -k md5-key -z keytests.nil > ns1/md5.key
+diff --git a/bin/tests/system/pending/prereq.sh b/bin/tests/system/pending/prereq.sh
+index 0b6998e..62b73e1 100644
+--- a/bin/tests/system/pending/prereq.sh
++++ b/bin/tests/system/pending/prereq.sh
+@@ -16,7 +16,7 @@
+ 
+ # $Id: prereq.sh,v 1.3 2009/11/18 23:48:06 tbox Exp $
+ 
+-../../../tools/genrandom 400 random.data
++genrandom 400 random.data
+ 
+ if $KEYGEN -q -a RSAMD5 -b 512 -n zone -r random.data foo > /dev/null 2>&1
+ then
+diff --git a/bin/tests/system/pending/setup.sh b/bin/tests/system/pending/setup.sh
+index aa44c06..132d747 100644
+--- a/bin/tests/system/pending/setup.sh
++++ b/bin/tests/system/pending/setup.sh
+@@ -16,6 +16,6 @@
+ 
+ # $Id: setup.sh,v 1.2 2009/11/17 23:55:18 marka Exp $
+ 
+-../../../tools/genrandom 400 random.data
++genrandom 400 random.data
+ 
+ cd ns1 && sh -e sign.sh
+diff --git a/bin/tests/system/pkcs11/prereq.sh b/bin/tests/system/pkcs11/prereq.sh
+index 40fe5e0..120459e 100644
+--- a/bin/tests/system/pkcs11/prereq.sh
++++ b/bin/tests/system/pkcs11/prereq.sh
+@@ -16,7 +16,7 @@
+ 
+ # $Id: prereq.sh,v 1.3 2010/06/08 23:50:24 tbox Exp $
+ 
+-../../../tools/genrandom 400 random.data
++genrandom 400 random.data
+ 
+ if $KEYGEN -q -a RSAMD5 -b 512 -n zone -r random.data foo > /dev/null 2>&1
+ then
+diff --git a/bin/tests/system/redirect/setup.sh b/bin/tests/system/redirect/setup.sh
+index 94512ec..09358db 100644
+--- a/bin/tests/system/redirect/setup.sh
++++ b/bin/tests/system/redirect/setup.sh
+@@ -18,7 +18,7 @@
+ 
+ sh clean.sh
+ 
+-../../../tools/genrandom 400 random.data
++genrandom 400 random.data
+ 
+ cp ns2/redirect.db.in ns2/redirect.db
+ cp ns2/example.db.in ns2/example.db
+diff --git a/bin/tests/system/resolver/setup.sh b/bin/tests/system/resolver/setup.sh
+index 5567d35..06756a2 100644
+--- a/bin/tests/system/resolver/setup.sh
++++ b/bin/tests/system/resolver/setup.sh
+@@ -16,7 +16,7 @@
+ 
+ # $Id$
+ 
+-../../../tools/genrandom 400 random.data
++genrandom 400 random.data
+ 
+ cp ns4/tld1.db ns4/tld.db
+ cp ns6/to-be-removed.tld.db.in ns6/to-be-removed.tld.db
+diff --git a/bin/tests/system/rpz/setup.sh b/bin/tests/system/rpz/setup.sh
+index 5a0f904..a903ade 100644
+--- a/bin/tests/system/rpz/setup.sh
++++ b/bin/tests/system/rpz/setup.sh
+@@ -35,7 +35,7 @@ for NM in '' -2 -given -disabled -passthru -no-op -nodata -nxdomain -cname -wild
+ done
+ 
+ # sign the root and a zone in ns2
+-../../../tools/genrandom 400 random.data
++genrandom 400 random.data
+ 
+ # $1=directory, $2=domain name, $3=input zone file, $4=output file
+ signzone () {
+diff --git a/bin/tests/system/rsabigexponent/ns1/sign.sh b/bin/tests/system/rsabigexponent/ns1/sign.sh
+old mode 100755
+new mode 100644
+diff --git a/bin/tests/system/rsabigexponent/ns2/sign.sh b/bin/tests/system/rsabigexponent/ns2/sign.sh
+old mode 100755
+new mode 100644
+diff --git a/bin/tests/system/rsabigexponent/prereq.sh b/bin/tests/system/rsabigexponent/prereq.sh
+index 8edbf1d..12169eb 100644
+--- a/bin/tests/system/rsabigexponent/prereq.sh
++++ b/bin/tests/system/rsabigexponent/prereq.sh
+@@ -16,7 +16,7 @@
+ 
+ # $Id$
+ 
+-../../../tools/genrandom 400 random.data
++genrandom 400 random.data
+ 
+ if ./bigkey > /dev/null 2>&1
+ then
+diff --git a/bin/tests/system/rsabigexponent/setup.sh b/bin/tests/system/rsabigexponent/setup.sh
+index bf24be6..eb1a0b5 100644
+--- a/bin/tests/system/rsabigexponent/setup.sh
++++ b/bin/tests/system/rsabigexponent/setup.sh
+@@ -18,6 +18,6 @@
+ 
+ sh clean.sh
+ 
+-../../../tools/genrandom 400 random.data
++genrandom 400 random.data
+ 
+ cd ns1 && sh -e sign.sh
+diff --git a/bin/tests/system/smartsign/prereq.sh b/bin/tests/system/smartsign/prereq.sh
+index e47b769..a377e1f 100644
+--- a/bin/tests/system/smartsign/prereq.sh
++++ b/bin/tests/system/smartsign/prereq.sh
+@@ -16,7 +16,7 @@
+ 
+ # $Id: prereq.sh,v 1.3 2010/01/18 23:48:40 tbox Exp $
+ 
+-../../../tools/genrandom 400 random.data
++genrandom 400 random.data
+ 
+ if $KEYGEN -q -r random.data foo > /dev/null 2>&1
+ then
+diff --git a/bin/tests/system/smartsign/setup.sh b/bin/tests/system/smartsign/setup.sh
+index a25d371..e9bb723 100644
+--- a/bin/tests/system/smartsign/setup.sh
++++ b/bin/tests/system/smartsign/setup.sh
+@@ -17,4 +17,4 @@
+ # $Id: setup.sh,v 1.3 2010/01/18 23:48:40 tbox Exp $
+ 
+ sh clean.sh
+-../../../tools/genrandom 400 random.data
++genrandom 400 random.data
+diff --git a/bin/tests/system/staticstub/clean.sh b/bin/tests/system/staticstub/clean.sh
+old mode 100755
+new mode 100644
+diff --git a/bin/tests/system/staticstub/ns3/sign.sh b/bin/tests/system/staticstub/ns3/sign.sh
+old mode 100755
+new mode 100644
+diff --git a/bin/tests/system/staticstub/ns4/sign.sh b/bin/tests/system/staticstub/ns4/sign.sh
+old mode 100755
+new mode 100644
+diff --git a/bin/tests/system/staticstub/setup.sh b/bin/tests/system/staticstub/setup.sh
+old mode 100755
+new mode 100644
+index 4c5a55c..b582088
+--- a/bin/tests/system/staticstub/setup.sh
++++ b/bin/tests/system/staticstub/setup.sh
+@@ -20,6 +20,6 @@ sed 's/SERVER_CONFIG_PLACEHOLDER/server-names { "ns.example.net"; };/' ns2/named
+ 
+ sed 's/EXAMPLE_ZONE_PLACEHOLDER/zone "example" { type master; file "example.db.signed"; };/' ns3/named.conf.in > ns3/named.conf
+ 
+-../../../tools/genrandom 400 random.data
++genrandom 400 random.data
+ 
+ cd ns3 && sh -e sign.sh
+diff --git a/bin/tests/system/staticstub/tests.sh b/bin/tests/system/staticstub/tests.sh
+old mode 100755
+new mode 100644
+diff --git a/bin/tests/system/tkey/prereq.sh b/bin/tests/system/tkey/prereq.sh
+index fca4a27..2f848ca 100644
+--- a/bin/tests/system/tkey/prereq.sh
++++ b/bin/tests/system/tkey/prereq.sh
+@@ -17,7 +17,7 @@
+ 
+ # $Id: prereq.sh,v 1.12 2009/03/02 23:47:43 tbox Exp $
+ 
+-../../../tools/genrandom 400 random.data
++genrandom 400 random.data
+ 
+ if $KEYGEN -a RSAMD5 -b 512 -n zone -r random.data foo > /dev/null 2>&1
+ then
+diff --git a/bin/tests/system/tkey/setup.sh b/bin/tests/system/tkey/setup.sh
+index 302ad82..a0a63c3 100644
+--- a/bin/tests/system/tkey/setup.sh
++++ b/bin/tests/system/tkey/setup.sh
+@@ -21,6 +21,6 @@ RANDFILE=random.data
+ 
+ sh clean.sh
+ 
+-../../../tools/genrandom 100 $RANDFILE
++genrandom 100 $RANDFILE
+ 
+ cd ns1 && sh setup.sh
+diff --git a/bin/tests/system/tsiggss/setup.sh b/bin/tests/system/tsiggss/setup.sh
+index 00222ba..10fcd19 100644
+--- a/bin/tests/system/tsiggss/setup.sh
++++ b/bin/tests/system/tsiggss/setup.sh
+@@ -24,7 +24,7 @@ RANDFILE="random.data"
+ 
+ rm -f ns1/*.jnl ns1/K*.key ns1/K*.private ns1/_default.tsigkeys
+ 
+-../../../tools/genrandom 400 $RANDFILE
++genrandom 400 $RANDFILE
+ 
+ key=`$KEYGEN -Cq -K ns1 -a DSA -b 512 -r $RANDFILE -n HOST -T KEY key.example.nil.`
+ cat ns1/example.nil.db.in ns1/${key}.key > ns1/example.nil.db
+diff --git a/bin/tests/system/unknown/setup.sh b/bin/tests/system/unknown/setup.sh
+index 921e6ed..f39457a 100644
+--- a/bin/tests/system/unknown/setup.sh
++++ b/bin/tests/system/unknown/setup.sh
+@@ -16,6 +16,6 @@
+ 
+ sh clean.sh
+ 
+-../../../tools/genrandom 400 random.data
++genrandom 400 random.data
+ 
+ (cd ns3; sh -e sign.sh)
+diff --git a/bin/tests/system/verify/setup.sh b/bin/tests/system/verify/setup.sh
+index 4d65286..15af676 100644
+--- a/bin/tests/system/verify/setup.sh
++++ b/bin/tests/system/verify/setup.sh
+@@ -18,6 +18,6 @@
+ 
+ sh clean.sh 
+ 
+-../../../tools/genrandom 400 random.data
++genrandom 400 random.data
+ 
+ (cd zones && sh genzones.sh)
+diff --git a/bin/tests/system/wildcard/ns1/sign.sh b/bin/tests/system/wildcard/ns1/sign.sh
+old mode 100755
+new mode 100644
+diff --git a/bin/tests/system/wildcard/setup.sh b/bin/tests/system/wildcard/setup.sh
+index fb4816d..3e61f2d 100644
+--- a/bin/tests/system/wildcard/setup.sh
++++ b/bin/tests/system/wildcard/setup.sh
+@@ -16,6 +16,6 @@
+ 
+ # $Id: setup.sh,v 1.1.2.1 2010/06/01 03:55:01 marka Exp $
+ 
+-../../../tools/genrandom 400 random.data
++genrandom 400 random.data
+ 
+ (cd ns1 && sh -e sign.sh)
+diff --git a/bin/tests/virtual-time/autosign-ksk/setup.sh b/bin/tests/virtual-time/autosign-ksk/setup.sh
+index e3fcaff..7611f07 100644
+--- a/bin/tests/virtual-time/autosign-ksk/setup.sh
++++ b/bin/tests/virtual-time/autosign-ksk/setup.sh
+@@ -20,7 +20,7 @@ SYSTEMTESTTOP=..
+ . $SYSTEMTESTTOP/conf.sh
+ . ./clean.sh
+ 
+-../../../tools/genrandom 800 random.data
++genrandom 800 random.data
+ dd if=random.data of=random.data1 bs=1k count=400 2> /dev/null
+ dd if=random.data of=random.data2 bs=1k skip=400 2> /dev/null
+ 
+diff --git a/bin/tests/virtual-time/autosign-zsk/setup.sh b/bin/tests/virtual-time/autosign-zsk/setup.sh
+index e3fcaff..7611f07 100644
+--- a/bin/tests/virtual-time/autosign-zsk/setup.sh
++++ b/bin/tests/virtual-time/autosign-zsk/setup.sh
+@@ -20,7 +20,7 @@ SYSTEMTESTTOP=..
+ . $SYSTEMTESTTOP/conf.sh
+ . ./clean.sh
+ 
+-../../../tools/genrandom 800 random.data
++genrandom 800 random.data
+ dd if=random.data of=random.data1 bs=1k count=400 2> /dev/null
+ dd if=random.data of=random.data2 bs=1k skip=400 2> /dev/null
+ 
+-- 
+1.8.3.2
+
