@@ -9,7 +9,7 @@ RDEPENDS_${PN}-server += "net-snmp-server-snmpd net-snmp-server-snmptrapd"
 RDEPENDS_${PN}-client += "net-snmp-mibs"
 RDEPENDS_${PN}-dev = "net-snmp-client (= ${EXTENDPV}) net-snmp-server (= ${EXTENDPV})"
 RRECOMMENDS_${PN}-dbg = "net-snmp-client (= ${EXTENDPV}) net-snmp-server (= ${EXTENDPV})"
-INC_PR = "r3"
+INC_PR = "r5"
 
 inherit autotools update-rc.d siteinfo
 
@@ -24,8 +24,8 @@ do_install () {
 
 do_install_append() {
 	install -d ${D}${sysconfdir}/snmp
-	install -d ${D}${sysconfdir}/init.d
-	install -m 755 ${WORKDIR}/init ${D}${sysconfdir}/init.d/snmpd
+        install -d ${D}${systemd_unitdir}/system
+
 	install -m 644 ${WORKDIR}/snmpd.conf ${D}${sysconfdir}/snmp/
 	install -m 644 ${WORKDIR}/snmptrapd.conf ${D}${sysconfdir}/snmp/
 	install -d ${STAGING_BINDIR}
@@ -36,16 +36,19 @@ do_install_append() {
 		-e "s@^includedir=.*@includedir=${STAGING_INCDIR}@g" \
 		-e "s@^libdir=.*@libdir=${STAGING_LIBDIR}@g" \
 		-i ${STAGING_BINDIR}/net-snmp-config
+
+        install -m 644 ${WORKDIR}/*.service ${D}/${systemd_unitdir}/system
 }
 
 PACKAGES = "net-snmp-dbg net-snmp-doc net-snmp-dev net-snmp-staticdev net-snmp-static net-snmp-libs \
-            net-snmp-mibs net-snmp-server net-snmp-client net-snmp-server-snmpd net-snmp-server-snmptrapd"
+            net-snmp-mibs net-snmp-server net-snmp-client net-snmp-server-snmpd net-snmp-server-snmptrapd \
+            net-snmp-server-snmpd-systemd net-snmp-server-snmptrapd-systemd"
 
 ALLOW_EMPTY_${PN}-server = "1"
 FILES_${PN}-libs = "${libdir}/lib*${SOLIBS}"
 FILES_${PN}-mibs = "${datadir}/snmp/mibs"
-FILES_${PN}-server-snmpd = "${sbindir}/snmpd ${sysconfdir}/snmp/snmpd.conf ${sysconfdir}/init.d"
-FILES_${PN}-server-snmptrapd = "${sbindir}/snmptrapd ${sysconfdir}/snmp/snmptrapd.conf"
+FILES_${PN}-server-snmpd = "${sbindir}/snmpd ${sysconfdir}/snmp/snmpd.conf ${systemd_unitdir}/system/snmpd.service"
+FILES_${PN}-server-snmptrapd = "${sbindir}/snmptrapd ${sysconfdir}/snmp/snmptrapd.conf ${systemd_unitdir}/system/snmptrapd.service"
 FILES_${PN}-client = "${bindir}/* ${datadir}/snmp/"
 FILES_${PN}-dbg += "${libdir}/.debug/ ${sbindir}/.debug/ ${bindir}/.debug/"
 FILES_${PN}-dev += "${bindir}/net-snmp-config ${bindir}/mib2c ${bindir}/mib2c-update"
@@ -64,6 +67,5 @@ pkg_postrm_net-snmp-server() {
 		OPT="-r $D "
 	else
 		OPT=""
-		/etc/init.d/snmpd stop
 	fi
 }
