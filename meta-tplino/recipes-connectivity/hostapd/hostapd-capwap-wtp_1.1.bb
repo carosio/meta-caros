@@ -14,7 +14,6 @@ FILES_${PN} += " \
 	${sbindir}/hostapd \
 	${sbindir}/hostapd_cli \
 	${sysconfdir}/hostapd.conf \
-	${systemd_unitdir}/system/hostapd.service \
 	${ROOT_HOME}/hostapd_wtp.conf"
 
 do_install_append() {

@@ -4,7 +4,7 @@ SECTION = "network"
 LICENSE = "GPLv2+"
 LIC_FILES_CHKSUM = "file://COPYING;md5=bedf4908d7c0c9b86aeb97756a02b556"
 
-PR = "r0"
+PR = "r1"
 
 DEPENDS = "openssl"
 
@@ -15,8 +15,7 @@ SRCREV = "AUTOINC"
 inherit autotools systemd
 
 SRC_URI = " \
-	git://github.com/travelping/openCAPWAP.git \
-	file://adjust_configs.patch \
+	git://git@git.tpip.net/opencapwap.git;protocol=ssh \
 	file://opencapwap-wtp.service \
 	file://settings.wtp.txt \
 	file://config.wtp \
@@ -55,3 +54,7 @@ do_install_append() {
 	install -m 0644 ${WORKDIR}/settings.ac.txt ${D}${ROOT_HOME}
 	install -m 0644 ${WORKDIR}/config.ac ${D}${ROOT_HOME}
 }
+
+##EXTRA_OECONF = "--disable-dtls --enable-debug"
+EXTRA_OECONF = "--with-openssl=${STAGING_LIBDIR}/.. --enable-debug"
+CFLAGS += "-DLOCALUDP" 
