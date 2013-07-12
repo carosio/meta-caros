@@ -13,6 +13,8 @@ SRC_URI = " \
 	file://defconfig \
 	file://hostapd.service"
 
+FILES_${PN} += " ${systemd_unitdir}/system/hostapd.service "
+
 S = "${WORKDIR}/hostapd-${PV}"
 
 EXTRA_OEMAKE = "-C ${S}/hostapd"

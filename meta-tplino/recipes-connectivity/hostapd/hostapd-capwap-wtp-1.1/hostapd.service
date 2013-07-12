@@ -1,6 +1,7 @@
 [Unit]
 Description=hostapd
-After=multi-user.target opencapwap-wtp.service
+After=multi-user.target
+Requires=opencapwap-wtp.service
 Wants=opencapwap-wtp.service
 
 [Service]

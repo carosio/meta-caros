@@ -1,6 +1,7 @@
 [Unit]
 Description=hostapd
 After=multi-user.target
+Requires=opencapwap-wtp.service
 
 [Service]
 ExecStart=/usr/sbin/hostapd /etc/hostapd.conf
