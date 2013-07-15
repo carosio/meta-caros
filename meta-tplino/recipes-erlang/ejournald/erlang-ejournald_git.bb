@@ -13,5 +13,5 @@ DEPENDS = "systemd"
 inherit tetrapak
 
 python () {
-    erlang_def_package("ejournald", "ejournald-*", "bin ebin priv", "c_src src include", d)
+    erlang_def_package("ejournald", "ejournald-*", "bin ebin priv", "c_src src include TODO.rst README.rst", d)
 }
