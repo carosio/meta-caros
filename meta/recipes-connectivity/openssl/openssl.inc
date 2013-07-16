@@ -5,7 +5,7 @@ BUGTRACKER = "http://www.openssl.org/news/vulnerabilities.html"
 SECTION = "libs/network"
 
 # Big Jump for OpenSSL 1.0 support with meta-oe
-INC_PR = "r15"
+INC_PR = "r16"
 
 # "openssl | SSLeay" dual license
 LICENSE = "openssl"
@@ -32,6 +32,8 @@ CFLAG_mtx-2 := "${@'${CFLAG}'.replace('-O2', '')}"
 export DIRS = "crypto ssl apps"
 export EX_LIBS = "-lgcc -ldl"
 export AS = "${CC} -c"
+
+EXTRA_OECONF = "no-idea no-mdc2 no-rc5 enable-tlsext no-ssl2"
 
 inherit pkgconfig siteinfo
 
@@ -119,7 +121,7 @@ do_configure () {
         useprefix=${prefix}
         if [ "x$useprefix" = "x" ]; then
                 useprefix=/
-        fi        
+        fi
 	perl ./Configure ${EXTRA_OECONF} shared --prefix=$useprefix --openssldir=${libdir}/ssl --libdir=`basename ${libdir}` $target
 }
 

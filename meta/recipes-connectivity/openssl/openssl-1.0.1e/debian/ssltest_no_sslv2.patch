@@ -1,0 +1,24 @@
+From: Dr. Stephen Henson <steve@openssl.org>
+Date: Mon Feb 11 18:17:50 2013 +0000
+Origin: upstream, commit:cbf9b4aed3e209fe8a39e1d6f55aaf46d1369dc4
+Subject: Fix in ssltest is no-ssl2 configured
+
+diff --git a/ssl/ssltest.c b/ssl/ssltest.c
+index 316bbb0..4f80be8 100644
+--- a/ssl/ssltest.c
++++ b/ssl/ssltest.c
+@@ -881,7 +881,13 @@ bad:
+ 		meth=SSLv23_method();
+ #else
+ #ifdef OPENSSL_NO_SSL2
+-	meth=SSLv3_method();
++	if (tls1)
++		meth=TLSv1_method();
++	else
++	if (ssl3)
++		meth=SSLv3_method();
++	else
++		meth=SSLv23_method();
+ #else
+ 	meth=SSLv2_method();
+ #endif
