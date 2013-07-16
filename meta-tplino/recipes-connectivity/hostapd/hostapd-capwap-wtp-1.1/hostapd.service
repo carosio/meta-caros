@@ -1,15 +1,15 @@
 [Unit]
 Description=hostapd
 After=multi-user.target
+After=opencapwap-wtp.service
 Requires=opencapwap-wtp.service
-Wants=opencapwap-wtp.service
 
 [Service]
 ExecStart=/usr/sbin/hostapd /etc/hostapd.conf
 Type=simple
 Environment="HOME=/home/root"
 WorkingDirectory=/home/root
-Restart=on-failure
+Restart=always
 
 [Install]
 WantedBy=multi-user.target
