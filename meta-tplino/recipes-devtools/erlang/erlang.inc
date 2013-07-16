@@ -4,6 +4,11 @@ PROVIDES += "virtual/erlang"
 RPROVIDES_${PN} += "erlang-stdlib erlang-kernel erlang-sasl"
 RPROVIDES_virtal/kernel += "erlang-stdlib erlang-kernel erlang-sasl"
 
+RDEPENDS_erlang-corba = "erlang-asn1"
+RDEPENDS_erlang-eldap = "erlang-asn1"
+RDEPENDS_erlang-public-key = "erlang-asn1"
+RDEPENDS_erlang-snmp = "erlang-asn1"
+
 DEPENDS += "openssl zlib ncurses"
 export OE_LDFLAGS="-lz"
 
