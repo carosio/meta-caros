@@ -1,14 +1,13 @@
 [Unit]
 Description=opencapwap wtp
 After=multi-user.target
-Requires=hostapd.service
 
 [Service]
 ExecStart=/usr/bin/WTP -f
 Type=simple
 Environment="HOME=/home/root"
 WorkingDirectory=/home/root
-Restart=on-failure
+Restart=always
 RestartSec=1s
 
 [Install]
