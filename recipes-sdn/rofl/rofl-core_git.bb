@@ -11,11 +11,11 @@ PV = "0.3+git${SRCPV}"
 PR = "r0"
 
 # SRC_URI = "git://gitolite@codebasin.net/rofl-core.git;protocol=ssh;branch=devel"
-SRC_URI = "git://git@git.tpip.net/rofl-core.git;protocol=ssh;branch=devel"
+SRC_URI = "git://git@git.tpip.net/rofl-core.git;protocol=ssh;branch=devel-new-mmap"
 
 S = "${WORKDIR}/git"
 
 inherit autotools
 
-EXTRA_OECONF = "--enable-debug"
+EXTRA_OECONF = "${@base_contains("IMAGE_FEATURES", 'debug-tweaks-rofl', '--enable-debug', '', d)}"
 PARALLEL_MAKE = ""

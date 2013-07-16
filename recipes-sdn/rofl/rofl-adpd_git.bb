@@ -14,7 +14,7 @@ S = "${WORKDIR}/git"
 
 inherit autotools
 
-EXTRA_OECONF += "--enable-debug"
+EXTRA_OECONF += "${@base_contains("IMAGE_FEATURES", 'debug-tweaks', '--enable-debug', '', d)}"
 CXXFLAGS_append = " -I${STAGING_INCDIR}/rofl"
 
 FILES_${PN} += '/usr/lib/libofhal_x86.so'
