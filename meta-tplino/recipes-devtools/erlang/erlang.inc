@@ -12,7 +12,10 @@ RDEPENDS_erlang-snmp = "erlang-asn1"
 DEPENDS += "openssl zlib ncurses"
 export OE_LDFLAGS="-lz"
 
-inherit autotools erlang
+inherit autotools erlang systemd
+
+SYSTEMD_PACKAGES = " erlang-epmd"
+SYSTEMD_SERVICE_erlang-epmd = " epmd.service"
 
 EXTRA_OECONF = '\
 	     --with-termcap \
@@ -100,7 +103,7 @@ python () {
     erlang_def_package("jinterface", "jinterface-*", "ebin", "src", d)
 }
 
-PACKAGES_prepend = "erlang-ic-staticdev "
+PACKAGES_prepend = "erlang-epmd erlang-ic-staticdev "
 
 FILES_${PN} = '${erlbindir}/erlc \
                ${erlbindir}/run_erl \
@@ -142,6 +145,7 @@ FILES_${PN} = '${erlbindir}/erlc \
                ${erllibdir}/hipe-*/ebin \
                ${erllibdir}/stdlib-*/ebin \
                ${erllibdir}/sasl-*/ebin \
+               ${systemd_unitdir}/system/*.service \
                /usr/bin/erlc \
                /usr/bin/run_erl \
                /usr/bin/erl_call \
@@ -216,7 +220,8 @@ do_install_append() {
 
     EI_VSN=`sed -e"s|.*= *||g" ${S}/lib/erl_interface/vsn.mk`
     IC_VSN=`sed -e"s|.*= *||g" ${S}/lib/ic/vsn.mk`
-    install -d -m0755 ${D}/usr/include ${D}/usr/lib
+    install -d -m0755 ${D}/usr/include ${D}/usr/lib ${D}${systemd_unitdir}/system
+    install -m 0644 ${WORKDIR}/epmd.service ${D}${systemd_unitdir}/system/
     ln -s ../lib/erlang/usr/include/driver_int.h				${D}/usr/include/driver_int.h
     ln -s ../lib/erlang/usr/include/erl_driver.h				${D}/usr/include/erl_driver.h
     ln -s ../lib/erlang/usr/include/erl_drv_nif.h				${D}/usr/include/erl_drv_nif.h
