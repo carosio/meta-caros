@@ -23,7 +23,8 @@ SRC_URI[sha256sum] = "f402c2051d9b027799a36f17c5e1750dcb4f07070ec46e79108901d03a
 
 PARALLEL_MAKE = ""
 
-PCI_CONF_FLAG = "ZLIB=yes DNS=yes SHARED=yes"
+PCI_CONF_FLAG = "ZLIB=yes SHARED=yes"
+PCI_CONF_FLAG_append_libc-glibc = " DNS=yes"
 
 # see configure.patch
 do_configure () {
@@ -43,6 +44,7 @@ export SBINDIR = "${sbindir}"
 export SHAREDIR = "${datadir}"
 export MANDIR = "${mandir}"
 
+LDFLAGS_prepend_libc-glibc = " -lresolv "
 EXTRA_OEMAKE += "${PCI_CONF_FLAG}"
 
 # The configure script breaks if the HOST variable is set
