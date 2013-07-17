@@ -9,7 +9,7 @@ LIC_FILES_CHKSUM = "file://../runtime/doc/uganda.txt;md5=4c91d841bb7b75f68b5bb8a
 PV_MAJOR = "${@d.getVar('PV',1).split('.')[0]}.${@d.getVar('PV',1).split('.')[1]}"
 VIMDIR = "${PN}${@d.getVar('PV',1).split('.')[0]}${@d.getVar('PV',1).split('.')[1]}"
 
-INC_PR = "r13"
+INC_PR = "r14"
 
 SRC_URI = "hg://vim.googlecode.com/hg/;protocol=https;module=vim"
 
@@ -58,6 +58,10 @@ do_install_append() {
 
     # Install example vimrc from runtime files
     install -m 0644 ../runtime/vimrc_example.vim ${D}/${datadir}/${PN}/vimrc
+
+    echo "\" set default colorscheme to something better readable" >> ${D}/${datadir}/${PN}/vimrc
+    echo "colorscheme desert" >> ${D}/${datadir}/${PN}/vimrc
+    echo "" >> ${D}/${datadir}/${PN}/vimrc
 }
 
 PACKAGES =+ "${PN}-common ${PN}-syntax ${PN}-help ${PN}-tutor ${PN}-vimrc ${PN}-data"
