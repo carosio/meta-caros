@@ -1,7 +1,7 @@
 DESCRIPTION = "Erlang Openflow Controller lib"
 SECTION = "devel"
 LICENSE = "BSD-3-Clause"
-LIC_FILES_CHKSUM = "file://src/flower_app.erl;beginline=1;endline=19;md5=1ab28ac9e46c60331c620bdf33901f4f"
+LIC_FILES_CHKSUM = "file://MIT-LICENSE.txt;md5=9db35a42b923528200d82fcbb74c4dc2"
 
 SRC_URI = "git://git@git.tpip.net/flower.git;protocol=ssh"
 
@@ -12,5 +12,5 @@ DEPENDS += "erlang-regine erlang-gen-listener-tcp erlang-gen-socket"
 inherit tetrapak
 
 python () {
-    erlang_def_package("flower", "flower-*", "ebin priv", "src include test README.md", d)
+    erlang_def_package("flower", "flower-*", "ebin priv", "src include test README.md MIT-LICENSE.txt", d)
 }
