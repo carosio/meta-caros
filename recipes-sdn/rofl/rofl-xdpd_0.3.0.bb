@@ -5,10 +5,10 @@ LIC_FILES_CHKSUM = "file://COPYRIGHT;md5=5d425c8f3157dbf212db2ec53d9e5132"
 
 DEPENDS = "rofl-core"
 
-SRCREV="AUTOINC"
-
-PV = "0.1+git${SRCPV}"
-PR = "r2"
+SRCREV="${AUTOREV}"
+PR = "r6"
+PV-orig := "${PV}" 
+PV = "${PV-orig}-${PR}-${SRCPV}"
 
 SRC_URI = " \
     git://git@git.tpip.net/xdpd.git;protocol=ssh;branch=devel-new-mmap \

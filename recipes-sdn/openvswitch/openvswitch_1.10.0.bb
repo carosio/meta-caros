@@ -10,7 +10,8 @@ SRC_URI += "git://openvswitch.org/openvswitch;protocol=git \
 
 S = "${WORKDIR}/git"
 
-SRCREV="AUTOINC"
-PV = "git${SRCPV}"
-PR = "r0"
+SRCREV="${AUTOREV}"
+PV-orig := "${PV}" 
+PV = "${PV-orig}-${PR}-${SRCPV}" 
+PR = "r14"
 
