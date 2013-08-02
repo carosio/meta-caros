@@ -4,7 +4,9 @@ LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://README.md;md5=e9afc8235a516dcad63385790d64ab22"
 
 SRCREV="ebdab7eb1a1e24880d25c22cfedff8a3c3abdb77"
-PR = "r1"
+PR = "r2"
+PV-orig := "${PV}" 
+PV = "${PV-orig}-${PR}-${SRCPV}"
 
 SRC_URI = "git://git@git.tpip.net/mongodb.git;protocol=ssh"
 

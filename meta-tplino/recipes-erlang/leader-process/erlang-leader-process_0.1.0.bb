@@ -4,8 +4,9 @@ LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://${COREBASE}/LICENSE;md5=3f40d7994397109285ec7b81fdeb3b58"
 
 SRCREV="85c085ae2600d35c7ca13cfd57d074c5a4fb8a48"
-PV = "0.1+git${SRCPV}"
-PR = "r0"
+PR = "r1"
+PV-orig := "${PV}" 
+PV = "${PV-orig}-${PR}-${SRCPV}" 
 
 SRC_URI = "git://git@git.tpip.net/leader_process.git;protocol=ssh"
 

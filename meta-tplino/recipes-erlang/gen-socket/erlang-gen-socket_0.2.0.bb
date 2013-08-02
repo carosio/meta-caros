@@ -4,9 +4,11 @@ LICENSE = "BSD-3-Clause"
 LIC_FILES_CHKSUM = "file://src/gen_socket.erl;beginline=1;endline=30;md5=62fc4961b678e7b93ce9f790eef138ae"
 
 SRC_URI = "git://git@git.tpip.net/gen_socket.git;protocol=ssh;branch=driver-poll"
-SRCREV = "AUTOINC"
+SRCREV = "${AUTOREV}"
 
-PR = "r2"
+PR = "r3"
+PV-orig := "${PV}" 
+PV = "${PV-orig}-${PR}-${SRCPV}" 
 
 S = "${WORKDIR}/git"
 

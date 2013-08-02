@@ -4,7 +4,9 @@ LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=2836c20a9a9293da518007b3786dbcfb"
 SRCREV = "5b62692539ea51c5fb3a033b66a318e7299747f5"
 
-PR = "r2"
+PR = "r3"
+PV-orig := "${PV}" 
+PV = "${PV-orig}-${PR}-${SRCPV}"
 
 SRC_URI = "git://git@git.tpip.net/gen_smtp.git;protocol=ssh"
 

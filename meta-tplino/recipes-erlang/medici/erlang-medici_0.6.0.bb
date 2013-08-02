@@ -4,7 +4,9 @@ LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://README;md5=8614e07bbe19bc8653206be7fd3dd276"
 
 SRCREV="6bfd658001ee9cef14497f4f6c64174940552cb3"
-PR = "r0"
+PR = "r1"
+PV-orig := "${PV}" 
+PV = "${PV-orig}-${PR}-${SRCPV}"
 
 SRC_URI = "git://git@git.tpip.net/medici.git;protocol=ssh"
 

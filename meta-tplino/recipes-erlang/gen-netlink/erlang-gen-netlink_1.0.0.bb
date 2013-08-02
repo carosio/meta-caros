@@ -3,9 +3,10 @@ SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://src/netlink.erl;beginline=1;endline=19;md5=1ab28ac9e46c60331c620bdf33901f4f"
 
-SRCREV = "AUTOINC"
-PV = "1.0+git${SRCPV}"
-PR = "r1"
+SRCREV = "${AUTOREV}"
+PR = "r3"
+PV-orig := "${PV}" 
+PV = "${PV-orig}-${PR}-${SRCPV}" 
 
 SRC_URI = "git://github.com/travelping/gen_netlink.git;protocol=git;branch=driver_poll_gen_socket"
 

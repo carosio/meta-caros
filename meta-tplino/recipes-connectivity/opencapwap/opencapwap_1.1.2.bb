@@ -4,13 +4,15 @@ SECTION = "network"
 LICENSE = "GPLv2+"
 LIC_FILES_CHKSUM = "file://COPYING;md5=bedf4908d7c0c9b86aeb97756a02b556"
 
-PR = "r1"
+PR = "r3"
 
 DEPENDS = "openssl"
 
 PACKAGES =+ "opencapwap-wtp opencapwap-ac"
 
-SRCREV = "AUTOINC"
+SRCREV = "${AUTOREV}"
+PV-orig := "${PV}" 
+PV = "${PV-orig}-${PR}-${SRCPV}"
 
 inherit autotools systemd
 

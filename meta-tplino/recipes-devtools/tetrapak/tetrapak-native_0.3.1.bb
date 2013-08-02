@@ -2,11 +2,13 @@ DESCRIPTION = "tetrapak is an extensible build system for Erlang/OTP application
 SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://src/tetrapak.erl;beginline=1;endline=19;md5=300d83493c235b71e1a4d58e25379bc5"
-SRCREV="AUTOINC"
+SRCREV="${AUTOREV}"
 
-PR = "r2"
+PR = "r3"
 
 SRC_URI = "git://git@git.tpip.net/tetrapak.git;protocol=ssh"
+PV-orig := "${PV}" 
+PV = "${PV-orig}-${PR}-${SRCPV}" 
 
 S = "${WORKDIR}/git"
 

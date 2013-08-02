@@ -4,7 +4,10 @@ LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://README;md5=65b51e150aca9b972755828804cf531d"
 
 SRCREV="67b10832c57c6aeba271a6ab4fbc020163813266"
-PR = "r0"
+PR = "r1"
+PV-orig := "${PV}" 
+PV = "${PV-orig}-${PR}-${SRCPV}"
+
 
 SRC_URI = "git://git@git.tpip.net/epgsql.git;protocol=ssh"
 

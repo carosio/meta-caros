@@ -4,7 +4,9 @@ LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=ff253ad767462c46be284da12dda33e8"
 
 SRCREV = "42a471caa33c1fa753cf9e9221d678fc0d0f714f"
-PR = "r6"
+PR = "r7"
+PV-orig := "${PV}" 
+PV = "${PV-orig}-${PR}-${SRCPV}"
 
 SRC_URI = "git://github.com/cloudant/bigcouch.git;protocol=git;branch=0.4.x \
 	   file://fix_scons_cross_compilation_brain_fuck.patch;apply=yes \

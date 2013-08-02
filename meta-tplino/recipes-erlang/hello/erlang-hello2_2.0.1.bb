@@ -4,7 +4,9 @@ LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://src/hello2.erl;beginline=1;endline=19;md5=8af7faa07f2606ede8e44010750a0093"
 
 SRCREV = "c1c21a95580d74443fb1a5383269faf491256a88"
-PR = "r0"
+PR = "r1"
+PV-orig := "${PV}" 
+PV = "${PV-orig}-${PR}-${SRCPV}" 
 
 SRC_URI = "git://git@git.tpip.net/hello2.git;protocol=ssh"
 

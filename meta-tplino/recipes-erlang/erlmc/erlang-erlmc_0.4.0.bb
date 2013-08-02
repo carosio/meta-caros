@@ -4,7 +4,9 @@ LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://README.markdown;md5=3f00652a3923114cd47e27de723cf13a"
 
 SRCREV = "984324e36c55e4683cc7fc2303694601d5e98536"
-PR = "r0"
+PR = "r1"
+PV-orig := "${PV}" 
+PV = "${PV-orig}-${PR}-${SRCPV}" 
 
 SRC_URI = "git://git@git.tpip.net/erlmc;protocol=ssh"
 
