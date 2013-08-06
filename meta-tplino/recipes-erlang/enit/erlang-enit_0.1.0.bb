@@ -3,9 +3,10 @@ SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://src/enit.erl;beginline=1;endline=19;md5=fc016e255103ff7b4faba219415dee94"
 
-SRCREV="7ff37bd4dd332249a065dd9c63eb1ed3f7305359"
-PV = "0.1+git${SRCPV}"
-PR = "r0"
+SRCREV = "${AUTOREV}"
+PR = "r1"
+PV-orig := "${PV}"
+PV = "${PV-orig}-${PR}-${SRCPV}"
 
 SRC_URI = "git://git@git.tpip.net/enit.git;protocol=ssh"
 
