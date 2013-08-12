@@ -4,7 +4,7 @@ LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://src/enit.erl;beginline=1;endline=19;md5=fc016e255103ff7b4faba219415dee94"
 
 SRCREV = "${AUTOREV}"
-PR = "r1"
+PR = "r2"
 PV-orig := "${PV}"
 PV = "${PV-orig}-${PR}-${SRCPV}"
 
@@ -15,7 +15,7 @@ S = "${WORKDIR}/git"
 inherit tetrapak
 
 python () {
-    erlang_def_package("enit", "enit-*", "bin ebin priv", "c_src src include", d)
+    erlang_def_package("enit", "enit-*", "bin ebin priv", "c_src src include test", d)
 }
 
 do_install_append() {
