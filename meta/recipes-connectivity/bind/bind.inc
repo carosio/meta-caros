@@ -6,7 +6,7 @@ LICENSE = "ISC & BSD"
 LIC_FILES_CHKSUM = "file://COPYRIGHT;md5=70a3b234bb402e38258a6aa54b3d25f3"
 
 DEPENDS = "openssl libcap"
-PR = "r9"
+PR = "r10"
 
 SRC_URI = "file://bind.service \
 		"
