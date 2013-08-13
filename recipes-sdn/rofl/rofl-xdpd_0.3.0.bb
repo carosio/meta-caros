@@ -33,7 +33,7 @@ SYSTEMD_PACKAGES = "${PN}"
 SYSTEMD_SERVICE_${PN} = "xdpd.service"
 
 EXTRA_OECONF += "--enable-gnu-linux \
-	         ${@base_contains("IMAGE_FEATURES", 'debug-tweaks', '--enable-debug', '', d)}"
+	         ${@base_contains("IMAGE_FEATURES", 'debug-tweaks-rofl', '--enable-debug', '', d)}"
 PARALLEL_MAKE = ""
 
 CXXFLAGS_append = " -I${STAGING_INCDIR}/rofl"
