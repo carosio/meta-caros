@@ -19,3 +19,5 @@ FILES_${PN} += " \
 do_install_append() {
 	install -m 0644 ${WORKDIR}/hostapd_wtp.conf ${D}${ROOT_HOME}
 }
+
+require platforms/buffalo-wzr-hp-ag300h.inc
