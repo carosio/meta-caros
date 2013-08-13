@@ -59,4 +59,6 @@ do_install_append() {
 
 ##EXTRA_OECONF = "--disable-dtls --enable-debug"
 EXTRA_OECONF = "--with-openssl=${STAGING_LIBDIR}/.. --enable-debug"
-CFLAGS += "-DLOCALUDP" 
+CFLAGS += "-DLOCALUDP"
+
+require platforms/buffalo-wzr-hp-ag300h.inc 
