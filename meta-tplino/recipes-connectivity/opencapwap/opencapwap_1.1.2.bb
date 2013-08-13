@@ -4,7 +4,7 @@ SECTION = "network"
 LICENSE = "GPLv2+"
 LIC_FILES_CHKSUM = "file://COPYING;md5=bedf4908d7c0c9b86aeb97756a02b556"
 
-PR = "r3"
+PR = "r5"
 
 DEPENDS = "openssl"
 
@@ -45,20 +45,20 @@ SYSTEMD_SERVICE_opencapwap-wtp = "opencapwap-wtp.service"
 SYSTEMD_SERVICE_opencapwap-ac = "opencapwap-ac.service"
 
 do_install_append() {
-	install -d ${D}${bindir} \
-		   ${D}${ROOT_HOME} \
+	     install -d ${D}${bindir} \
+		   ${D}${sysconfdir}/capwap \
 		   ${D}${systemd_unitdir}/system
 
         install -m 0644 ${WORKDIR}/opencapwap-wtp.service ${D}/${systemd_unitdir}/system
-	install -m 0644 ${WORKDIR}/settings.wtp.txt ${D}${ROOT_HOME}
-	install -m 0644 ${WORKDIR}/config.wtp ${D}${ROOT_HOME}
+	install -m 0644 ${WORKDIR}/settings.wtp.txt ${D}${sysconfdir}/capwap
+	install -m 0644 ${WORKDIR}/config.wtp  ${D}${sysconfdir}/capwap
         install -m 0644 ${WORKDIR}/opencapwap-ac.service ${D}/${systemd_unitdir}/system
-	install -m 0644 ${WORKDIR}/settings.ac.txt ${D}${ROOT_HOME}
-	install -m 0644 ${WORKDIR}/config.ac ${D}${ROOT_HOME}
+	install -m 0644 ${WORKDIR}/settings.ac.txt  ${D}${sysconfdir}/capwap
+	install -m 0644 ${WORKDIR}/config.ac  ${D}${sysconfdir}/capwap
 }
 
 ##EXTRA_OECONF = "--disable-dtls --enable-debug"
-EXTRA_OECONF = "--with-openssl=${STAGING_LIBDIR}/.. --enable-debug"
-CFLAGS += "-DLOCALUDP"
+EXTRA_OECONF = "--with-openssl=${STAGING_LIBDIR}/.. --enable-debug --sysconfdir=/etc/capwap"
+CFLAGS += "-DLOCALUDP" 
 
 require platforms/buffalo-wzr-hp-ag300h.inc 
