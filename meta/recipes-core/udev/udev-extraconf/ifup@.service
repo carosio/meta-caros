@@ -1,0 +1,9 @@
+[Unit]
+Description=ifup for %I
+After=local-fs.target
+BindTo=sys-subsystem-net-devices-%i.device
+
+[Service]
+ExecStart=/sbin/ifup %I
+ExecStop=/sbin/ifdown %I
+RemainAfterExit=true
