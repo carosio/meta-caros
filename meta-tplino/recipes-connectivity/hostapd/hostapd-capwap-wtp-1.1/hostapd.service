@@ -5,6 +5,7 @@ After=opencapwap-wtp.service
 Requires=opencapwap-wtp.service
 
 [Service]
+ExecStartPre=/bin/sleep 3
 ExecStart=/usr/sbin/hostapd /etc/hostapd.conf
 Type=simple
 Environment="HOME=/home/root"
