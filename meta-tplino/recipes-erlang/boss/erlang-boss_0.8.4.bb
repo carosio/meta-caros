@@ -4,7 +4,7 @@ LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=9445ab65d571cee0b2d6e3b4e35953cc"
 
 SRCREV="f5a2576f72293e8ab06c621f641f08b7d232a29f"
-PR = "r1"
+PR = "r2"
 PV-orig := "${PV}" 
 PV = "${PV-orig}-${PR}-${SRCPV}" 
 
@@ -18,5 +18,5 @@ DEPENDS_append = " erlang-boss-db erlang-tinymq erlang-tiny-pq erlang-erlydtl er
 RDEPENDS_${PN}_append = " erlang-boss-db erlang-tinymq erlang-tiny-pq erlang-erlydtl erlang-jaderl erlang-dynamic-compile erlang-gen-smtp erlang-misultin erlang-mochiweb erlang-simple-bridge erlang-mimetypes erlang-pmod-transform erlang-poolboy erlang-cowboy erlang-mochicow "
 
 python () {
-    erlang_def_package("boss", "boss*", "ebin priv", "src include doc-src skel", d)
+    erlang_def_package("boss", "boss*", "ebin priv", "LICENSE windows-make.bat skel.template src include doc-src skel", d)
 }
