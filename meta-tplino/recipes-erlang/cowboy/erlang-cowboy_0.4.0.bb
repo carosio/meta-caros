@@ -4,8 +4,10 @@ LICENSE = "ISC"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=0f736ba129c39537e16c83bdc97f8bba"
 
 SRCREV="fd17b6d44412bf3678bdc9bfcfee19a90088ede4"
-PR = "r0"
-PV = "0.4+git${SRCPV}"
+PR = "r1"
+PV-orig := "${PV}" 
+PV = "${PV-orig}-${PR}-${SRCPV}" 
+
 SRC_URI = "git://github.com/RoadRunnr/cowboy.git;protocol=git \
 	   file://add-tetrapak.patch;apply=yes"
 

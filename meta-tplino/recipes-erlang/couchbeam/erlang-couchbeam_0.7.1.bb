@@ -4,8 +4,9 @@ LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=212a03dbdaf546250bb9c74b04bfdeae"
 
 SRCREV="d34ebb6ea97260c3dd775d796bff67c87b2717de"
-PV = "0.7.1+git${SRCPV}"
-PR = "r1"
+PR = "r2"
+PV-orig := "${PV}" 
+PV = "${PV-orig}-${PR}-${SRCPV}" 
 
 SRC_URI = "git://github.com/travelping/couchbeam.git;protocol=git;branch=tp-integration \
 	   file://add-tetrapak.patch;apply=yes"

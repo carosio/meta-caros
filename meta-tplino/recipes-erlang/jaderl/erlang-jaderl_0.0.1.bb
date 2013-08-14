@@ -4,7 +4,9 @@ LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://src/jaderl.erl;md5=7a9e7abea03db1447e8f7f69595a5f56"
 
 SRCREV="536a66e5c9c5979d08e9c85888470883bd464a31"
-PR = "r0"
+PR = "r1"
+PV-orig := "${PV}" 
+PV = "${PV-orig}-${PR}-${SRCPV}"
 
 SRC_URI = "git://git@git.tpip.net/jaderl.git;protocol=ssh"
 

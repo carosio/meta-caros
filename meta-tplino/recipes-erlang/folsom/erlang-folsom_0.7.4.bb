@@ -4,7 +4,9 @@ LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=8f7bb094c7232b058c7e9f2e431f389c"
 
 SRCREV = "5e2d2e0da4ce9d2edb5d60414ee554ec6cebf464"
-PR = "r0"
+PR = "r1"
+PV-orig := "${PV}" 
+PV = "${PV-orig}-${PR}-${SRCPV}"
 
 SRC_URI = "git://github.com/boundary/folsom.git;protocol=git \
 	   file://add-tetrapak.patch;apply=yes"

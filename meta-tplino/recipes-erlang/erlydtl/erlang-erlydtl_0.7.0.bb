@@ -4,7 +4,9 @@ LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://README.markdown;md5=0798b8144f0dd94b98eeed1727451a2d"
 
 SRCREV="4b6b2494b2121aaeacf16e329c1d3992b15c6eea"
-PR = "r0"
+PR = "r1"
+PV-orig := "${PV}" 
+PV = "${PV-orig}-${PR}-${SRCPV}" 
 
 SRC_URI = "git://git@git.tpip.net/erlydtl.git;protocol=ssh"
 

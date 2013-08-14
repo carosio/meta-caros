@@ -4,7 +4,9 @@ LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=9445ab65d571cee0b2d6e3b4e35953cc"
 
 SRCREV="f5a2576f72293e8ab06c621f641f08b7d232a29f"
-PR = "r0"
+PR = "r1"
+PV-orig := "${PV}" 
+PV = "${PV-orig}-${PR}-${SRCPV}" 
 
 SRC_URI = "git://git@git.tpip.net/boss.git;protocol=ssh"
 

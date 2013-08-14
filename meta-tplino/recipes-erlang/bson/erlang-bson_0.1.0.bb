@@ -4,7 +4,9 @@ LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://README.md;md5=ed4f50d32302a100094afb36ee379bc1"
 
 SRCREV = "54942e7d84cf083127bf36a98981639654ebb60a"
-PR = "r0"
+PR = "r1"
+PV-orig := "${PV}" 
+PV = "${PV-orig}-${PR}-${SRCPV}"
 
 SRC_URI = "git://git@git.tpip.net/bson;protocol=ssh"
 

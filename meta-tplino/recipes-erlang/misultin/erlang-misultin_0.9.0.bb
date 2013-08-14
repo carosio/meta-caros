@@ -4,7 +4,9 @@ LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://LICENSE.txt;md5=aa243523732ab6258fece5095a38dd9f"
 
 SRCREV = "1e5da0fcfde87b7cca48b7698c656d05593db491"
-PR = "r0"
+PR = "r1"
+PV-orig := "${PV}" 
+PV = "${PV-orig}-${PR}-${SRCPV}" 
 
 SRC_URI = "git://git@git.tpip.net/misultin;protocol=ssh"
 

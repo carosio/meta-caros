@@ -4,8 +4,9 @@ LICENSE = "BSD-3-Clause"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=e353635574756e02aec3521297f86ada"
 
 SRCREV="4c771ba32d2d01d0bbb5236521adefbfc4620033"
-PV = "0.2+git${SRCPV}"
-PR = "r0"
+PR = "r1"
+PV-orig := "${PV}" 
+PV = "${PV-orig}-${PR}-${SRCPV}"
 
 SRC_URI = "git://github.com/erlware/erlcron.git;protocol=git \
 	   file://add-tetrapak.patch;apply=yes"

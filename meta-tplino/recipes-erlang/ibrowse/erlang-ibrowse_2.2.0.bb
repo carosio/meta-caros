@@ -4,8 +4,9 @@ LICENSE = "BSD-3-Clause"
 LIC_FILES_CHKSUM = "file://BSD_LICENSE;md5=357cce4ac3d0490701422421e7b58807"
 
 SRCREV="8c46b108bb648119b90433f9c60ed36bb25e29cd"
-PV = "2.2.0+git${SRCPV}"
-PR = "r0"
+PR = "r1"
+PV-orig := "${PV}" 
+PV = "${PV-orig}-${PR}-${SRCPV}"
 
 SRC_URI = "git://github.com/cmullaparthi/ibrowse.git;protocol=git \
 	   file://add-tetrapak.patch;apply=yes"
