@@ -1,0 +1,10 @@
+[Unit]
+Description=SSH Key Generation
+ConditionPathExists=|!/etc/dropbear/dropbear_rsa_host_key
+
+[Service]
+ExecStart=/home/root/dropbearkeygen.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
