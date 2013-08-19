@@ -1,6 +1,6 @@
 require erlang.inc
 
-PR = "r6"
+PR = "r8"
 
 SRC_URI += " file://epmd.service "
 

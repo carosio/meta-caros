@@ -9,6 +9,7 @@ RDEPENDS_erlang-eldap = "erlang-asn1"
 RDEPENDS_erlang-public-key = "erlang-asn1"
 RDEPENDS_erlang-snmp = "erlang-asn1"
 
+RDEPENDS_erlang += " erlang-epmd "
 DEPENDS += "openssl zlib ncurses"
 export OE_LDFLAGS="-lz"
 
