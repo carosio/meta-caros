@@ -13,7 +13,7 @@ SRCREV_meta ?= "${AUTOREV}"
 
 SRC_URI = "git://git@git.tpip.net/tplino-linux-3.8;protocol=ssh;bareclone=1;branch=${KBRANCH},${KMETA};name=machine,meta"
 
-LINUX_VERSION ?= "3.8.4"
+LINUX_VERSION ?= "3.8.13"
 
 PR = "${INC_PR}.4"
 PV = "${LINUX_VERSION}+${PR}-${SRCPV}"
