@@ -4,7 +4,7 @@ SECTION = "network"
 LICENSE = "GPLv2+"
 LIC_FILES_CHKSUM = "file://COPYING;md5=bedf4908d7c0c9b86aeb97756a02b556"
 
-PR = "r5"
+PR = "r6"
 
 DEPENDS = "openssl"
 
@@ -60,5 +60,3 @@ do_install_append() {
 ##EXTRA_OECONF = "--disable-dtls --enable-debug"
 EXTRA_OECONF = "--with-openssl=${STAGING_LIBDIR}/.. --enable-debug --sysconfdir=/etc/capwap"
 CFLAGS += "-DLOCALUDP" 
-
-require platforms/buffalo-wzr-hp-ag300h.inc 
