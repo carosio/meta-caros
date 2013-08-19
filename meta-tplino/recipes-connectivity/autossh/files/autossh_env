@@ -1,0 +1,13 @@
+SSH_OPTIONS=" -i <SSHKEY> -g -N -f" 
+port="<PORT>" 
+user="<USER>" 
+host="<HOST>" 
+#if GATETIME 0 autossh will retry to connect even on failure of first attempt to run ssh
+AUTOSSH_GATETIME=0 
+AUTOSSH_PORT=0
+#log levels correspond to the levels used by syslog 
+AUTOSSH_LOGLEVEL=3
+#the POLL is the max time between connecting retrys every failed retry will increases the breake time
+AUTOSSH_POLL=300
+#path to the ssh executable
+AUTOSSH_PATH=/usr/bin/autossh

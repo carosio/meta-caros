@@ -1,0 +1,11 @@
+[Unit]
+Description=autossh starts and manages an ssh connection 
+After=multi-user.target
+
+[Service]
+Type=forking
+ExecStart=/etc/init.d/autossh.sh
+EnvironmentFile=/etc/autossh/autossh_env
+
+[Install]
+WantedBy=multi-user.target
