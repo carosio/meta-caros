@@ -4,7 +4,7 @@ SECTION = "network"
 LICENSE = "GPLv2+"
 LIC_FILES_CHKSUM = "file://COPYING;md5=bedf4908d7c0c9b86aeb97756a02b556"
 
-PR = "r8"
+PR = "r9"
 
 DEPENDS = "openssl"
 
@@ -19,7 +19,7 @@ inherit autotools systemd
 SRC_URI = " \
 	git://git@git.tpip.net/opencapwap.git;protocol=ssh \
 	file://opencapwap-wtp.service \
-	file://settings.wtp.txt \
+	file://settings_1.1.4.wtp.txt \
 	file://config.wtp \
 	file://opencapwap-ac.service \
 	file://settings.ac.txt \
@@ -29,7 +29,7 @@ FILES_opencapwap-wtp = " \
 	${bindir}/WTP \
 	${systemd_unitdir}/system/opencapwap-wtp.service \
 	${ROOT_HOME}/config.wtp \
-	${ROOT_HOME}/settings.wtp.txt"
+	${ROOT_HOME}/settings_1.1.4.wtp.txt"
 
 FILES_opencapwap-ac = " \
 	${bindir}/AC \
@@ -50,12 +50,12 @@ do_install_append() {
 		   ${D}${systemd_unitdir}/system
 
         install -m 0644 ${WORKDIR}/opencapwap-wtp.service ${D}/${systemd_unitdir}/system
-	install -m 0644 ${WORKDIR}/settings.wtp.txt ${D}${sysconfdir}/capwap
-	install -m 0644 ${WORKDIR}/config.wtp  ${D}${sysconfdir}/capwap
+	      install -m 0644 ${WORKDIR}/settings_1.1.4.wtp.txt ${D}${sysconfdir}/capwap/settings.wtp.txt
+	      install -m 0644 ${WORKDIR}/config.wtp  ${D}${sysconfdir}/capwap
         install -m 0644 ${WORKDIR}/opencapwap-ac.service ${D}/${systemd_unitdir}/system
-	install -m 0644 ${WORKDIR}/settings.ac.txt  ${D}${sysconfdir}/capwap
-	install -m 0644 ${WORKDIR}/config.ac  ${D}${sysconfdir}/capwap
+	      install -m 0644 ${WORKDIR}/settings.ac.txt  ${D}${sysconfdir}/capwap
+	      install -m 0644 ${WORKDIR}/config.ac  ${D}${sysconfdir}/capwap
 }
 
 ##EXTRA_OECONF = "--disable-dtls --enable-debug"
-EXTRA_OECONF = "--with-openssl=${STAGING_LIBDIR}/.. --enable-debug --sysconfdir=/etc/capwap"
+EXTRA_OECONF = "--with-openssl=${STAGING_LIBDIR}/.. --sysconfdir=/etc/capwap"
