@@ -10,7 +10,7 @@ DEPENDS = "openssl"
 
 PACKAGES =+ "opencapwap-wtp opencapwap-ac"
 
-SRCREV = "${AUTOREV}"
+SRCREV = "f1fecf9f318ec7be743324587d414306de54bc36"
 PV-orig := "${PV}" 
 PV = "${PV-orig}-${PR}-${SRCPV}"
 
@@ -50,12 +50,12 @@ do_install_append() {
 		   ${D}${systemd_unitdir}/system
 
         install -m 0644 ${WORKDIR}/opencapwap-wtp.service ${D}/${systemd_unitdir}/system
-	install -m 0644 ${WORKDIR}/settings.wtp.txt ${D}${sysconfdir}/capwap
-	install -m 0644 ${WORKDIR}/config.wtp  ${D}${sysconfdir}/capwap
+	      install -m 0644 ${WORKDIR}/settings.wtp.txt ${D}${sysconfdir}/capwap
+	      install -m 0644 ${WORKDIR}/config.wtp  ${D}${sysconfdir}/capwap
         install -m 0644 ${WORKDIR}/opencapwap-ac.service ${D}/${systemd_unitdir}/system
-	install -m 0644 ${WORKDIR}/settings.ac.txt  ${D}${sysconfdir}/capwap
-	install -m 0644 ${WORKDIR}/config.ac  ${D}${sysconfdir}/capwap
+	      install -m 0644 ${WORKDIR}/settings.ac.txt  ${D}${sysconfdir}/capwap
+	      install -m 0644 ${WORKDIR}/config.ac  ${D}${sysconfdir}/capwap
 }
 
 ##EXTRA_OECONF = "--disable-dtls --enable-debug"
-EXTRA_OECONF = "--with-openssl=${STAGING_LIBDIR}/.. --enable-debug --sysconfdir=/etc/capwap"
+EXTRA_OECONF = "--with-openssl=${STAGING_LIBDIR}/.. --sysconfdir=/etc/capwap"
