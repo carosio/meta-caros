@@ -1,0 +1,10 @@
+[Unit]
+Description=Run tasks when events happen at the network interface
+After=local-fs.target
+
+[Service]
+Type=forking
+ExecStart=/usr/sbin/ifplugd -f 
+
+[Install]
+WantedBy=local-fs.target
