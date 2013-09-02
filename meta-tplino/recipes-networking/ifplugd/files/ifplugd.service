@@ -1,10 +1,11 @@
 [Unit]
 Description=Run tasks when events happen at the network interface
-After=local-fs.target
+After=systemd-udevd.service
 
 [Service]
 Type=forking
 ExecStart=/usr/sbin/ifplugd -f 
+Restart=always
 
 [Install]
-WantedBy=local-fs.target
+WantedBy=multi-user.target
