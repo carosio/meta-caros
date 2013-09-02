@@ -2,10 +2,11 @@
 Description=hostapd
 After=multi-user.target
 After=opencapwap-wtp.service
+After=systemd-udevd.service
 Requires=opencapwap-wtp.service
 
 [Service]
-TimeoutStartSec= 3
+ExecStartPre=/bin/sleep 3
 ExecStart=/usr/sbin/hostapd /etc/hostapd.conf
 Type=simple
 Environment="HOME=/home/root"
