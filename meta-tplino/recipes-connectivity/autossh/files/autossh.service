@@ -5,6 +5,7 @@ After=multi-user.target
 [Service]
 Type=forking
 ExecStart=/etc/init.d/autossh.sh
+ExecStop=/usr/bin/killall autossh
 EnvironmentFile=/etc/autossh/autossh_env
 
 [Install]

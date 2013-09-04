@@ -1,6 +1,6 @@
 DESCRIPTION = "autossh"
 LICENSE = "GPLv2+"
-PR = "r7"
+PR = "r9"
 
 LIC_FILES_CHKSUM = "file://../git/autossh.c;beginline=1;endline=24;md5=45e6f189cd3b4d0d119c0946df4071fd"
 
@@ -41,5 +41,6 @@ FILES_${PN} = "${bindir}/autossh \
     ${sysconfdir}/autossh/autossh_env \
     ${sysconfdir}/init.d/autossh.sh"
 
+CONFFILES_${PN} += "${sysconfdir}/autossh/autossh_env"
 SRC_URI[md5sum] = "26520eea934f296be0783dabe7fcfd28"
 SRC_URI[sha256sum] = "6fcaba6a409a46bdf832086736bb8f09d245ebce11027f41d39588a95dc7fd1d"
