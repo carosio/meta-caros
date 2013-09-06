@@ -1,6 +1,6 @@
 require opencapwap.inc
 
-SRCREV = "98106086da9c8f15043e6050be37945543a173c5"
+SRCREV = "beb21307e2da09a58d7e37820ee206ccdeb0b57e"
 PR = "${INC_PR}.2"
 PV-orig := "${PV}" 
 PV = "${PV-orig}-${PR}-${SRCPV}"
