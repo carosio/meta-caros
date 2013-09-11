@@ -1,0 +1,25 @@
+diff --git a/src/drivers/driver_capwap.c b/src/drivers/driver_capwap.c
+index dfbc3ee..d4a388d 100644
+--- a/src/drivers/driver_capwap.c
++++ b/src/drivers/driver_capwap.c
+@@ -6397,6 +6397,20 @@ static int i802_sta_deauth(void *priv, const u8 *own_addr, const u8 *addr,
+ 	struct i802_bss *bss = priv;
+ 	struct ieee80211_mgmt mgmt;
+ 
++	/* fake deauth from station for capwap */
++	memset(&mgmt, 0, sizeof(mgmt));
++	mgmt.frame_control = IEEE80211_FC(WLAN_FC_TYPE_MGMT,
++					  WLAN_FC_STYPE_DEAUTH);
++	/* sa/da reversed */
++	memcpy(mgmt.da, own_addr, ETH_ALEN);
++	memcpy(mgmt.sa, addr, ETH_ALEN);
++	memcpy(mgmt.bssid, own_addr, ETH_ALEN);
++	mgmt.u.deauth.reason_code = host_to_le16(reason);
++
++	ipc_send_80211_to_ac(generic_wtp_info.fd_ipc, (u8 *) &mgmt,
++			     IEEE80211_HDRLEN + sizeof(mgmt.u.deauth));
++	/* -------------*/
++
+ 	memset(&mgmt, 0, sizeof(mgmt));
+ 	mgmt.frame_control = IEEE80211_FC(WLAN_FC_TYPE_MGMT,
+ 					  WLAN_FC_STYPE_DEAUTH);
