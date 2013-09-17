@@ -11,7 +11,7 @@ DEPENDS = "openssl"
 PACKAGES =+ "opencapwap-wtp opencapwap-ac"
 
 PRINC := "${@int(PRINC)+1}"
-FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}-${PV-orig}:"
+FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}-${PV}:"
 
 inherit autotools systemd
 
@@ -43,7 +43,7 @@ FILES_opencapwap-ac = " \
 CONFFILES_opencapwap-ac = " \ 
   ${sysconfdir}/capwap/config.ac \
   ${sysconfdir}/capwap/settings.ac.txt \
-  "
+"
 
 S = "${WORKDIR}/git"
 
