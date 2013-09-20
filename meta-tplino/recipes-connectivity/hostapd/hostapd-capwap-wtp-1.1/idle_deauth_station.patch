@@ -1,8 +1,7 @@
-diff --git a/src/drivers/driver_capwap.c b/src/drivers/driver_capwap.c
-index dfbc3ee..d4a388d 100644
---- a/src/drivers/driver_capwap.c
-+++ b/src/drivers/driver_capwap.c
-@@ -6397,6 +6397,20 @@ static int i802_sta_deauth(void *priv, const u8 *own_addr, const u8 *addr,
+diff -up hostapd-1.1/src/drivers/driver_capwap_wtp.c.orig hostapd-1.1/src/drivers/driver_capwap_wtp.c
+--- hostapd-1.1/src/drivers/driver_capwap_wtp.c.orig	2013-09-20 14:44:50.323182383 +0200
++++ hostapd-1.1/src/drivers/driver_capwap_wtp.c	2013-09-20 14:53:26.775175464 +0200
+@@ -6670,6 +6670,20 @@ static int i802_sta_deauth(void *priv, c
  	struct i802_bss *bss = priv;
  	struct ieee80211_mgmt mgmt;
  
