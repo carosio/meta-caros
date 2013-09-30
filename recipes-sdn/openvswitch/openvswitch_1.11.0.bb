@@ -4,14 +4,11 @@ require openvswitch.inc
 
 LIC_FILES_CHKSUM = "file://COPYING;md5=49eeb5acb1f5e510f12c44f176c42253"
 
-SRC_URI += "git://openvswitch.org/openvswitch;protocol=git \
+SRC_URI += "http://openvswitch.org/releases/openvswitch-1.11.0.tar.gz \
 	    file://fix_missing_dist_file.patch \
 	   "
 
 S = "${WORKDIR}/git"
 
-SRCREV="${AUTOREV}"
-PV-orig := "${PV}" 
-PV = "${PV-orig}-${PR}-${SRCPV}" 
-PR = "r14"
+PR = "r1"
 
