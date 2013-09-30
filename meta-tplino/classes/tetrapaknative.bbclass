@@ -12,5 +12,5 @@ do_compile() {
 }
 
 do_install() {
-    ERL_LIBS=${erllibs} tetrapak install -prefix ${D}
+    ERL_LIBS=${erllibs} tetrapak install -prefix ${D}/${base_prefix}
 }
