@@ -1,0 +1,141 @@
+From 98a306194965abea975c2a2fbfdf6f83e9b4cafd Mon Sep 17 00:00:00 2001
+From: Helge Sychla <hs@travelping.com>
+Date: Mon, 15 Apr 2013 11:11:58 +0200
+Subject: [PATCH] patch
+
+---
+ Makefile               | 18 ------------------
+ c_src/Makefile         | 22 ++++++++++++++++++++++
+ rebar.config           |  4 ----
+ rebar.config.script    | 18 ------------------
+ tetrapak/build_nif.erl | 11 +++++++++++
+ tetrapak/config.ini    |  8 ++++++++
+ 6 files changed, 41 insertions(+), 40 deletions(-)
+ delete mode 100644 Makefile
+ create mode 100644 c_src/Makefile
+ delete mode 100644 rebar.config
+ delete mode 100644 rebar.config.script
+ create mode 100644 tetrapak/build_nif.erl
+ create mode 100644 tetrapak/config.ini
+
+diff --git a/Makefile b/Makefile
+deleted file mode 100644
+index 0622dff..0000000
+--- a/Makefile
++++ /dev/null
+@@ -1,18 +0,0 @@
+-
+-.PHONY: all compile clean eunit test doc
+-
+-all: compile
+-
+-compile:
+-	rebar compile
+-
+-eunit: compile
+-	rebar eunit
+-
+-test: eunit
+-
+-clean:
+-	rebar clean
+-
+-doc:
+-	rebar doc
+\ No newline at end of file
+diff --git a/c_src/Makefile b/c_src/Makefile
+new file mode 100644
+index 0000000..3106775
+--- /dev/null
++++ b/c_src/Makefile
+@@ -0,0 +1,22 @@
++prefix ?= /usr
++exec_prefix ?= $(prefix)
++bindir ?= $(exec_prefix)/bin
++
++PRIVDIR := ../priv
++
++LD ?= ld
++CC ?= gcc
++RM ?= rm
++
++CFLAGS ?= -O2
++
++override CFLAGS += -std=gnu99 -Wall -fpic 
++override LDFLAGS += -shared -fpic 
++
++all : $(PRIVDIR)/yang_drv.so
++
++$(PRIVDIR)/yang_drv.so : yang_scan_nif.o
++	$(CC) $(LDFLAGS) -o $@ $^
++
++clean:
++	$(RM) -f $(PRIVDIR)/yang_drv.so yang_scan_nif.o
+diff --git a/rebar.config b/rebar.config
+deleted file mode 100644
+index 07bb365..0000000
+--- a/rebar.config
++++ /dev/null
+@@ -1,4 +0,0 @@
+-%% Config file for yang parser application
+-{erl_opts, [debug_info, fail_on_warning]}.
+-{sub_dirs, ["src"]}.
+-{port_specs, [{"priv/yang_drv.so", ["c_src/yang_scan_nif.c"]}]}.
+diff --git a/rebar.config.script b/rebar.config.script
+deleted file mode 100644
+index cc46b44..0000000
+--- a/rebar.config.script
++++ /dev/null
+@@ -1,18 +0,0 @@
+-%% -*- erlang -*-
+-
+-%%
+-%% If the environment variable X_COMP is set, it is an indication that self is being compiled
+-%% as a dependency under exodev. Since exodev lists all dependency in its root rebar.config 
+-%% file in order to have a flat view of the dependency tree, we should nil out our local
+-%% deps list provided by our local rebar.config
+-%%
+-case os:getenv("EXODEV_COMP") of
+-    false ->
+-        CONFIG;
+-
+-    _ ->
+-        case lists:keytake(deps, 1, CONFIG) of
+-            { value, _, Remainder } -> Remainder;
+-            _ -> CONFIG
+-        end
+-end.
+diff --git a/tetrapak/build_nif.erl b/tetrapak/build_nif.erl
+new file mode 100644
+index 0000000..d9c814e
+--- /dev/null
++++ b/tetrapak/build_nif.erl
+@@ -0,0 +1,11 @@
++-task({"build:nif", "Build the ejson NIF library"}).
++-task({"clean:nif", "Clean the ejson NIF library"}).
++
++run("build:nif", _) ->
++    tetrapak:outputcmd(tetrapak:subdir("c_src"), "make", [cflags(), "all"]);
++
++run("clean:nif", _) ->
++    tetrapak:outputcmd(tetrapak:subdir("c_src"), "make", [cflags(), "clean"]).
++
++cflags() ->
++    ["CFLAGS=", "-O2 ", ["-I", code:root_dir(), "/erts-", erlang:system_info(version), "/include"]].
+diff --git a/tetrapak/config.ini b/tetrapak/config.ini
+new file mode 100644
+index 0000000..60d0aeb
+--- /dev/null
++++ b/tetrapak/config.ini
+@@ -0,0 +1,8 @@
++[build]
++version = "~t.~o~~~c"
++
++[package]
++maintainer = "Travelping GmbH <info@travelping.com>"
++exclude = "\\.gitignore|README*|\\.arcconfig|^dist|Makefile|rebar.config*"
++architecture = host
++
+-- 
+1.8.1.2
+
