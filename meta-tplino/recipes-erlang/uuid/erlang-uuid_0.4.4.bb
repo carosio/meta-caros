@@ -3,7 +3,7 @@ SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://COPYING;md5=e6a600fd5e1d9cbde2d983680233ad02"
 
-SRCREV = "76893975bc7d70b217e8f7490d85d1e50105245a"
+SRCREV = "ae1856162130f03fbf89223879b44f8d8cb9f5e4"
 PR = "r1"
 
 SRC_URI = "git://git@git.tpip.net/uuid.git;protocol=ssh"
