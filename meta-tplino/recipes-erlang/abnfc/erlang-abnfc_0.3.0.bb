@@ -8,7 +8,7 @@ PR = "r2"
 PV-orig := "${PV}" 
 PV = "${PV-orig}-${PR}-${SRCPV}"
 
-SRC_URI = "git://github.com/nox/abnfc.git;protocol=git \
+SRC_URI = "git://github.com/travelping/abnfc.git;protocol=git \
 	   file://add-tetrapak.patch;apply=yes"
 
 S = "${WORKDIR}/git"
