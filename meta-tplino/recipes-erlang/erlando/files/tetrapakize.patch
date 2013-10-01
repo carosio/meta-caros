@@ -1,0 +1,12 @@
+diff --git a/tetrapak/config.ini b/tetrapak/config.ini
+new file mode 100644
+index 0000000..ec5bc2e
+--- /dev/null
++++ b/tetrapak/config.ini
+@@ -0,0 +1,6 @@
++[build]
++version = "~~~c"
++
++[package]
++maintainer = "Travelping GmbH <info@travelping.com>"
++exclude = "^\\.hgignore|^Makefile|^package\\.mk|^rebar\\.config|^\\.pc|^patches"
