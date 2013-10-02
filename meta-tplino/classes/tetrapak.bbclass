@@ -19,8 +19,12 @@ python do_qa_tetrapak() {
 
     pn = d.getVar('PN', True)
     srcdir = d.getVar('S', True)
-    config = ConfigParser.ConfigParser()
-    config.read(srcdir + '/tetrapak/config.ini')
+    try:
+        config = ConfigParser.RawConfigParser()
+        config.read(srcdir + '/tetrapak/config.ini')
+    except ConfigParser.ParsingError:
+        return
+
     if not config.has_option('package.deb','build_dependencies'):
         return
 
