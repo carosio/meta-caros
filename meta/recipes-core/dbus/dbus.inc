@@ -12,7 +12,7 @@ DEPENDS_class-nativesdk = "nativesdk-expat virtual/nativesdk-libintl virtual/lib
 RDEPENDS_dbus = "${@base_contains('DISTRO_FEATURES', 'ptest', 'dbus-ptest', '', d)}"
 RDEPENDS_class-native = ""
 
-INC_PR = "r5"
+INC_PR = "r6"
 
 SRC_URI = "http://dbus.freedesktop.org/releases/dbus/dbus-${PV}.tar.gz \
            file://tmpdir.patch; \
@@ -57,6 +57,12 @@ FILES_${PN} = "${bindir}/dbus-daemon* \
 FILES_${PN}-lib = "${libdir}/lib*.so.*"
 RRECOMMENDS_${PN}-lib = "${PN}"
 FILES_${PN}-dev += "${libdir}/dbus-1.0/include ${bindir}/dbus-glib-tool"
+
+python __anonymous() {
+    features = d.getVar("DISTRO_FEATURES", True).split()
+    if "sysvinit" not in features:
+        d.setVar("INHIBIT_UPDATERCD_BBCLASS", "1")
+}
 
 pkg_postinst_dbus() {
 	if [ -z "$D" ] && [ -e /etc/init.d/populate-volatile.sh ] ; then
