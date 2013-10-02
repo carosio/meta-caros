@@ -12,7 +12,9 @@ S = "${WORKDIR}/git"
 
 inherit tetrapak
 
-DEPENDS = " erlang-mochiweb erlang-cowboy "
+PREFERRED_VERSION_erlang-cowboy = "0.4.%"
+
+DEPENDS = "erlang-mochiweb erlang-cowboy"
 
 python () {
     erlang_def_package("mochicow", "mochicow*", "ebin priv", "src include", d)
