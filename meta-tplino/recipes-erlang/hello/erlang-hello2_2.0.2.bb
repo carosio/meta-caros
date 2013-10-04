@@ -12,8 +12,8 @@ S = "${WORKDIR}/git"
 
 inherit tetrapak
 
-DEPENDS_append = " erlang-cowboy erlang-yang-native erlang-erlzmq erlang-ex-uri erlang-ibrowse "
-RDEPENDS_${PN}_append = " erlang-cowboy erlang-yang erlang-erlzmq erlang-ex-uri erlang-ibrowse "
+DEPENDS = " erlang-cowboy erlang-yang-native erlang-erlzmq erlang-ex-uri erlang-ibrowse "
+RDEPENDS_${PN} = " erlang-cowboy erlang-yang erlang-erlzmq erlang-ex-uri erlang-ibrowse "
 
 python () {
     erlang_def_package("hello2", "hello2-*", "ebin priv", "src include README.md examples", d)
