@@ -1,19 +1,12 @@
 DESCRIPTION = "A live image init script"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://${COREBASE}/meta/COPYING.MIT;md5=3da9cfbcb788c80a0384361b4de20420"
-RDEPENDS_${PN} = "udev"
 DEPENDS = "virtual/kernel"
+RDEPENDS_${PN} = "udev udev-extraconf"
 SRC_URI = "file://init-live.sh"
 
 PR = "r11"
 
-do_compile() {
-	#if grep -q "CONFIG_UNION_FS=y" ${STAGING_KERNEL_DIR}/.config; then
-	#	sed -i 's/UNIONFS="no"/UNIONFS="yes"/g' ${WORKDIR}/init-live.sh
-	#fi
-	:
-}
- 
 do_install() {
         install -m 0755 ${WORKDIR}/init-live.sh ${D}/init
 }

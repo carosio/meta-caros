@@ -7,12 +7,11 @@ ROOT_IMAGE="rootfs.img"
 MOUNT="/bin/mount"
 UMOUNT="/bin/umount"
 ISOLINUX=""
-UNIONFS="no"
 
 # Copied from initramfs-framework. The core of this script probably should be
 # turned into initramfs-framework modules to reduce duplication.
 udev_daemon() {
-	OPTIONS="/sbin/udevd /lib/udev/udevd /lib/systemd/systemd-udevd"
+	OPTIONS="/sbin/udev/udevd /sbin/udevd /lib/udev/udevd /sbin/systemd/systemd-udevd /lib/systemd/systemd-udevd"
 
 	for o in $OPTIONS; do
 		if [ -x "$o" ]; then
@@ -75,15 +74,19 @@ read_args() {
 }
 
 boot_live_root() {
-    killall udevd 2>/dev/null
+    # Watches the udev event queue, and exits if all current events are handled
+    udevadm settle --timeout=3 --quiet
+    killall "${_UDEV_DAEMON##*/}" 2>/dev/null
 
     # Move the mount points of some filesystems over to
     # the corresponding directories under the real root filesystem.
+    for dir in `awk '/\/dev.* \/media/{print $2}' /proc/mounts`; do
+        mkdir -p  ${ROOT_MOUNT}/$dir
+        mount -n --move $dir ${ROOT_MOUNT}/$dir
+    done
     mount -n --move /proc ${ROOT_MOUNT}/proc
     mount -n --move /sys ${ROOT_MOUNT}/sys
     mount -n --move /dev ${ROOT_MOUNT}/dev
-    # Move /media/$i over to the real root filesystem
-    mount -n --move /media/$i ${ROOT_MOUNT}/media/realroot
 
     cd $ROOT_MOUNT
     exec switch_root -c /dev/console $ROOT_MOUNT /sbin/init
@@ -134,30 +137,66 @@ do
   sleep 1
 done
 
+# Try to make a union mount of the root image.
+# If no unification filesystem is available, mount the image read-only.
+mount_and_boot() {
+    mkdir $ROOT_MOUNT
+    mknod /dev/loop0 b 7 0 2>/dev/null
+
+    # determine which unification filesystem to use
+    union_fs_type=""
+    if grep -q -w "overlayfs" /proc/filesystems; then
+	union_fs_type="overlayfs"
+    elif grep -q -w "aufs" /proc/filesystems; then
+	union_fs_type="aufs"
+    else
+	union_fs_type=""
+    fi
+
+    # make a union mount if possible
+    case $union_fs_type in
+	"overlayfs")
+	    mkdir -p /rootfs.ro /rootfs.rw
+	    if ! mount -o rw,loop,noatime,nodiratime /media/$i/$ISOLINUX/$ROOT_IMAGE /rootfs.ro; then
+		rm -rf /rootfs.ro /rootfs.rw
+		fatal "Could not mount rootfs image"
+	    else
+		mount -t tmpfs -o rw,noatime,mode=755 tmpfs /rootfs.rw
+		mount -t overlayfs -o "lowerdir=/rootfs.ro,upperdir=/rootfs.rw" overlayfs $ROOT_MOUNT
+		mkdir -p $ROOT_MOUNT/rootfs.ro $ROOT_MOUNT/rootfs.rw
+		mount --move /rootfs.ro $ROOT_MOUNT/rootfs.ro
+		mount --move /rootfs.rw $ROOT_MOUNT/rootfs.rw
+	    fi
+	    ;;
+	"aufs")
+	    mkdir -p /rootfs.ro /rootfs.rw
+	    if ! mount -o rw,loop,noatime,nodiratime /media/$i/$ISOLINUX/$ROOT_IMAGE /rootfs.ro; then
+		rm -rf /rootfs.ro /rootfs.rw
+		fatal "Could not mount rootfs image"
+	    else
+		mount -t tmpfs -o rw,noatime,mode=755 tmpfs /rootfs.rw
+		mount -t aufs -o "dirs=/rootfs.rw=rw:/rootfs.ro=ro" aufs $ROOT_MOUNT
+		mkdir -p $ROOT_MOUNT/rootfs.ro $ROOT_MOUNT/rootfs.rw
+		mount --move /rootfs.ro $ROOT_MOUNT/rootfs.ro
+		mount --move /rootfs.rw $ROOT_MOUNT/rootfs.rw
+	    fi
+	    ;;
+	"")
+	    if ! mount -o rw,loop,noatime,nodiratime /media/$i/$ISOLINUX/$ROOT_IMAGE $ROOT_MOUNT ; then
+		fatal "Could not mount rootfs image"
+	    else
+		mount -t tmpfs -o rw,noatime,mode=755 tmpfs $ROOT_MOUNT/media
+	    fi
+	    ;;
+    esac
+
+    # boot the image
+    boot_live_root
+}
+
 case $label in
     boot)
-	mkdir $ROOT_MOUNT
-	mknod /dev/loop0 b 7 0 2>/dev/null
-
-	
-	if [ "$UNIONFS" = "yes" ]; then
-	    mkdir /rootfs-tmp
-
-	    if ! $MOUNT -o rw,loop,noatime,nodiratime /media/$i/$ISOLINUX/$ROOT_IMAGE /rootfs-tmp ; then
-		fatal "Could not mount rootfs image"
-	    else
-		mkdir /cow
-		mount -t tmpfs -o rw,noatime,mode=755 tmpfs /cow
-		mount -t unionfs -o dirs=/cow:/rootfs-tmp=ro unionfs $ROOT_MOUNT
-		boot_live_root
-	    fi
-	else
-	    if ! $MOUNT -o rw,loop,noatime,nodiratime /media/$i/$ISOLINUX/$ROOT_IMAGE $ROOT_MOUNT ; then
-		fatal "Could not mount rootfs image"
-	    else
-		boot_live_root
-	    fi
-	fi
+	mount_and_boot
 	;;
     install|install-efi)
 	if [ -f /media/$i/$ISOLINUX/$ROOT_IMAGE ] ; then

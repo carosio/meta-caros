@@ -13,64 +13,77 @@ boot_size=20
 # 5% for the swap
 swap_ratio=5
 
-found="no"
+# Get a list of hard drives
+hdnamelist=""
+live_dev_name=${1%%/*}
 
-echo "Searching for a hard drive..."
-for device in 'hda' 'hdb' 'sda' 'sdb' 'mmcblk0' 'mmcblk1'
-  do
-  if [ -e /sys/block/${device}/removable ]; then
-      if [ "$(cat /sys/block/${device}/removable)" = "0" ]; then
-	  found="yes"
+echo "Searching for hard drives ..."
 
-	  while true; do
-	      # Try sleeping here to avoid getting kernel messages
-              # obscuring/confusing user
-	      sleep 5
-	      echo "Found drive at /dev/${device}. Do you want to install this image there ? [y/n]"
-	      read answer
-	      if [ "$answer" = "y" ] ; then
-		  break
-	      fi
-	  
-	      if [ "$answer" = "n" ] ; then
-		  found=no
-		  break
-	      fi
-
-	      echo "Please answer by y or n"
-	  done
-      fi
-  fi
-
-  if [ "$found" = "yes" ]; then
-      break;
-  fi
-
+for device in `ls /sys/block/`; do
+    case $device in
+	loop*)
+            # skip loop device
+	    ;;
+	ram*)
+            # skip ram device
+	    ;;
+	*)
+	    # skip the device LiveOS is on
+	    # Add valid hard drive name to the list
+	    if [ $device != $live_dev_name -a -e /dev/$device ]; then
+		hdnamelist="$hdnamelist $device"
+	    fi
+	    ;;
+    esac
 done
 
-if [ "$found" = "no" ]; then
-      exit 1      
+TARGET_DEVICE_NAME=""
+for hdname in $hdnamelist; do
+    # Display found hard drives and their basic info
+    echo "-------------------------------"
+    echo /dev/$hdname
+    if [ -r /sys/block/$hdname/device/vendor ]; then
+	echo -n "VENDOR="
+	cat /sys/block/$hdname/device/vendor
+    fi
+    echo -n "MODEL="
+    cat /sys/block/$hdname/device/model
+    cat /sys/block/$hdname/device/uevent
+    echo
+    # Get user choice
+    while true; do
+	echo -n "Do you want to install this image there? [y/n] "
+	read answer
+	if [ "$answer" = "y" -o "$answer" = "n" ]; then
+	    break
+	fi
+	echo "Please answer y or n"
+    done
+    if [ "$answer" = "y" ]; then
+	TARGET_DEVICE_NAME=$hdname
+	break
+    fi
+done
+
+if [ -n "$TARGET_DEVICE_NAME" ]; then
+    echo "Installing image on /dev/$TARGET_DEVICE_NAME ..."
+else
+    echo "No hard drive selected. Installation aborted."
+    exit 1
 fi
 
-echo "Installing image on /dev/${device}"
+device=$TARGET_DEVICE_NAME
 
 #
 # The udev automounter can cause pain here, kill it
 #
+rm -f /etc/udev/rules.d/automount.rules
 rm -f /etc/udev/scripts/mount*
 
 #
 # Unmount anything the automounter had mounted
 #
 umount /dev/${device}* 2> /dev/null || /bin/true
-
-if [ ! -b /dev/sda ] ; then
-    mknod /dev/sda b 8 0
-fi
-
-if [ ! -b /dev/sdb ] ; then
-    mknod /dev/sdb b 8 16
-fi
 
 if [ ! -b /dev/loop0 ] ; then
     mknod /dev/loop0 b 7 0
@@ -132,29 +145,32 @@ mkfs.ext3 $rootfs
 echo "Formatting swap partition...($swap)"
 mkswap $swap
 
-mkdir /ssd
-mkdir /rootmnt
-mkdir /bootmnt
+mkdir /tgt_root
+mkdir /src_root
+mkdir -p /boot
 
-mount $rootfs /ssd
-mount -o rw,loop,noatime,nodiratime /media/$1/$2 /rootmnt
-
+# Handling of the target root partition
+mount $rootfs /tgt_root
+mount -o rw,loop,noatime,nodiratime /media/$1/$2 /src_root
 echo "Copying rootfs files..."
-cp -a /rootmnt/* /ssd
-
-if [ -d /ssd/etc/ ] ; then
-    echo "$swap                swap             swap       defaults              0  0" >> /ssd/etc/fstab
-
+cp -a /src_root/* /tgt_root
+if [ -d /tgt_root/etc/ ] ; then
+    echo "$swap                swap             swap       defaults              0  0" >> /tgt_root/etc/fstab
+    echo "$bootfs              /boot            ext3       defaults              1  2" >> /tgt_root/etc/fstab
     # We dont want udev to mount our root device while we're booting...
-    if [ -d /ssd/etc/udev/ ] ; then
-	echo "/dev/${device}" >> /ssd/etc/udev/mount.blacklist
+    if [ -d /tgt_root/etc/udev/ ] ; then
+	echo "/dev/${device}" >> /tgt_root/etc/udev/mount.blacklist
     fi
 fi
+umount /tgt_root
+umount /src_root
 
+# Handling of the target boot partition
+mount $bootfs /boot
+echo "Preparing boot partition..."
 if [ -f /etc/grub.d/40_custom ] ; then
     echo "Preparing custom grub2 menu..."
-    GRUBCFG="/bootmnt/boot/grub/grub.cfg"
-    mount $bootfs /bootmnt
+    GRUBCFG="/boot/grub/grub.cfg"
     mkdir -p $(dirname $GRUBCFG)
     cp /etc/grub.d/40_custom $GRUBCFG
     sed -i "s@__ROOTFS__@$rootfs $rootwait@g" $GRUBCFG
@@ -164,31 +180,24 @@ if [ -f /etc/grub.d/40_custom ] ; then
     sed -i "/#/d" $GRUBCFG
     sed -i "/exec tail/d" $GRUBCFG
     chmod 0444 $GRUBCFG
-    umount /bootmnt
 fi
-
-umount /ssd
-umount /rootmnt
-
-echo "Preparing boot partition..."
-mount $bootfs /ssd
-grub-install --root-directory=/ssd /dev/${device}
-
-echo "(hd0) /dev/${device}" > /ssd/boot/grub/device.map
+grub-install /dev/${device}
+echo "(hd0) /dev/${device}" > /boot/grub/device.map
 
 # If grub.cfg doesn't exist, assume GRUB 0.97 and create a menu.lst
-if [ ! -f /ssd/boot/grub/grub.cfg ] ; then
+if [ ! -f /boot/grub/grub.cfg ] ; then
     echo "Preparing custom grub menu..."
-    echo "default 0" > /ssd/boot/grub/menu.lst
-    echo "timeout 30" >> /ssd/boot/grub/menu.lst
-    echo "title Live Boot/Install-Image" >> /ssd/boot/grub/menu.lst
-    echo "root  (hd0,0)" >> /ssd/boot/grub/menu.lst
-    echo "kernel /boot/vmlinuz root=$rootfs rw $3 $4 quiet" >> /ssd/boot/grub/menu.lst
+    echo "default 0" > /boot/grub/menu.lst
+    echo "timeout 30" >> /boot/grub/menu.lst
+    echo "title Live Boot/Install-Image" >> /boot/grub/menu.lst
+    echo "root  (hd0,0)" >> /boot/grub/menu.lst
+    echo "kernel /vmlinuz root=$rootfs rw $3 $4 quiet" >> /boot/grub/menu.lst
 fi
 
-cp /media/$1/vmlinuz /ssd/boot/
+cp /media/$1/vmlinuz /boot/
 
-umount /ssd
+umount /boot
+
 sync
 
 echo "Remove your installation media, and press ENTER"
