@@ -13,6 +13,8 @@
 # ${SYSLINUX_OPTS} - additional options to add to the syslinux file ';' delimited
 # ${SYSLINUX_SPLASH} - A background for the vga boot menu if using the boot menu
 # ${SYSLINUX_SERIAL} - Set an alternate serial port or turn off serial with empty string
+# ${SYSLINUX_DEFAULT} - Set standard boot label, if empty label boot is set 
+
 
 do_bootimg[depends] += "syslinux:do_populate_sysroot \
                         syslinux-native:do_populate_sysroot"
@@ -108,8 +110,13 @@ python build_syslinux_cfg () {
 
     if menu and syslinux_serial:
         cfgfile.write('DEFAULT Graphics console %s\n' % (labels.split()[0]))
+
+    default = d.getVar('SYSLINUX_DEFAULT', True)
+    
+    if default: 
+       cfgfile.write('DEFAULT %s\n' % default)    
     else:
-        cfgfile.write('DEFAULT %s\n' % (labels.split()[0]))
+        cfgfile.write('DEFAULT boot\n')
 
     timeout = d.getVar('SYSLINUX_TIMEOUT', True)
 
@@ -161,7 +168,7 @@ python build_syslinux_cfg () {
 
                 cfgfile.write('LABEL=%s '% (label))
 
-                cfgfile.write('%s %s\n' % (append, btype[1]))
+                cfgfile.write('%s \n' % append)
             else:
                 cfgfile.write('APPEND %s\n' % btype[1])
 
