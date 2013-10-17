@@ -1,0 +1,173 @@
+From 4f736c59fa5ff82fa5c894edec6e14d430d4fb50 Mon Sep 17 00:00:00 2001
+From: Helge Sychla <hs@travelping.com>
+Date: Thu, 13 Jun 2013 20:06:14 +0200
+Subject: [PATCH] patch
+
+---
+ Makefile               | 90 --------------------------------------------------
+ app.mk                 | 21 ------------
+ src/common_lib.app.src |  8 ++---
+ tetrapak/config.ini    |  9 +++++
+ 4 files changed, 13 insertions(+), 115 deletions(-)
+ delete mode 100644 Makefile
+ delete mode 100644 app.mk
+ create mode 100644 tetrapak/config.ini
+
+diff --git a/Makefile b/Makefile
+deleted file mode 100644
+index 0dbab5e..0000000
+--- a/Makefile
++++ /dev/null
+@@ -1,90 +0,0 @@
+-#### INCLUDES
+-include app.mk
+-
+-###-----------------------------------------------------------------------------
+-### Special characters
+-###-----------------------------------------------------------------------------
+-comma := ,
+-empty :=
+-space := $(empty) $(empty)
+-
+-###-----------------------------------------------------------------------------
+-### Application Layout
+-###-----------------------------------------------------------------------------
+-INCLUDE = include
+-APPSRC = $(patsubst src/%.app.src,%.app.src,$(wildcard src/*.app.src))
+-APP = $(APPSRC:.app.src=.app)
+-APPNAME = $(basename $(APP))
+-ERLS = $(patsubst src/%.erl,%.erl,$(wildcard src/*.erl))
+-BEAMS = $(ERLS:.erl=.beam)
+-MODS = $(subst $(space),$(comma),$(ERLS:.erl=))
+-DOCS = $(patsubst doc/%.ndoc,%.ndoc,$(wildcard doc/*.ndoc))
+-MANS = $(DOCS:.ndoc=.3)
+-HTMS = $(DOCS:.ndoc=.html)
+-TEXS = $(DOCS:.ndoc=.tex)
+-PDFS = $(DOCS:.ndoc=.pdf)
+-
+-### Dependecy Search Paths
+-VPATH = src:include:ebin:doc
+-
+-.PHONY: all clean doc
+-.SUFFIXES: .erl .hrl .beam .app.src .app .rel .ndoc
+-
+-###-----------------------------------------------------------------------------
+-### TARGETS
+-###-----------------------------------------------------------------------------
+-all: $(BEAMS) $(APP)
+-
+-man: $(MANS)
+-	@$(MV) doc/man/$(APPNAME)_overview.3 doc/man/$(APPNAME).1
+-
+-html: $(HTMS)
+-	@$(MV) doc/html/$(APPNAME)_overview.html doc/html/index.html
+-
+-pdf: $(PDFS)
+-	@$(MV) doc/pdf/$(APPNAME)_overview.pdf doc/pdf/$(APPNAME).pdf
+-
+-doc: man html pdf
+-
+-templates:
+-
+-clean:
+-	@$(RM) ebin/*.beam
+-	@$(RM) ebin/*.app
+-
+-realclean: clean
+-	@$(RM) doc/html/*
+-	@$(RM) doc/man/*
+-	@$(RM) doc/pdf/*
+-
+-dialyze:
+-	$(DIALYZER) -I $(INCLUDE) -I .. --src --verbose -c ./src
+-
+-## Rules
+-%.beam: %.erl
+-	@$(ECHO) "$(ERLC) $(EFLAGS) $^"
+-	@$(ERLC) $(EFLAGS) $^
+-
+-%.3: %.ndoc
+-	@$(SED) "s|%MODULES%|`echo $(MODS)`|g" $^ | \
+-	$(SED) "s|%VSN%|$(VSN)|g" | $(SED) "s|%APPLICATION%|$(APPNAME)|g" | \
+-	$(ERLDOC) -i - -t man --no-toc --erl -o doc/man/$@
+-
+-%.html: %.ndoc
+-	@$(SED) "s|%MODULES%|`echo $(MODS)`|g" $^ | \
+-	$(SED) "s|%VSN%|$(VSN)|g" | $(SED) "s|%APPLICATION%|$(APPNAME)|g" | \
+-	$(ERLDOC) -i - -t xhtml --erl -o doc/html/$@
+-
+-%.pdf: %.ndoc
+-	@$(SED) "s|%MODULES%|`echo $(MODS)`|g" $^ | \
+-	$(SED) "s|%VSN%|$(VSN)|g" | $(SED) "s|%APPLICATION%|$(APPNAME)|g" | \
+-	$(ERLDOC) -i - -t pdf --no-toc --erl -o doc/pdf/$@
+-
+-$(APP): $(APPSRC)
+-	@$(SED) "s|%MODULES%|`echo $(MODS)`|g" $^ | \
+-	$(SED) "s|%VSN%|$(VSN)|g" | $(SED) "s|%APPLICATION%|$(APPNAME)|g" > ebin/$@
+-
+-#$(NDOC): $(SRC)
+-#	@$(SED) "s|%VSN%|$(VSN)|g" $^ > $^
+-
+-#grep --regexp="==.*==" otp_app.ndoc | sed "s/== //g" | sed "s/ ==//g"
+diff --git a/app.mk b/app.mk
+deleted file mode 100644
+index 5a43386..0000000
+--- a/app.mk
++++ /dev/null
+@@ -1,21 +0,0 @@
+-VSN = 3.3.0
+-
+-### FIXME These variables should be automatically set when compiling
+-ERL = erl
+-ERLC = erlc
+-ifeq ($(DEBUG_INFO), true)
+-	EFLAGS = -Wall -I include -I .. -o ebin +debug_info
+-else
+-	EFLAGS = -Wall -I include -I .. -o ebin
+-endif
+-DIALYZER = dialyzer
+-RUN_TEST = run_test
+-
+-### Default apps
+-ECHO = echo
+-SED = sed
+-CP = cp -vf
+-RM = rm -vf
+-MV = mv -vf
+-ERLDOC = ndoc
+-
+diff --git a/src/common_lib.app.src b/src/common_lib.app.src
+index 8b5fabb..33c8023 100644
+--- a/src/common_lib.app.src
++++ b/src/common_lib.app.src
+@@ -1,8 +1,8 @@
+-{application, %APPLICATION%,
++{application, common_lib,
+  [{description, "Common Library"},
+-  {vsn, "%VSN%"},
+-  {modules, [%MODULES%]},
++  {vsn, "3.3.0"},
++  {modules, []},
+   {registered, [cl_timer_srv]},
+   {applications, [kernel, stdlib]},
+-  {mod, {%APPLICATION%, []}},
++  {mod, {common_lib, []}},
+   {env, []}]}.
+diff --git a/tetrapak/config.ini b/tetrapak/config.ini
+new file mode 100644
+index 0000000..550e34a
+--- /dev/null
++++ b/tetrapak/config.ini
+@@ -0,0 +1,9 @@
++[build]
++version = "~t.~o~~~c"
++
++[package]
++maintainer = "Helge Sychla <hs@travelping.com>"
++exclude = "^\\.gitignore|^test|^request-logs/|^doc/|Makefile|Emakefile|status\\.ipc|^\\.pc|^patches"
++extra_apps = []
++deb.section = "net"
++
+-- 
+1.8.1.2
+
