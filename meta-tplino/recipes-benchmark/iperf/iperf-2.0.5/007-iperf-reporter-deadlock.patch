@@ -1,0 +1,68 @@
+Description: deadlock with multiple clients
+ 000-Iperf_Fix-CPU-Usage.diff contains a bug can cause iperf deadlock while
+ it acting as server with multiple clients.  For example, in the code below,
+ Condition_Wait is incorrectly used without a Condition_Lock.
+ @@ -396,11 +390,8 @@
+  void EndReport( ReportHeader *agent ) {
+     if ( agent != NULL ) {
+         int index = agent->reporterindex;
+ -       if (threadSleeping)
+ -           Condition_Signal( &ReportCond );
+ -
+         while ( index != -1 ) {
+ -            thread_rest();
+ +            Condition_Wait( &ReportDoneCond );
+             index = agent->reporterindex;
+         }
+         agent->agentindex = -1;
+ .
+ Original patch for iperf 2.0.4 modified by Roberto Lumbreras for new
+ upstream version 2.0.5.
+Author: Kirby Zhou <kirbyzhou@sohu-rd.com>
+Bug-Debian: http://bugs.debian.org/533592
+
+--- a/include/Condition.h	2010-12-19 21:00:13.859169268 +0100
++++ b/include/Condition.h	2010-12-19 21:03:26.875321888 +0100
+@@ -115,6 +115,11 @@
+     // sleep this thread, waiting for condition signal
+ #if   defined( HAVE_POSIX_THREAD )
+     #define Condition_Wait( Cond ) pthread_cond_wait( &(Cond)->mCondition, &(Cond)->mMutex )
++    #define Condition_Wait_Event( Cond ) do { \
++        Mutex_Lock( &(Cond)->mMutex ); \
++        pthread_cond_wait( &(Cond)->mCondition, &(Cond)->mMutex ); \
++        Mutex_Unlock( &(Cond)->mMutex ); \
++    } while ( 0 )
+ #elif defined( HAVE_WIN32_THREAD )
+     // atomically release mutex and wait on condition,                      
+     // then re-acquire the mutex
+@@ -122,6 +127,10 @@
+         SignalObjectAndWait( (Cond)->mMutex, (Cond)->mCondition, INFINITE, false ); \
+         Mutex_Lock( &(Cond)->mMutex );                          \
+     } while ( 0 )
++    #define Condition_Wait_Event( Cond ) do { \
++        Mutex_Lock( &(Cond)->mMutex ); \
++        SignalObjectAndWait( (Cond)->mMutex, (Cond)->mCondition, INFINITE, false ); \
++    } while ( 0 )
+ #else
+     #define Condition_Wait( Cond )
+ #endif
+--- a/src/Reporter.c	2010-03-31 01:08:24.000000000 +0200
++++ b/src/Reporter.c	2010-12-19 21:04:41.388496478 +0100
+@@ -339,7 +339,7 @@
+             // item
+             while ( index == 0 ) {
+                 Condition_Signal( &ReportCond );
+-                Condition_Wait( &ReportDoneCond );
++                Condition_Wait_Event( &ReportDoneCond );
+                 index = agent->reporterindex;
+             }
+             agent->agentindex = 0;
+@@ -347,7 +347,7 @@
+         // Need to make sure that reporter is not about to be "lapped"
+         while ( index - 1 == agent->agentindex ) {
+             Condition_Signal( &ReportCond );
+-            Condition_Wait( &ReportDoneCond );
++            Condition_Wait_Event( &ReportDoneCond );
+             index = agent->reporterindex;
+         }
+ 

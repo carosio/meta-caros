@@ -1,0 +1,25 @@
+Description: fix receive typo
+Author: Roberto Lumbreras <rover@debian.org>
+
+--- a/man/iperf.1	2010-12-19 21:19:11.871168845 +0100
++++ b/man/iperf.1	2010-12-19 21:19:22.811557617 +0100
+@@ -116,7 +116,7 @@
+ input the data to be transmitted from stdin
+ .TP
+ .BR -L ", " --listenport " \fIn\fR"
+-port to recieve bidirectional tests back on
++port to receive bidirectional tests back on
+ .TP
+ .BR -P ", " --parallel " \fIn\fR"
+ number of parallel client threads to run
+--- a/src/Reporter.c	2010-12-19 21:18:27.667170232 +0100
++++ b/src/Reporter.c	2010-12-19 21:18:51.969392521 +0100
+@@ -681,7 +681,7 @@
+             data->TotalLen += packet->packetLen;
+         }
+     } else {
+-        // update recieved amount and time
++        // update received amount and time
+         data->packetTime = packet->packetTime;
+         reporter_condprintstats( &reporthdr->report, reporthdr->multireport, finished );
+         data->TotalLen += packet->packetLen;
