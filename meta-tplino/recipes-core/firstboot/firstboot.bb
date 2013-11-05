@@ -17,6 +17,6 @@ do_install () {
     install -m 0755  ${WORKDIR}/firstboot.sh ${D}${ROOT_HOME}
 
     install -d ${D}${systemd_unitdir}/system
-    install -m 0644 ${WORKDIR}/firstboot.service ${D}/${systemd_unitdir}/system
+    install -m 0644 ${WORKDIR}/firstboot.service ${D}${systemd_unitdir}/system
 
 }
