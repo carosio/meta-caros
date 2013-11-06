@@ -1,20 +1,14 @@
 DESCRIPTION = "A collection of utilities and DSOs to handle compiled objects."
 HOMEPAGE = "https://fedorahosted.org/elfutils"
 SECTION = "base"
-LICENSE = "(GPL-2+ & Elfutils-Exception)"
-LIC_FILES_CHKSUM = "file://COPYING;md5=0636e73ff0215e8d672dc4c32c317bb3\
-                    file://EXCEPTION;md5=570adcb0c1218ab57f2249c67d0ce417"
+LICENSE = "(GPLv3 & Elfutils-Exception)"
+LIC_FILES_CHKSUM = "file://COPYING;md5=d32239bcb673463ab874e80d47fae504"
 DEPENDS = "libtool bzip2 zlib virtual/libintl"
 
-PR = "r11"
+SRC_URI = "https://fedorahosted.org/releases/e/l/elfutils/${PV}/elfutils-${PV}.tar.bz2"
 
-SRC_URI = "https://fedorahosted.org/releases/e/l/elfutils/elfutils-${PV}.tar.bz2"
-
-SRC_URI[md5sum] = "a0bed1130135f17ad27533b0034dba8d"
-SRC_URI[sha256sum] = "8aebfa4a745db21cf5429c9541fe482729b62efc7e53e9110151b4169fe887da"
-
-# pick the patch from debian
-# http://ftp.de.debian.org/debian/pool/main/e/elfutils/elfutils_0.148-1.debian.tar.gz
+SRC_URI[md5sum] = "163a5712b86f6bdfebdf233cc6e2192d"
+SRC_URI[sha256sum] = "68444a4526416ffd68852ec3c6a40ceddcca46538297322405319884c5d30ed8"
 
 SRC_URI += "\
         file://redhat-portability.diff \
@@ -23,15 +17,12 @@ SRC_URI += "\
         file://arm_backend.diff \
         file://mips_backend.diff \
         file://m68k_backend.diff \
-        file://testsuite-ignore-elflint.diff \
         file://elf_additions.diff \
-	file://elfutils-fsize.patch \
-	file://remove-unused.patch \
-	file://mempcpy.patch \
-	file://fix_for_gcc-4.7.patch \
+        file://mempcpy.patch \
 	file://dso-link-change.patch \
 	file://nm-Fix-size-passed-to-snprintf-for-invalid-sh_name-case.patch \
 	file://elfutils-ar-c-fix-num-passed-to-memset.patch \
+	file://fix-build-gcc-4.8.patch \
 "
 # Only apply when building uclibc based target recipe
 SRC_URI_append_libc-uclibc = " file://uclibc-support.patch"
