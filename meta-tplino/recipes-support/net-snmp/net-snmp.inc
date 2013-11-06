@@ -2,21 +2,25 @@ DESCRIPTION = "Various tools relating to the Simple Network Management Protocol"
 HOMEPAGE = "http://www.net-snmp.org/"
 LICENSE = "BSD"
 
-DEPENDS = "openssl libnl"
+DEPENDS = "openssl libnl lmsensors"
 RDEPENDS_${PN}-server-snmpd += "net-snmp-mibs"
 RDEPENDS_${PN}-server-snmptrapd += "net-snmp-server-snmpd"
 RDEPENDS_${PN}-server += "net-snmp-server-snmpd net-snmp-server-snmptrapd"
 RDEPENDS_${PN}-client += "net-snmp-mibs"
 RDEPENDS_${PN}-dev = "net-snmp-client (= ${EXTENDPV}) net-snmp-server (= ${EXTENDPV})"
 RRECOMMENDS_${PN}-dbg = "net-snmp-client (= ${EXTENDPV}) net-snmp-server (= ${EXTENDPV})"
-INC_PR = "r5"
+INC_PR = "r6"
 
 inherit autotools update-rc.d siteinfo
 
 TARGET_CC_ARCH += "${LDFLAGS}"
 
 EXTRA_OECONF = "--enable-shared --disable-manuals --with-defaults \
-${@base_conditional('SITEINFO_ENDIANNESS', 'le', '--with-endianness=little', '--with-endianness=big', d)}"
+	        --enable-agentx-dom-sock-only \
+	        --with-mib-modules='smux ucd-snmp/lmsensorsMib ip-mib/ipv4InterfaceTable ip-mib/ipv6InterfaceTable agentx/master' \
+${@base_contains('DISTRO_FEATURES', 'ipv6', '--enable-ipv6', '', d)} \
+${@base_conditional('SITEINFO_ENDIANNESS', 'le', '--with-endianness=little', '--with-endianness=big', d)} \
+${@base_contains('DISTRO_FEATURES', 'systemd', '--with-systemd', '', d)}"
 
 do_install () {
 	oe_runmake install
