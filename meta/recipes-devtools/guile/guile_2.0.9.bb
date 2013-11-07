@@ -19,16 +19,15 @@ SRC_URI = "${GNU_MIRROR}/guile/guile-${PV}.tar.xz \
            file://opensuse/guile-64bit.patch \
            file://guile_2.0.6_fix_sed_error.patch \
            file://arm_endianness.patch \
-           file://fix_parallel_build_issue.patch \
            "
 
 #           file://debian/0001-Change-guile-to-guile-X.Y-for-info-pages.patch
 #           file://opensuse/guile-turn-off-gc-test.patch 
 
-SRC_URI[md5sum] = "30ff9e94663a2e2098b52f8ce9d050b9"
-SRC_URI[sha256sum] = "6f278fa699685382ae51ba8bfad5840959e0af6414f3ad803d61131567bfa338"
+SRC_URI[md5sum] = "a69b575d4a633bdd9118f3a4a1e97766"
+SRC_URI[sha256sum] = "f70a38c8d9751f442679bfe61852bba8545af4d4355d037630997c2f37f2895b"
 
-PR = "r1"
+PR = "r0"
 
 inherit autotools gettext
 BBCLASSEXTEND = "native"
@@ -37,7 +36,9 @@ DEPENDS = "libunistring bdwgc gmp libtool libffi"
 # add guile-native only to the target recipe's DEPENDS
 DEPENDS += "${@['guile-native libatomics-ops', ''][d.getVar('PN', True) != 'guile']}"
 
-EXTRA_OECONF += "${@['--without-libltdl-prefix --without-libgmp-prefix', ''][bb.data.inherits_class('native',d)]}"
+RDEPENDS_${PN}_append_libc-glibc_class-target = "glibc-gconv-iso8859-1"
+
+EXTRA_OECONF += "${@['--without-libltdl-prefix --without-libgmp-prefix --without-libreadline-prefix', ''][bb.data.inherits_class('native',d)]}"
 
 do_configure_prepend() {
 	mkdir -p po
