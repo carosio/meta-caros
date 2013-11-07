@@ -4,21 +4,49 @@ HOMEPAGE = "http://openvswitch.org/"
 SECTION = "networking"
 LICENSE = "Apache-2"
 
-DEPENDS += "openssl python perl systemd"
+inherit module autotools systemd
+
+PRINC="6"
+
+DEPENDS += "openssl python perl"
 
 RDEPENDS_${PN} += "util-linux-uuidgen util-linux-libuuid \
 	       python ${PN}-controller"
-RDEPENDS_${PN}-controller = "${PN} lsb ${PN}-pki"
+RDEPENDS_${PN}-ovsdb = "${PN}-common lsb"
+RDEPENDS_${PN}-vswitchd = "${PN}-common lsb kernel-module-${PN}"
+RDEPENDS_${PN}-controller = "${PN} ${PN}-common lsb ${PN}-pki"
 RDEPENDS_${PN}-tools = "${PN} perl perl-module-strict"
 RDEPENDS_${PN}-pki = "${PN}"
 RRECOMMENDS_${PN} += "kernel-module-${PN}"
 
-SRC_URI += "file://openvswitch.service"
+SRC_URI += "file://openvswitch.service \
+	    file://openvswitch-ovsdb.service \
+	    file://openvswitch-vswitchd.service \
+	    file://modules.load"
 
 EXTRA_OECONF = "--with-linux=${STAGING_KERNEL_DIR} KARCH=${TARGET_ARCH}"
 
 ALLOW_EMPTY_${PN}-pki = "1"
-PACKAGES =+ "${PN}-controller ${PN}-tools ${PN}-bugtool ${PN}-pki"
+PACKAGES =+ "${PN}-common ${PN}-ovsdb ${PN}-vswitchd ${PN}-controller ${PN}-tools ${PN}-bugtool ${PN}-pki ${PN}-python"
+
+FILES_${PN}-common = "\
+	/etc/openvswitch \
+	${bindir}/ovs-vsctl \
+	${bindir}/ovs-appctl \
+	"
+
+FILES_${PN}-ovsdb = "\
+	${sbindir}/ovsdb-server \
+	${bindir}/ovsdb-tool \
+	${datadir}/openvswitch/vswitch.ovsschema \
+	"
+
+FILES_${PN}-vswitchd  = "\
+	${sysconfdir}/modules-load.d/openvswitch.conf \
+	${sbindir}/ovs-vswitchd \
+	${bindir}/ovs-ofctl \
+	${bindir}/ovs-dpctl \
+	"
 
 FILES_${PN}-controller = "\
 	${sysconfdir}/openvswitch-controller \
@@ -38,7 +66,12 @@ FILES_${PN}-tools = "\
 	${bindir}/ovs-tcpundump \
 	${bindir}/ovs-test \
 	${bindir}/ovs-vlan-test \
-	${datadir}/openvswitch/python/ovstest \
+	${sbindir}/ovs-vlan-bug-workaround \
+	${bindir}/ovsdb-client \
+	${datadir}/openvswitch/scripts/ovs-lib \
+	${datadir}/openvswitch/scripts/ovs-check-dead-ifs \
+	${datadir}/openvswitch/scripts/ovs-ctl \
+	${datadir}/openvswitch/scripts/ovs-save \
         "
 
 FILES_${PN}-bugtool = "\
@@ -47,17 +80,30 @@ FILES_${PN}-bugtool = "\
 	${datadir}/openvswitch/scripts/ovs-bugtool* \
         "
 
+FILES_${PN}-python = "\
+	${datadir}/openvswitch/python \
+        "
+
 MODULE_PACKAGES = "kernel-module-${PN}"
 MODULE_FILES_kernel-module-${PN} = "/lib/modules"
 
-inherit module autotools
-
-SYSTEMD_PACKAGES = "${PN}"
+SYSTEMD_PACKAGES = "${PN} ${PN}-ovsdb ${PN}-vswitchd"
 SYSTEMD_SERVICE_${PN} = "openvswitch.service"
+SYSTEMD_SERVICE_${PN}-ovsdb = "openvswitch-ovsdb.service"
+SYSTEMD_SERVICE_${PN}-vswitchd = "openvswitch-vswitchd.service"
 
 do_install_append() {
 	oe_runmake 'INSTALL_MOD_PATH=${D}' modules_install
-	true || rm -fr ${D}/${datadir}/${PN}/pki
+	rm -fr ${D}/${datadir}/${PN}/pki ${D}/${localstatedir}
+	mkdir -p ${D}/${localstatedir}/lib/openvswitch/pki
+
+    install -d ${D}${systemd_unitdir}/system/
+    install -m 0644 ${WORKDIR}/openvswitch.service ${D}${systemd_unitdir}/system/
+    install -m 0644 ${WORKDIR}/openvswitch-ovsdb.service ${D}${systemd_unitdir}/system/
+    install -m 0644 ${WORKDIR}/openvswitch-vswitchd.service ${D}${systemd_unitdir}/system/
+
+    install -d ${D}${sysconfdir}/modules-load.d
+    install -m 0644 ${WORKDIR}/modules.load  ${D}${sysconfdir}/modules-load.d/openvswitch.conf
 }
 
 pkg_postinst_${PN}-pki () {
