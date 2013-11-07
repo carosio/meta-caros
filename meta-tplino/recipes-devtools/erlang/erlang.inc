@@ -15,6 +15,8 @@ export OE_LDFLAGS="-lz"
 
 inherit autotools erlang systemd
 
+PRINC="1"
+
 SYSTEMD_PACKAGES = " erlang-epmd"
 SYSTEMD_SERVICE_erlang-epmd = " epmd.service"
 
@@ -64,6 +66,7 @@ python () {
     erlang_def_package("common-test", "common_test-*", "ebin priv", "src include", d)
     erlang_def_package("corba", "cosEvent-* cosEventDomain-* cosFileTransfer-* cosNotification-* cosProperty-* cosTime-* cosTransactions-* orber-*", "ebin priv", "src include COSS java_src examples", d)
     erlang_def_package("crypto", "crypto-*", "ebin priv/lib/*so", "src", d)
+    erlang_def_package("compiler", "compiler-*", "ebin", "src", d)
     erlang_def_package("debugger", "debugger-*", "ebin priv", "src", d)
     erlang_def_package("dialyzer", "dialyzer-*", "ebin", "src", d)
     erlang_def_package("diameter", "diameter-*", "ebin", "src include examples", d)
