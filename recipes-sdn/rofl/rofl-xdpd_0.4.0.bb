@@ -10,7 +10,6 @@ PR = "r1"
 
 SRC_URI = " \
     git://git@git.tpip.net/xdpd.git;protocol=ssh;branch=devel-new-mmap \
-    file://xdpd.service \
     file://cli.cfg \
 "
 
