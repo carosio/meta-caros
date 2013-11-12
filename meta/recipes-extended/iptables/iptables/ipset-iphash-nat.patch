@@ -1,0 +1,273 @@
+Index: iptables-1.4.18/extensions/libipt_SETDNAT.c
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ iptables-1.4.18/extensions/libipt_SETDNAT.c	2013-11-11 16:40:25.704776700 +0100
+@@ -0,0 +1,124 @@
++/*
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++/* Shared library add-on to iptables to add IP SETNAT nat target. */
++#include <stdio.h>
++#include <netdb.h>
++#include <string.h>
++#include <stdlib.h>
++#include <getopt.h>
++#include <ctype.h>
++
++#include <xtables.h>
++#include <linux/netfilter/xt_set.h>
++#include <linux/netfilter_ipv4/ipt_SETNAT.h>
++#include "libxt_set.h"
++
++static void SETDNAT_help(void)
++{
++	printf("SETDNAT target options:\n"
++	       " --setdnat name\n");
++}
++
++static const struct option SETDNAT_opts[] = {
++	{"setdnat",   1, NULL, '1'},
++	{ }
++};
++
++static void SETDNAT_init(struct xt_entry_target *target)
++{
++	struct ipt_setnat_target *info =
++	    (struct ipt_setnat_target *) target->data;
++
++	memset(info, 0, sizeof(struct ipt_setnat_target));
++	info->index = IPSET_INVALID_ID;
++
++}
++
++static int SETDNAT_parse(int c, char **argv, int invert, unsigned int *flags,
++                     const void *entry, struct xt_entry_target **target)
++{
++	struct ipt_setnat_target *info =
++	    (struct ipt_setnat_target *) (*target)->data;
++	struct xt_set_info setinfo;
++
++	switch (c) {
++	case '1':		/* --set <set> */
++		if (*flags)
++			xtables_error(PARAMETER_PROBLEM,
++				      "--setdnat can be specified only once");
++
++		if (strlen(optarg) > IPSET_MAXNAMELEN - 1)
++			xtables_error(PARAMETER_PROBLEM,
++				      "setname `%s' too long, max %d characters.",
++				      optarg, IPSET_MAXNAMELEN - 1);
++
++		get_set_byname(optarg, &setinfo);
++		info->index = setinfo.index;
++
++		*flags = 1;
++		break;
++
++	default:
++		return 0;
++	}
++	return 1;
++}
++
++static void SETDNAT_check(unsigned int flags)
++{
++	if (!flags)
++		xtables_error(PARAMETER_PROBLEM,
++			   "You must specify `--setdnat'");
++}
++
++static void
++print_target(const char *prefix, const struct ipt_setnat_target *info)
++{
++	char setname[IPSET_MAXNAMELEN];
++
++	if (info->index == IPSET_INVALID_ID)
++		return;
++	get_set_byid(setname, info->index);
++	printf("%s %s ", prefix, setname);
++}
++
++static void SETDNAT_print(const void *ip, const struct xt_entry_target *target,
++                      int numeric)
++{
++	struct ipt_setnat_target *info =
++	    (struct ipt_setnat_target *) target->data;
++
++	print_target("setdnat", info);
++}
++
++static void SETDNAT_save(const void *ip, const struct xt_entry_target *target)
++{
++	struct ipt_setnat_target *info =
++	    (struct ipt_setnat_target *) target->data;
++
++	print_target("setdnat", info);
++}
++
++static struct xtables_target setnat_tg_reg = {
++	.name		= "SETDNAT",
++	.version	= XTABLES_VERSION,
++	.family		= PF_INET,
++	.size		= XT_ALIGN(sizeof(struct ipt_setnat_target)),
++	.userspacesize	= XT_ALIGN(sizeof(struct ipt_setnat_target)),
++	.help		= SETDNAT_help,
++	.init		= SETDNAT_init,
++	.parse		= SETDNAT_parse,
++	.final_check	= SETDNAT_check,
++	.print		= SETDNAT_print,
++	.save		= SETDNAT_save,
++	.extra_opts	= SETDNAT_opts,
++};
++
++void _init(void)
++{
++	xtables_register_target(&setnat_tg_reg);
++}
+Index: iptables-1.4.18/extensions/libipt_SETSNAT.c
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ iptables-1.4.18/extensions/libipt_SETSNAT.c	2013-11-11 16:40:25.704776700 +0100
+@@ -0,0 +1,124 @@
++/*
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++/* Shared library add-on to iptables to add IP SETNAT nat target. */
++#include <stdio.h>
++#include <netdb.h>
++#include <string.h>
++#include <stdlib.h>
++#include <getopt.h>
++#include <ctype.h>
++
++#include <xtables.h>
++#include <linux/netfilter/xt_set.h>
++#include <linux/netfilter_ipv4/ipt_SETNAT.h>
++#include "libxt_set.h"
++
++static void SETSNAT_help(void)
++{
++	printf("SETSNAT target options:\n"
++	       " --setsnat name\n");
++}
++
++static const struct option SETSNAT_opts[] = {
++	{.name = "setsnat", .has_arg = true, .val = '1'},
++	XT_GETOPT_TABLEEND,
++};
++
++static void SETSNAT_init(struct xt_entry_target *target)
++{
++	struct ipt_setnat_target *info =
++	    (struct ipt_setnat_target *) target->data;
++
++	memset(info, 0, sizeof(struct ipt_setnat_target));
++	info->index = IPSET_INVALID_ID;
++
++}
++
++static int SETSNAT_parse(int c, char **argv, int invert, unsigned int *flags,
++                     const void *entry, struct xt_entry_target **target)
++{
++	struct ipt_setnat_target *info =
++	    (struct ipt_setnat_target *) (*target)->data;
++	struct xt_set_info setinfo;
++
++	switch (c) {
++	case '1':		/* --set <set> */
++		if (*flags)
++			xtables_error(PARAMETER_PROBLEM,
++				      "--setsnat can be specified only once");
++
++		if (strlen(optarg) > IPSET_MAXNAMELEN - 1)
++			xtables_error(PARAMETER_PROBLEM,
++				      "setname `%s' too long, max %d characters.",
++				      optarg, IPSET_MAXNAMELEN - 1);
++
++		get_set_byname(optarg, &setinfo);
++		info->index = setinfo.index;
++
++		*flags = 1;
++		break;
++
++	default:
++		return 0;
++	}
++	return 1;
++}
++
++static void SETSNAT_check(unsigned int flags)
++{
++	if (!flags)
++		xtables_error(PARAMETER_PROBLEM,
++			      "You must specify `--setsnat'");
++}
++
++static void
++print_target(const char *prefix, const struct ipt_setnat_target *info)
++{
++	char setname[IPSET_MAXNAMELEN];
++
++	if (info->index == IPSET_INVALID_ID)
++		return;
++	get_set_byid(setname, info->index);
++	printf("%s %s ", prefix, setname);
++}
++
++static void SETSNAT_print(const void *ip, const struct xt_entry_target *target,
++                      int numeric)
++{
++	struct ipt_setnat_target *info =
++	    (struct ipt_setnat_target *) target->data;
++
++	print_target("setsnat", info);
++}
++
++static void SETSNAT_save(const void *ip, const struct xt_entry_target *target)
++{
++	struct ipt_setnat_target *info =
++	    (struct ipt_setnat_target *) target->data;
++
++	print_target("setsnat", info);
++}
++
++static struct xtables_target setnat_tg_reg = {
++	.name		= "SETSNAT",
++	.version	= XTABLES_VERSION,
++	.family		= PF_INET,
++	.size		= XT_ALIGN(sizeof(struct ipt_setnat_target)),
++	.userspacesize	= XT_ALIGN(sizeof(struct ipt_setnat_target)),
++	.help		= SETSNAT_help,
++	.init		= SETSNAT_init,
++	.parse		= SETSNAT_parse,
++	.final_check	= SETSNAT_check,
++	.print		= SETSNAT_print,
++	.save		= SETSNAT_save,
++	.extra_opts	= SETSNAT_opts,
++};
++
++void _init(void)
++{
++	xtables_register_target(&setnat_tg_reg);
++}
+Index: iptables-1.4.18/include/linux/netfilter_ipv4/ipt_SETNAT.h
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ iptables-1.4.18/include/linux/netfilter_ipv4/ipt_SETNAT.h	2013-11-11 16:40:25.704776700 +0100
+@@ -0,0 +1,10 @@
++#ifndef _IPT_SETNAT_H
++#define _IPT_SETNAT_H
++
++#include <linux/netfilter/ipset/ip_set.h>
++
++struct ipt_setnat_target {
++	ip_set_id_t index;
++};
++
++#endif /*_IPT_SETNAT_H*/
