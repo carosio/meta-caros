@@ -1,6 +1,6 @@
 inherit useradd systemd
 
-RDEPENDS_${PN}_append = " logrotate erlang-enit "
+RDEPENDS_${PN} += "logrotate erlang-enit erlang-epmd"
 
 USERADD_PACKAGES = "${PN}"
 
