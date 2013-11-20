@@ -23,7 +23,7 @@ SRC_URI = "http://www.valgrind.org/downloads/valgrind-${PV}.tar.bz2 \
 SRC_URI[md5sum] = "288758010b271119a0ffc0183f1d6e38"
 SRC_URI[sha256sum] = "473be00576bed311a662b277a2bfbe97d9cca4058e68619a0e420c9fc19958db"
 
-COMPATIBLE_HOST = '(i.86|x86_64|powerpc|powerpc64).*-linux'
+COMPATIBLE_HOST = '(i.86|x86_64|powerpc|powerpc64|mips).*-linux'
 COMPATIBLE_HOST_armv7a = 'arm.*-linux'
 
 inherit autotools
