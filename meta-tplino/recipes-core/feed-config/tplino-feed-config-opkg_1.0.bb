@@ -1,7 +1,7 @@
 DESCRIPTION = "TPLINO feed configuration"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://${COREBASE}/meta/COPYING.MIT;md5=3da9cfbcb788c80a0384361b4de20420"
-PR = "r5"
+PR = "r6"
 INHIBIT_DEFAULT_DEPS = "1"
 
 #FEEDNAMEPREFIX ?= "INVALID"
@@ -11,6 +11,7 @@ INHIBIT_DEFAULT_DEPS = "1"
 do_compile() {
 	mkdir -p ${S}/${sysconfdir}/opkg/
 
+	ipkgarchs="${ALL_MULTILIB_PACKAGE_ARCHS}"
 	basefeedconf=${S}/${sysconfdir}/opkg/base-feeds.conf
 
 	rm -f $basefeedconf
@@ -20,7 +21,6 @@ do_compile() {
 	        echo "src/gz ${FEEDNAMEPREFIX}-$arch ${FEEDDOMAIN}/${FEEDURIPREFIX}/ipk/$arch" >> $basefeedconf
 	done
 }
-
 
 do_install () {
 	install -d ${D}${sysconfdir}/opkg
