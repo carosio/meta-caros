@@ -1,0 +1,13 @@
+Index: git/Makefile.in
+===================================================================
+--- git.orig/Makefile.in	2013-11-14 15:04:57.981780614 +0100
++++ git/Makefile.in	2013-11-14 15:05:09.701978071 +0100
+@@ -224,7 +224,7 @@
+	fi
+ 
+ .PHONY: install
+-install: all install-devel install-doc install-generator
++install: all install-generator
+	$(INSTALL) -m 775 -d $(DESTDIR)/$(libdir)
+	$(LIBTOOL) --mode=install cp $(NAME).la $(DESTDIR)/$(libdir)
+	$(LIBTOOL) --mode=finish $(DESTDIR)/$(libdir)
