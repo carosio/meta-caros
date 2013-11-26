@@ -5,23 +5,22 @@ RDEPENDS_${PN} += "logrotate erlang-enit erlang-epmd"
 USERADD_PACKAGES = "${PN}"
 
 # Add user and group the node will be running as
-GROUPADD_PARAM_${PN} = "${NODEUSER}"
+GROUPADD_PARAM_${PN} = "${NODEGROUP}"
 USERADD_PARAM_${PN} = "--create-home \
                        --system \
                        --shell /bin/false \
-                       --gid ${NODEUSER} \
+                       --gid ${NODEGROUP} \
                        --comment ${NODEUSERCOMMENT} \
-                       ${NODEGROUP}"
+                       ${NODEUSER}"
 
 SRC_URI_append = " file://${NODENAME}.service \
                    file://user.config \
                    file://defaults.config \
                    file://release.enit \
                    file://logrotate \
-                   file://tmpfiles \
                    "
 
-FILES_${PN}_append = " ${libdir}/tmpfiles.d/${NODENAME}.conf "
+FILES_${PN}_append = " ${libdir}/tmpfiles.d/"
 
 SYSTEMD_SERVICE_${PN} = "${NODENAME}.service"
 
@@ -45,7 +44,9 @@ do_install() {
     install -d -m 0775 -o ${NODEUSER} -g ${NODEGROUP} ${D}${LOGDIR}
 
     # tmpfiles
-    install -m 0644 -o "root" -g "root" ${WORKDIR}/tmpfiles ${D}${libdir}/tmpfiles.d/${NODENAME}.conf
+    if [ -f "${S}/files/tmpfiles" ]; then
+        install -m 0644 -o "root" -g "root" ${S}/files/tmpfiles ${D}${libdir}/tmpfiles.d/${NODENAME}.conf
+    fi
 
     install -m 644 ${WORKDIR}/user.config ${D}${sysconfdir}/enit/${NODENAME}/99-user.config
     install -m 644 ${WORKDIR}/defaults.config ${D}${sysconfdir}/enit/${NODENAME}/00-defaults.config
