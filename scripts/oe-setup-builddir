@@ -113,13 +113,7 @@ cat <<EOM
 
 You can now run 'bitbake <target>'
 
-Common targets are:
-    core-image-minimal
-    core-image-sato
-    meta-toolchain
-    meta-toolchain-sdk
-    adt-installer
-    meta-ide-support
+Refer to the handbook for information regarding common build targets.
 
 You can also run generated qemu images with a command like 'runqemu qemux86'
 
