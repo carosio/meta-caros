@@ -22,8 +22,7 @@ SRC_URI = "http://matt.ucc.asn.au/dropbear/releases/dropbear-${PV}.tar.gz \
 	         file://fix-2kb-keys.patch \
 	         file://nopw-option.patch \
 		 file://dropbearkey.service \
-		 file://dropbear@.service \
-            	 file://dropbear.socket \
+		 file://dropbear.service \
                  ${@base_contains('DISTRO_FEATURES', 'pam', '${PAM_SRC_URI}', '', d)} \
 		 ${@base_contains('DISTRO_FEATURES', 'x11', '', 'file://disable-x11fwd.patch', d)} "
 
@@ -40,7 +39,7 @@ EXTRA_OEMAKE = 'MULTI=1 SCPPROGRESS=1 PROGRAMS="${SBINCOMMANDS} ${BINCOMMANDS}"'
 EXTRA_OECONF += "\
  ${@base_contains('DISTRO_FEATURES', 'pam', '--enable-pam', '--disable-pam', d)}"
 
-SYSTEMD_SERVICE_${PN} = "dropbear.socket dropbearkey.service"
+SYSTEMD_SERVICE_${PN} = "dropbear.service dropbearkey.service"
 
 do_install() {
 	install -d ${D}${sysconfdir} \
@@ -67,7 +66,6 @@ do_install() {
 	done
 
 	install -m 644 ${WORKDIR}/*.service ${D}/${systemd_unitdir}/system
-	install -m 644 ${WORKDIR}/*.socket ${D}/${systemd_unitdir}/system
 }
 
 inherit update-alternatives
