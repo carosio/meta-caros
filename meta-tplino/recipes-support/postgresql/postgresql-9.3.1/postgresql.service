@@ -1,0 +1,23 @@
+[Install]
+WantedBy=multi-user.target
+
+[Unit]
+Description=PostgreSQL server
+After=network.target
+
+[Service]
+User=postgres
+Group=postgres
+TimeoutSec=120
+Type=forking
+
+EnvironmentFile=/etc/conf.d/pg
+
+SyslogIdentifier=postgres
+
+ExecStartPre=/usr/bin/postgresql-check-db-dir ${pgdata}
+ExecStart=/usr/bin/pg_ctl -s -D ${pgdata} start -w -t 120
+ExecReload=/usr/bin/pg_ctl -s -D ${pgdata} reload
+ExecStop=/usr/bin/pg_ctl -s -D ${pgdata} stop -m fast
+
+OOMScoreAdjust=-200
