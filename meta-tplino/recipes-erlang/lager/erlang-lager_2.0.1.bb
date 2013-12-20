@@ -3,14 +3,15 @@ SECTION = "devel"
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=ff253ad767462c46be284da12dda33e8"
 
-SRCREV = "578a2d1e07b4ad6e2b280fcc4a11fcc1d479878e"
-PR = "r1"
+SRCREV = "ad400896af5b1ad8b4f7a4d34e609b5a990640bb"
+PR = "r2"
 
-SRC_URI = "git://github.com/travelping/lager.git;protocol=git;branch=add_journald \
-           file://add-tetrapak.patch;apply=yes"
+SRC_URI = "git://github.com/basho/lager.git;protocol=git \
+           file://add-tetrapak.patch;apply=yes \
+           file://fix-boss_compiler.patch;apply=yes"
 
-DEPENDS_append = " erlang-goldrush erlang-ejournald "
-RDEPENDS_${PN}_append = " erlang-goldrush erlang-ejournald "
+DEPENDS_append = " erlang-goldrush "
+RDEPENDS_${PN}_append = " erlang-goldrush "
 
 S = "${WORKDIR}/git"
 
