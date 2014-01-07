@@ -1,0 +1,14 @@
+[Unit]
+Description=opencapwap ac
+After=multi-user.target
+Before=hostapd.service
+
+[Service]
+ExecStart=/usr/bin/AC -f
+Type=simple
+Environment="HOME=/home/root"
+WorkingDirectory=/home/root
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

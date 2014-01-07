@@ -4,7 +4,7 @@ SECTION = "network"
 LICENSE = "GPLv2+"
 LIC_FILES_CHKSUM = "file://COPYING;md5=bedf4908d7c0c9b86aeb97756a02b556"
 
-INC_PR = "r15"
+INC_PR = "r16"
 
 DEPENDS = "openssl"
 
@@ -28,6 +28,8 @@ SRC_URI = " \
 FILES_opencapwap-wtp = " \
 	${bindir}/WTP \
 	${systemd_unitdir}/system/opencapwap-wtp.service \
+  ${sysconfdir}/capwap/config.wtp \
+  ${sysconfdir}/capwap/settings.wtp.txt \
   "
 
 CONFFILES_opencapwap-wtp = " \
@@ -38,6 +40,8 @@ CONFFILES_opencapwap-wtp = " \
 FILES_opencapwap-ac = " \
 	${bindir}/AC \
 	${systemd_unitdir}/system/opencapwap-ac.service \
+  ${sysconfdir}/capwap/config.ac \
+  ${sysconfdir}/capwap/settings.ac.txt \
   "
 
 CONFFILES_opencapwap-ac = " \ 
@@ -65,4 +69,4 @@ do_install_append() {
 	     install -m 0644 ${WORKDIR}/config.ac  ${D}${sysconfdir}/capwap
 }
 
-EXTRA_OECONF = "--with-openssl=${STAGING_LIBDIR}/.. --sysconfdir=/etc/capwap"
+EXTRA_OECONF = "--with-openssl=${STAGING_LIBDIR}/.. --sysconfdir=/etc/capwap "
