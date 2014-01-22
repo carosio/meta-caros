@@ -1,15 +1,18 @@
-DESCRIPTION = "Revised OpenFlow Library XDPD (ROFL)"
+DESCRIPTION = "The eXtensible OpenFlow datapath daemon"
 SECTION = "net"
 LICENSE = "MPL-2.0"
 LIC_FILES_CHKSUM = "file://COPYRIGHT;md5=5d425c8f3157dbf212db2ec53d9e5132"
 
 DEPENDS = "rofl-core"
 
-SRCREV="b9397fb00e316ff771db8ead3b25e5f0b6e41fc6"
+SRCREV="2ad91d591c45a5c910bee32d9c60651d8f25152e"
+
+PE = "1"
 PR = "r1"
 
 SRC_URI = " \
-    git://git@git.tpip.net/xdpd.git;protocol=ssh;branch=devel-new-mmap \
+    git://codebasin.net/xdpd.git;protocol=ssh;branch=master-0.3 \
+    file://xdpd.service \
     file://cli.cfg \
 "
 
@@ -30,13 +33,14 @@ SYSTEMD_PACKAGES = "${PN}"
 SYSTEMD_SERVICE_${PN} = "xdpd.service"
 
 EXTRA_OECONF += "--enable-gnu-linux \
-	         ${@base_contains("IMAGE_FEATURES", 'debug-tweaks-rofl', '--enable-debug', '', d)}"
-PARALLEL_MAKE = ""
+             ${@base_contains("IMAGE_FEATURES", 'debug-tweaks-rofl', '--enable-debug', '', d)}"
 
 CXXFLAGS_append = " -I${STAGING_INCDIR}/rofl"
 
+EXTRA_AUTORECONF += "-I${S}"
+
 do_fix_modules () {
-	rm -rf ${S}/src/xdpd/fwd-modules/bcm ${S}/src/xdpd/fwd-modules/gnu_linux_dpdk ${S}/src/xdpd/fwd-modules/octeon5650
+    rm -rf ${S}/src/xdpd/fwd-modules/bcm ${S}/src/xdpd/fwd-modules/gnu_linux_dpdk ${S}/src/xdpd/fwd-modules/octeon5650
 }
 
 do_patch_append() {
