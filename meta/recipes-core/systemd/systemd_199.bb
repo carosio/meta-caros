@@ -9,7 +9,7 @@ LIC_FILES_CHKSUM = "file://LICENSE.GPL2;md5=751419260aa954499f7abaabaa882bbe \
 PROVIDES = "udev"
 
 PE = "1"
-PR = "r3"
+PR = "r4"
 
 DEPENDS = "kmod docbook-sgml-dtd-4.1-native intltool-native gperf-native acl readline dbus libcap libcgroup tcp-wrappers glib-2.0"
 DEPENDS += "${@base_contains('DISTRO_FEATURES', 'pam', 'libpam', '', d)}"
@@ -72,6 +72,7 @@ EXTRA_OECONF = " --with-rootprefix=${rootprefix} \
                  --disable-coredump \
                  --disable-introspection \
                  --disable-tcpwrap \
+                 --disable-binfmt \
                  --enable-split-usr \
                  --disable-microhttpd \
                  --without-python \
