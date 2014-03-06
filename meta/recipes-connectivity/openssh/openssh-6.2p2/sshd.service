@@ -4,10 +4,7 @@ Wants=sshdgenkeys.service
 After=sshdgenkeys.service
 
 [Service]
-<<<<<<< HEAD
 ExecStartPre=/bin/mkdir -p /run/sshd
-=======
->>>>>>> master
 ExecStart=-@SBINDIR@/sshd -D
 ExecReload=@BASE_BINDIR@/kill -HUP $MAINPID
 StandardError=syslog

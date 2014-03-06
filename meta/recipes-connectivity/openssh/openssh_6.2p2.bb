@@ -7,11 +7,7 @@ SECTION = "console/network"
 LICENSE = "BSD"
 LIC_FILES_CHKSUM = "file://LICENCE;md5=e326045657e842541d3f35aada442507"
 
-<<<<<<< HEAD
-PR = "r2.5"
-=======
-PR = "r2"
->>>>>>> master
+PR = "r3"
 
 DEPENDS = "zlib openssl"
 DEPENDS += "${@base_contains('DISTRO_FEATURES', 'pam', 'libpam', '', d)}"
@@ -27,10 +23,6 @@ SRC_URI = "ftp://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-${PV}.tar.
            file://nostrip.patch \
            file://sshd_config \
            file://ssh_config \
-<<<<<<< HEAD
-=======
-           file://init \
->>>>>>> master
            file://openssh-CVE-2011-4327.patch \
            file://mac.patch \
            ${@base_contains('DISTRO_FEATURES', 'pam', '${PAM_SRC_URI}', '', d)} \
@@ -43,20 +35,10 @@ PAM_SRC_URI = "file://sshd"
 SRC_URI[md5sum] = "be46174dcbb77ebb4ea88ef140685de1"
 SRC_URI[sha256sum] = "7f29b9d2ad672ae0f9e1dcbff871fc5c2e60a194e90c766432e32161b842313b"
 
-<<<<<<< HEAD
 inherit useradd update-alternatives systemd
 
 USERADD_PACKAGES = "${PN}-sshd"
 USERADD_PARAM_${PN}-sshd = "--system --no-create-home --home-dir /var/run/sshd --shell /bin/false --user-group sshd"
-=======
-inherit useradd update-rc.d update-alternatives systemd
-
-USERADD_PACKAGES = "${PN}-sshd"
-USERADD_PARAM_${PN}-sshd = "--system --no-create-home --home-dir /var/run/sshd --shell /bin/false --user-group sshd"
-INITSCRIPT_PACKAGES = "${PN}-sshd"
-INITSCRIPT_NAME_${PN}-sshd = "sshd"
-INITSCRIPT_PARAMS_${PN}-sshd = "defaults 9"
->>>>>>> master
 
 SYSTEMD_PACKAGES = "${PN}-sshd"
 SYSTEMD_SERVICE_${PN}-sshd = "sshd.service sshdgenkeys.service"
@@ -88,10 +70,6 @@ do_configure_prepend () {
 		cp aclocal.m4 acinclude.m4
 	fi
 }
-<<<<<<< HEAD
-=======
-
->>>>>>> master
 do_compile_append () {
 	install -m 0644 ${WORKDIR}/sshd_config ${S}/
 	install -m 0644 ${WORKDIR}/ssh_config ${S}/
@@ -105,14 +83,6 @@ do_install_append () {
 			install -m 0755 ${WORKDIR}/sshd ${D}${sysconfdir}/pam.d/sshd
 		fi
 	done
-<<<<<<< HEAD
-
-=======
-	install -d ${D}${sysconfdir}/init.d
-	install -m 0755 ${WORKDIR}/init ${D}${sysconfdir}/init.d/sshd
-	rm -f ${D}${bindir}/slogin ${D}${datadir}/Ssh.bin
-	rmdir ${D}${localstatedir}/run/sshd ${D}${localstatedir}/run ${D}${localstatedir}
->>>>>>> master
 	install -d ${D}/${sysconfdir}/default/volatiles
 	install -m 644 ${WORKDIR}/volatiles.99_sshd ${D}/${sysconfdir}/default/volatiles/99_sshd
 
@@ -140,11 +110,7 @@ ALLOW_EMPTY_${PN} = "1"
 PACKAGES =+ "${PN}-keygen ${PN}-scp ${PN}-ssh ${PN}-sshd ${PN}-sftp ${PN}-misc ${PN}-sftp-server"
 FILES_${PN}-scp = "${bindir}/scp.${BPN}"
 FILES_${PN}-ssh = "${bindir}/ssh.${BPN} ${sysconfdir}/ssh/ssh_config"
-<<<<<<< HEAD
 FILES_${PN}-sshd = "${sbindir}/sshd ${systemd_unitdir}/system/sshd.service ${systemd_unitdir}/system/sshdgenkeys.service"
-=======
-FILES_${PN}-sshd = "${sbindir}/sshd ${sysconfdir}/init.d/sshd"
->>>>>>> master
 FILES_${PN}-sshd += "${sysconfdir}/ssh/moduli ${sysconfdir}/ssh/sshd_config ${sysconfdir}/ssh/sshd_config_readonly ${sysconfdir}/default/volatiles/99_sshd"
 FILES_${PN}-sftp = "${bindir}/sftp"
 FILES_${PN}-sftp-server = "${libexecdir}/sftp-server"
