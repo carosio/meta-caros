@@ -10,6 +10,7 @@ EXTRA_OECONF = '\
 	     --enable-smp-support \
 	     --without-java \
 	     --with-ssl \
+         --with-crypto \
 '
 
 do_configure() {
