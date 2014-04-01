@@ -10,23 +10,18 @@ HOMEPAGE = "https://btrfs.wiki.kernel.org"
 LICENSE = "GPLv2"
 LIC_FILES_CHKSUM = "file://COPYING;md5=fcb02dc552a041dee27e4b85c7396067"
 SECTION = "base"
-DEPENDS = "util-linux attr"
+DEPENDS = "util-linux attr e2fsprogs lzo acl"
 
-SRCREV = "fdb6c0402337d9607c7a39155088eaf033742752"
-SRC_URI = "git://git.kernel.org/pub/scm/linux/kernel/git/mason/btrfs-progs.git;protocol=git"
+SRCREV = "8cae1840afb3ea44dcc298f32983e577480dfee4"
+SRC_URI = "git://git.kernel.org/pub/scm/linux/kernel/git/mason/btrfs-progs.git \
+           file://weak-defaults.patch \
+           file://allow-relative-path.patch \
+          "
 
 S = "${WORKDIR}/git"
 
-PV = "0.19+git${SRCPV}"
+PV = "3.12+git${SRCPV}"
 
-PR = "r6"
-
-SRC_URI += " file://fix_use_of_gcc.patch \
-	 file://weak-defaults.patch \
-	 file://fix_race_condition_with_multithreaded_make.patch "
-
-SRC_URI[md5sum] = "78b1700d318de8518abfaab71f99a885"
-SRC_URI[sha256sum] = "1285774e0cb72984fac158dd046c8d405324754febd30320cd31e459253e4b65"
 
 do_install () {
 	oe_runmake 'DESTDIR=${D}' install
