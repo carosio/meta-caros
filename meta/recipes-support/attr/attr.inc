@@ -2,7 +2,9 @@ DESCRIPTION = "utilities for manipulating filesystem extended attributes"
 HOMEPAGE = "http://savannah.nongnu.org/projects/attr/"
 SECTION = "libs"
 
-DEPENDS = "ncurses"
+DEPENDS = "ncurses gettext"
+
+INC_PR = "r5"
 
 LICENSE = "LGPLv2.1+ & GPLv2+"
 LICENSE_${PN} = "GPLv2+"
