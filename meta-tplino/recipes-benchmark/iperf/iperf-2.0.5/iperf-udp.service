@@ -1,0 +1,9 @@
+[Unit]
+Description=Iperf UDP Server
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/iperf -u -s
+
+[Install]
+WantedBy=multi-user.target
