@@ -12,6 +12,9 @@ DEPENDS = "perl-native-runtime"
 
 SRC_URI = "http://www.openssl.org/source/openssl-${PV}.tar.gz \
           "
+
+INC_PR = "r17"
+
 S = "${WORKDIR}/openssl-${PV}"
 
 PACKAGECONFIG[perl] = ",,,"
