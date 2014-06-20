@@ -7,7 +7,7 @@ SRC_URI = "git://git@git.tpip.net/flower.git;protocol=ssh"
 
 S = "${WORKDIR}/git"
 
-DEPENDS += "erlang-regine erlang-gen-listener-tcp erlang-gen-socket"
+DEPENDS += "erlang-regine erlang-gen-listener-tcp erlang-gen-socket erlang-lager"
 
 inherit tetrapak
 
