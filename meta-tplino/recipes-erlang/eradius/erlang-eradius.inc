@@ -4,7 +4,7 @@ LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://MIT_LICENSE;md5=7a8830d51731fc79efbb8166db8d2859"
 
 S = "${WORKDIR}/git"
-PR = "r1"
+INC_PR = "r1"
 
 inherit tetrapak
 

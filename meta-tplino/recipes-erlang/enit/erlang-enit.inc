@@ -2,7 +2,7 @@ DESCRIPTION = "Dynamic Erlang release management"
 SECTION = "devel"
 LICENSE = "MIT"
 
-PR = "r1"
+INC_PR = "r1"
 
 SRC_URI = "git://git@git.tpip.net/enit.git;protocol=ssh"
 
