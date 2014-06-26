@@ -1,4 +1,4 @@
 require erlang-hello.inc
-SRCREV = "a256b29763777339900a64021b4dbf09c8ff0dc0"
+SRCREV = "2a49329b85ad70c3ace42e5d3c3ea4b150469eaf"
 
-PR = "${INC_PR}.1"
+PR = "${INC_PR}.2"
