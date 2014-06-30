@@ -1,4 +1,4 @@
 require erlang-yang-native.inc
-SRCREV = "3635baebccfea37db481d1653aeeaf45306bb246"
+SRCREV = "de4a84d45bd8fc4a18a54e1ef7072020318f7334"
 
-PR = "${INC_PR}.1"
+PR = "${INC_PR}.2"
