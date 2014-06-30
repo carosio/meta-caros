@@ -15,7 +15,7 @@ export OE_LDFLAGS="-lz"
 
 inherit autotools erlang systemd
 
-PRINC="1"
+PRINC="2"
 
 SYSTEMD_PACKAGES = " erlang-epmd"
 SYSTEMD_SERVICE_erlang-epmd = " epmd.service"
@@ -61,7 +61,10 @@ do_install() {
 }
 
 python () {
-    erlang_def_package("appmon", "appmon-*", "ebin priv", "src", d)
+    pkgsrc = d.getVar('S', True)
+
+    if os.path.exists(os.path.join(pkgsrc, "lib", "appmon")):
+        erlang_def_package("appmon", "appmon-*", "ebin priv", "src", d)
     erlang_def_package("asn1", "asn1-*", "ebin priv/lib/*so", "src asn1 examples", d)
     erlang_def_package("common-test", "common_test-*", "ebin priv", "src include", d)
     erlang_def_package("corba", "cosEvent-* cosEventDomain-* cosFileTransfer-* cosNotification-* cosProperty-* cosTime-* cosTransactions-* orber-*", "ebin priv", "src include COSS java_src examples", d)
@@ -79,7 +82,8 @@ python () {
     erlang_def_package("ic", "ic-*", "ebin", "src include examples", d)
     erlang_def_package("ic-java", "ic-java-*", "ebin", "src", d)
     erlang_def_package("inets", "inets-*", "ebin priv/lib/*so priv/bin", "src include examples", d)
-    erlang_def_package("inviso", "inviso-*", "ebin", "src", d)
+    if os.path.exists(os.path.join(pkgsrc, "lib", "invisio")):
+        erlang_def_package("inviso", "inviso-*", "ebin", "src", d)
     erlang_def_package("manpages", "manpages-*", "ebin", "src", d)
     erlang_def_package("megaco", "megaco-*", "ebin priv", "src include examples", d)
     erlang_def_package("mnesia", "mnesia-* mnesia_session-*", "ebin", "src include examples", d)
@@ -88,7 +92,8 @@ python () {
     erlang_def_package("os-mon", "os_mon-*", "ebin priv mibs", "src include", d)
     erlang_def_package("parsetools", "parsetools-*", "ebin", "src include", d)
     erlang_def_package("percept", "percept-*", "ebin priv", "src", d)
-    erlang_def_package("pman", "pman-*", "ebin priv", "src", d)
+    if os.path.exists(os.path.join(pkgsrc, "lib", "pman")):
+        erlang_def_package("pman", "pman-*", "ebin priv", "src", d)
     erlang_def_package("public-key", "public_key-*", "ebin", "src asn1 include", d)
     erlang_def_package("reltool", "reltool-*", "ebin", "src examples", d)
     erlang_def_package("runtime-tools", "runtime_tools-*", "ebin priv/lib/*so", "src include examples", d)
@@ -97,9 +102,11 @@ python () {
     erlang_def_package("ssl", "ssl-*", "ebin", "src include examples", d)
     erlang_def_package("syntax-tools", "syntax_tools-*", "ebin", "src examples", d)
     erlang_def_package("test-server", "test_server-*", "ebin", "src include", d)
-    erlang_def_package("toolbar", "toolbar-*", "ebin", "src", d)
+    if os.path.exists(os.path.join(pkgsrc, "lib", "toolbar")):
+        erlang_def_package("toolbar", "toolbar-*", "ebin", "src", d)
     erlang_def_package("tools", "tools-*", "ebin priv bin", "src examples", d)
-    erlang_def_package("tv", "tv-*", "ebin priv", "src", d)
+    if os.path.exists(os.path.join(pkgsrc, "lib", "tv")):
+        erlang_def_package("tv", "tv-*", "ebin priv", "src", d)
     erlang_def_package("typer", "typer-*", "ebin", "src", d)
     erlang_def_package("webtool", "webtool-*", "ebin priv", "src", d)
     erlang_def_package("wx", "wx-*", "ebin", "src include examples", d)
@@ -115,6 +122,7 @@ FILES_${PN} = '${erlbindir}/erlc \
                ${erlbindir}/epmd \
                ${erlbindir}/start_sasl.boot \
                ${erlbindir}/start_clean.boot \
+               ${erlbindir}/no_dot_erlang.boot \
                ${erlbindir}/start \
                ${erlbindir}/start_erl \
                ${erlbindir}/erl \
@@ -206,9 +214,9 @@ do_install_append() {
     rm -rf \
 	${D}/usr/bin/run_test \
 	${D}${erldir}/bin/run_test \
-	${D}${erldir}/erts-5.9.1/bin/*.src \
+	${D}${erldir}/erts-*/bin/*.src \
 	${D}${erldir}/erts-*/src \
-	${D}${erldir}/erts-5.9.1/lib/internal/README \
+	${D}${erldir}/erts-*/lib/internal/README \
 	${D}${erllibdir}/runtime_tools-*/priv/obj \
 	${D}${erllibdir}/cosEvent-*/info \
 	${D}${erllibdir}/cosEventDomain-*/info \
@@ -219,10 +227,11 @@ do_install_append() {
 	${D}${erllibdir}/crypto-*/priv/obj \
 	${D}${erllibdir}/asn1-*/c_src \
 	${D}${erllibdir}/ic-*/priv \
+	${D}${erllibdir}/ose-* \
 	${D}${erldir}/misc \
 	${D}${erldir}/Install
 
-    EI_VSN=`sed -e"s|.*= *||g" ${S}/lib/erl_interface/vsn.mk`
+    EI_VSN=`grep "^EI_VSN" ${S}/lib/erl_interface/vsn.mk | sed -e"s|.*= *||g"`
     IC_VSN=`sed -e"s|.*= *||g" ${S}/lib/ic/vsn.mk`
     install -d -m0755 ${D}/usr/include ${D}/usr/lib ${D}${systemd_unitdir}/system
     install -m 0644 ${WORKDIR}/epmd.service ${D}${systemd_unitdir}/system/

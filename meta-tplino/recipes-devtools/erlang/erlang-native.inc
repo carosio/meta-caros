@@ -6,12 +6,12 @@ DEPENDS += "openssl"
 
 inherit autotools native
 
-EXTRA_OECONF = '\
+EXTRA_OECONF = "\
 	     --enable-smp-support \
 	     --without-java \
 	     --with-ssl \
-         --with-crypto \
-'
+	     --with-crypto \
+"
 
 do_configure() {
         oe_runconf
