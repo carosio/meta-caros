@@ -1,0 +1,14 @@
+[Unit]
+Description=Erlang Port Mapper Daemon
+Requires=epmd.socket
+
+[Service]
+ExecStart=/usr/bin/epmd -systemd
+ExecStop=/usr/bin/epmd -kill
+Type=simple
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+Also=epmd.socket
+WantedBy=multi-user.target

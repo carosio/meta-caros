@@ -9,7 +9,7 @@ RDEPENDS_erlang-eldap = "erlang-asn1"
 RDEPENDS_erlang-public-key = "erlang-asn1"
 RDEPENDS_erlang-snmp = "erlang-asn1"
 
-RDEPENDS_erlang += " erlang-epmd "
+RDEPENDS_erlang += "erlang-epmd"
 DEPENDS += "openssl zlib ncurses"
 export OE_LDFLAGS="-lz"
 
@@ -17,8 +17,8 @@ inherit autotools erlang systemd
 
 PRINC="2"
 
-SYSTEMD_PACKAGES = " erlang-epmd"
-SYSTEMD_SERVICE_erlang-epmd = " epmd.service"
+SYSTEMD_PACKAGES = "erlang-epmd"
+SYSTEMD_SERVICE_erlang-epmd = "epmd.service"
 
 EXTRA_OECONF = '\
 	     --with-termcap \
