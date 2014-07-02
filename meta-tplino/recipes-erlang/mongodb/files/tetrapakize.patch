@@ -1,0 +1,12 @@
+Index: mongodb-erlang-ce9bf77902e837735f3f52b4956eb4abdfa9c928/tetrapak/config.ini
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ mongodb-erlang-ce9bf77902e837735f3f52b4956eb4abdfa9c928/tetrapak/config.ini	2014-06-25 14:50:40.594821648 +0200
+@@ -0,0 +1,7 @@
++[build]
++version = "1.0.0~~~d~~~c"
++
++[package]
++maintainer = "Travelping GmbH <info@travelping.com>"
++exclude = "^doc|README\\.md|rebar|rebar\\.config|mongodb_tests\\.beam|\\.arcconfig|\\.gitignore|\\.pc|^patches"
++extra_apps = [eunit, bson]
