@@ -1,0 +1,11 @@
+Index: poolboy-91cf587b6029be696679a4788905de796ec89df3/tetrapak/config.ini
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ poolboy-91cf587b6029be696679a4788905de796ec89df3/tetrapak/config.ini	2014-06-25 15:56:00.278926613 +0200
+@@ -0,0 +1,6 @@
++[build]
++version = "1.2.1"
++
++[package]
++maintainer = "Travelping GmbH <info@travelping.com>"
++exclude = "README\\.md|^Makefile|\\.pc|^patches|\\.editorconfig|\\.travis.yml|VERSION|\\.gitignore|^rebar|^rebar.config|^UNLICENSE|^LICENSE|package.exs"
