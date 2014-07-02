@@ -1,0 +1,11 @@
+Index: aleppo-0.8.9/tetrapak/config.ini
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ aleppo-0.8.9/tetrapak/config.ini	2014-06-25 13:28:26.130689507 +0200
+@@ -0,0 +1,6 @@
++[build]
++version = "~t.~o~~~c"
++
++[package]
++maintainer = "Travelping GmbH <info@travelping.com>"
++exclude = "^doc|README\\.md|rebar|rebar\\.config|\\.gitignore|Makefile|\\.pc|^patches"
