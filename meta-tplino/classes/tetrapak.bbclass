@@ -1,16 +1,20 @@
 inherit erlang
 
+TETRAPAK_OPTS ??= ""
+
 DEPENDS += "tetrapak-native virtual/erlang"
 
 erllibs = "${STAGING_DIR_ERLANG_LIBS}:${TETRAPAK_ERL_LIBS}"
 
 do_compile() {
     mkdir -p ebin
-    ERL_LIBS=${erllibs} tetrapak build
+    bbnote "Running tetrapak build ${TETRAPAK_OPTS}"
+    ERL_LIBS=${erllibs} tetrapak build ${TETRAPAK_OPTS}
 }
 
 do_install() {
-    ERL_LIBS=${erllibs} tetrapak install -prefix ${D}
+    bbnote "Running tetrapak install -prefix ${D} ${TETRAPAK_OPTS}"
+    ERL_LIBS=${erllibs} tetrapak install -prefix ${D} ${TETRAPAK_OPTS}
 }
 
 python do_qa_tetrapak() {
