@@ -4,9 +4,10 @@ LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://COPYING.txt;md5=419886945d428c4b26dd4a4f5b2b222b"
 
 SRCREV = "9cb511a262421b8d502c7d3b850c4ad54a1a9d09"
-PR = "r2"
+PR = "r3"
 
-SRC_URI = "git://git@git.tpip.net/mysql;protocol=ssh"
+SRC_URI = "git://git@git.tpip.net/mysql;protocol=ssh \
+	   file://fix-utf8-encoding.patch"
 
 S = "${WORKDIR}/git"
 
