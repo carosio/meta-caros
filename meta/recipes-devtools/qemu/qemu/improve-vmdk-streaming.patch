@@ -25,11 +25,11 @@ Signed-off-by: Milos Vyletel <milos.vyletel@gmail.com>
  block/vmdk.c |  363 +++++++++++++++++++++++++++++++++++++++++++++-------------
  1 files changed, 281 insertions(+), 82 deletions(-)
 
-diff --git a/block/vmdk.c b/block/vmdk.c
-index 27a78da..f482225 100644
---- a/block/vmdk.c
-+++ b/block/vmdk.c
-@@ -81,6 +81,21 @@ typedef struct {
+Index: qemu-2.1.0-rc1/block/vmdk.c
+===================================================================
+--- qemu-2.1.0-rc1.orig/block/vmdk.c	2014-07-08 22:42:01.000000000 +0200
++++ qemu-2.1.0-rc1/block/vmdk.c	2014-07-09 15:12:51.166151820 +0200
+@@ -81,6 +81,21 @@
      uint16_t compressAlgorithm;
  } QEMU_PACKED VMDK4Header;
  
@@ -51,7 +51,7 @@ index 27a78da..f482225 100644
  #define L2_CACHE_SIZE 16
  
  typedef struct VmdkExtent {
-@@ -89,24 +104,29 @@ typedef struct VmdkExtent {
+@@ -89,24 +104,29 @@
      bool compressed;
      bool has_marker;
      bool has_zero_grain;
@@ -81,7 +81,7 @@ index 27a78da..f482225 100644
  } VmdkExtent;
  
  typedef struct BDRVVmdkState {
-@@ -555,14 +575,51 @@ static char *vmdk_read_desc(BlockDriverState *file, uint64_t desc_offset,
+@@ -555,14 +575,51 @@
      return buf;
  }
  
@@ -133,7 +133,7 @@ index 27a78da..f482225 100644
      VmdkExtent *extent;
      BDRVVmdkState *s = bs->opaque;
      int64_t l1_backup_offset = 0;
-@@ -593,48 +650,13 @@ static int vmdk_open_vmdk4(BlockDriverState *bs,
+@@ -593,48 +650,13 @@
  
      if (le64_to_cpu(header.gd_offset) == VMDK4_GD_AT_END) {
          /*
@@ -185,14 +185,14 @@ index 27a78da..f482225 100644
          header = footer.header;
      }
  
-@@ -645,11 +667,15 @@ static int vmdk_open_vmdk4(BlockDriverState *bs,
+@@ -645,11 +667,15 @@
          error_set(errp, QERR_UNKNOWN_BLOCK_FORMAT_FEATURE,
                    bs->device_name, "vmdk", buf);
          return -ENOTSUP;
 -    } else if (le32_to_cpu(header.version) == 3 && (flags & BDRV_O_RDWR)) {
 +    } else if (le32_to_cpu(header.version) == 3 &&
 +               (flags & BDRV_O_RDWR) &&
-+               !(le64_to_cpu(header.flags) & VMDK4_FLAG_COMPRESS)) {
++               !(le32_to_cpu(header.flags) & VMDK4_FLAG_COMPRESS)) {
          /* VMware KB 2064959 explains that version 3 added support for
           * persistent changed block tracking (CBT), and backup software can
           * read it as version=1 if it doesn't care about the changed area
@@ -203,7 +203,7 @@ index 27a78da..f482225 100644
          error_setg(errp, "VMDK version 3 must be read only");
          return -EINVAL;
      }
-@@ -689,11 +715,20 @@ static int vmdk_open_vmdk4(BlockDriverState *bs,
+@@ -689,11 +715,20 @@
      if (ret < 0) {
          return ret;
      }
@@ -224,7 +224,7 @@ index 27a78da..f482225 100644
      }
      extent->has_marker = le32_to_cpu(header.flags) & VMDK4_FLAG_MARKER;
      extent->version = le32_to_cpu(header.version);
-@@ -1000,6 +1035,11 @@ static int vmdk_L2update(VmdkExtent *extent, VmdkMetaData *m_data)
+@@ -1000,6 +1035,11 @@
      uint32_t offset;
      QEMU_BUILD_BUG_ON(sizeof(offset) != sizeof(m_data->offset));
      offset = cpu_to_le32(m_data->offset);
@@ -236,7 +236,7 @@ index 27a78da..f482225 100644
      /* update L2 table */
      if (bdrv_pwrite_sync(
                  extent->file,
-@@ -1026,6 +1066,97 @@ static int vmdk_L2update(VmdkExtent *extent, VmdkMetaData *m_data)
+@@ -1026,6 +1066,97 @@
      return VMDK_OK;
  }
  
@@ -334,7 +334,7 @@ index 27a78da..f482225 100644
  static int get_cluster_offset(BlockDriverState *bs,
                                      VmdkExtent *extent,
                                      VmdkMetaData *m_data,
-@@ -1034,8 +1165,8 @@ static int get_cluster_offset(BlockDriverState *bs,
+@@ -1034,8 +1165,8 @@
                                      uint64_t *cluster_offset)
  {
      unsigned int l1_index, l2_offset, l2_index;
@@ -345,7 +345,7 @@ index 27a78da..f482225 100644
      bool zeroed = false;
  
      if (m_data) {
-@@ -1048,11 +1179,25 @@ static int get_cluster_offset(BlockDriverState *bs,
+@@ -1048,11 +1179,25 @@
  
      offset -= (extent->end_sector - extent->sectors) * SECTOR_SIZE;
      l1_index = (offset >> 9) / extent->l1_entry_sectors;
@@ -373,7 +373,7 @@ index 27a78da..f482225 100644
          return VMDK_UNALLOC;
      }
      for (i = 0; i < L2_CACHE_SIZE; i++) {
-@@ -1063,7 +1208,7 @@ static int get_cluster_offset(BlockDriverState *bs,
+@@ -1063,7 +1208,7 @@
                      extent->l2_cache_counts[j] >>= 1;
                  }
              }
@@ -382,7 +382,7 @@ index 27a78da..f482225 100644
              goto found;
          }
      }
-@@ -1076,11 +1221,11 @@ static int get_cluster_offset(BlockDriverState *bs,
+@@ -1076,11 +1221,11 @@
              min_index = i;
          }
      }
@@ -396,7 +396,7 @@ index 27a78da..f482225 100644
                  extent->l2_size * sizeof(uint32_t)
              ) != extent->l2_size * sizeof(uint32_t)) {
          return VMDK_ERROR;
-@@ -1090,15 +1235,15 @@ static int get_cluster_offset(BlockDriverState *bs,
+@@ -1090,15 +1235,15 @@
      extent->l2_cache_counts[min_index] = 1;
   found:
      l2_index = ((offset >> 9) / extent->cluster_sectors) % extent->l2_size;
@@ -415,7 +415,7 @@ index 27a78da..f482225 100644
      }
      if (extent->has_zero_grain && *cluster_offset == VMDK_GTE_ZEROED) {
          zeroed = true;
-@@ -1119,7 +1264,7 @@ static int get_cluster_offset(BlockDriverState *bs,
+@@ -1119,7 +1264,7 @@
          }
  
          *cluster_offset >>= 9;
@@ -424,7 +424,7 @@ index 27a78da..f482225 100644
  
          /* First of all we write grain itself, to avoid race condition
           * that may to corrupt the image.
-@@ -1210,6 +1355,7 @@ static int vmdk_write_extent(VmdkExtent *extent, int64_t cluster_offset,
+@@ -1210,6 +1355,7 @@
      uLongf buf_len;
      const uint8_t *write_buf = buf;
      int write_len = nb_sectors * 512;
@@ -432,7 +432,7 @@ index 27a78da..f482225 100644
  
      if (extent->compressed) {
          if (!extent->has_marker) {
-@@ -1227,6 +1373,7 @@ static int vmdk_write_extent(VmdkExtent *extent, int64_t cluster_offset,
+@@ -1227,6 +1373,7 @@
          data->size = buf_len;
          write_buf = (uint8_t *)data;
          write_len = buf_len + sizeof(VmdkGrainMarker);
@@ -440,7 +440,7 @@ index 27a78da..f482225 100644
      }
      ret = bdrv_pwrite(extent->file,
                          cluster_offset + offset_in_cluster,
-@@ -1236,6 +1383,13 @@ static int vmdk_write_extent(VmdkExtent *extent, int64_t cluster_offset,
+@@ -1236,6 +1383,13 @@
          ret = ret < 0 ? ret : -EIO;
          goto out;
      }
@@ -454,7 +454,7 @@ index 27a78da..f482225 100644
      ret = 0;
   out:
      g_free(data);
-@@ -1534,10 +1688,12 @@ static int vmdk_create_extent(const char *filename, int64_t filesize,
+@@ -1534,10 +1688,12 @@
      int ret, i;
      BlockDriverState *bs = NULL;
      VMDK4Header header;
@@ -467,7 +467,7 @@ index 27a78da..f482225 100644
  
      ret = bdrv_create_file(filename, opts, &local_err);
      if (ret < 0) {
-@@ -1562,28 +1718,38 @@ static int vmdk_create_extent(const char *filename, int64_t filesize,
+@@ -1562,28 +1718,38 @@
      }
      magic = cpu_to_be32(VMDK4_MAGIC);
      memset(&header, 0, sizeof(header));
@@ -514,7 +514,7 @@ index 27a78da..f482225 100644
      /* swap endianness for all header fields */
      header.version = cpu_to_le32(header.version);
      header.flags = cpu_to_le32(header.flags);
-@@ -1620,30 +1786,54 @@ static int vmdk_create_extent(const char *filename, int64_t filesize,
+@@ -1620,30 +1786,54 @@
          goto exit;
      }
  
@@ -535,6 +535,10 @@ index 27a78da..f482225 100644
 +        /* footer marker */
 +        footer.footer_marker.val = cpu_to_le64(1);
 +        footer.footer_marker.type = cpu_to_le32(MARKER_FOOTER);
++
++        /* header */
++        footer.magic = cpu_to_be32(VMDK4_MAGIC);
++        footer.header = header;
  
 -    /* write backup grain directory */
 -    for (i = 0, tmp = le64_to_cpu(header.gd_offset) + gd_sectors;
@@ -546,10 +550,6 @@ index 27a78da..f482225 100644
 -    if (ret < 0) {
 -        error_set(errp, QERR_IO_ERROR);
 -        goto exit;
-+        /* header */
-+        footer.magic = cpu_to_be32(VMDK4_MAGIC);
-+        footer.header = header;
-+
 +        /* grain directory offset */
 +        footer.header.gd_offset = cpu_to_le64(gd_offset);
 +
@@ -592,7 +592,7 @@ index 27a78da..f482225 100644
      }
  
      ret = 0;
-@@ -1914,6 +2104,15 @@ exit:
+@@ -1914,6 +2104,15 @@
  static void vmdk_close(BlockDriverState *bs)
  {
      BDRVVmdkState *s = bs->opaque;
@@ -608,6 +608,3 @@ index 27a78da..f482225 100644
  
      vmdk_free_extents(bs);
      g_free(s->create_type);
--- 
-1.7.1
-
