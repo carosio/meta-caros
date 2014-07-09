@@ -17,7 +17,6 @@ QEMU_TARGETS ?= "arm i386 mips mipsel mips64 mips64el ppc sh4 x86_64"
 
 SRC_URI = "\
     file://powerpc_rom.bin \
-    file://no-strip.patch \
     file://larger_default_ram_size.patch \
     file://disable-grabs.patch \
     "

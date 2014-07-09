@@ -18,11 +18,11 @@ Signed-off-by: Robert Yang <liezhi.yang@windriver.com>
  hw/arm/versatilepb.c |    6 ++++++
  1 file changed, 6 insertions(+)
 
-diff --git a/hw/arm/versatilepb.c b/hw/arm/versatilepb.c
-index b48d84c..ad2cd5a 100644
---- a/hw/arm/versatilepb.c
-+++ b/hw/arm/versatilepb.c
-@@ -199,6 +199,12 @@ static void versatile_init(QEMUMachineInitArgs *args, int board_id)
+Index: qemu-2.1.0-rc1/hw/arm/versatilepb.c
+===================================================================
+--- qemu-2.1.0-rc1.orig/hw/arm/versatilepb.c	2014-07-09 13:56:45.078029543 +0200
++++ qemu-2.1.0-rc1/hw/arm/versatilepb.c	2014-07-09 13:57:37.158030938 +0200
+@@ -198,6 +198,12 @@
          fprintf(stderr, "Unable to find CPU definition\n");
          exit(1);
      }
@@ -32,9 +32,6 @@ index b48d84c..ad2cd5a 100644
 +                ((unsigned int)ram_size / (1 << 20)));
 +        exit(1);
 +    }
-     memory_region_init_ram(ram, NULL, "versatile.ram", args->ram_size);
+     memory_region_init_ram(ram, NULL, "versatile.ram", machine->ram_size);
      vmstate_register_ram_global(ram);
      /* ??? RAM should repeat to fill physical memory space.  */
--- 
-1.7.10.4
-
