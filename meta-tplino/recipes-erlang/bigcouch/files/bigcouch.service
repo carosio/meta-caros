@@ -5,7 +5,7 @@ After=multi-user.target
 [Service]
 Environment="HOME=/home/root"
 Type=simple
-ExecStart=/opt/bigcouch/bin/bigcouch -b
+ExecStart=/opt/bigcouch/bin/couchdb -b
 
 [Install]
 WantedBy=multi-user.target

@@ -28,7 +28,7 @@ SCRIPT_ERROR=1
 DESCRIPTION="database server"
 NAME=bigcouch
 SCRIPT_NAME=`basename $0`
-BIGCOUCH=/opt/bigcouch/bin/bigcouch
+BIGCOUCH=/opt/bigcouch/bin/couchdb
 CONFIGURATION_FILE=/etc/default/bigcouch
 RUN_DIR=/var/run
 

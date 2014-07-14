@@ -1,10 +1,10 @@
-diff --git a/rel/reltool.config b/rel/reltool.config
-index 3caff2d..c8f8e2f 100644
---- a/rel/reltool.config
-+++ b/rel/reltool.config
-@@ -36,8 +36,23 @@
+Index: git/rel/reltool.config
+===================================================================
+--- git.orig/rel/reltool.config	2014-07-08 16:27:38.811958274 +0200
++++ git/rel/reltool.config	2014-07-08 16:56:57.300005365 +0200
+@@ -39,8 +39,11 @@
      {rel, "start_clean", "", [kernel, stdlib]},
-     {boot_rel, "bigcouch"},
+     {boot_rel, "couchdb"},
      {profile, embedded},
 -    {excl_sys_filters, ["^bin/.*", "^erts.*/bin/(dialyzer|typer)"]},
 +    {app_file, strip},
@@ -12,18 +12,38 @@ index 3caff2d..c8f8e2f 100644
 +			"^erts.*/(doc|info|include|lib|man|src)"]},
      {excl_archive_filters, [".*"]},
 +    {excl_app_filters, ["^priv/obj"]},
-+
-+    {app, mochiweb, [{excl_app_filters, ["^priv"]}]},
-+    {app, eunit, [{incl_cond, exclude}]},
-+    {app, gs, [{incl_cond, exclude}]},
-+    {app, wx, [{incl_cond, exclude}]},
-+    {app, observer, [{incl_cond, exclude}]},
-+    {app, et, [{mod, et_viewer, [{incl_cond, exclude}]},
-+	       {mod, et_gs_contents_viewer, [{incl_cond, exclude}]},
-+	       {mod, et_gs_viewer, [{incl_cond, exclude}]},
-+	       {mod, et_wx_contents_viewer, [{incl_cond, exclude}]},
-+	       {mod, et_wx_viewer, [{incl_cond, exclude}]}
-+    ]},
+     {incl_cond, exclude},
  
-     % It's sufficient to list 'chttpd' here, as reltool will pull in all
-     % dependencies.  But we'll be explicit and list everything actively
+     %% stdlib
+@@ -62,16 +65,20 @@
+     {app, chttpd, [{incl_cond, include}]},
+     {app, config, [{incl_cond, include}]},
+     {app, couch, [{incl_cond, include}]},
++    {app, couch_index, [{incl_cond, include}]},
+     {app, couch_log, [{incl_cond, include}]},
++    {app, couch_mrview, [{incl_cond, include}]},
+     {app, couch_replicator, [{incl_cond, include}]},
+     {app, ddoc_cache, [{incl_cond, include}]},
+     {app, ets_lru, [{incl_cond, include}]},
+     {app, fabric, [{incl_cond, include}]},
++    {app, fauxton, [{incl_cond, include}]},
+     {app, goldrush, [{incl_cond, include}]},
+     {app, ibrowse, [{incl_cond, include}]},
++    {app, jiffy, [{incl_cond, include}]},
+     {app, lager, [{incl_cond, include}]},
+     {app, mem3, [{incl_cond, include}]},
+-    {app, mochiweb, [{incl_cond, include}]},
++    {app, mochiweb, [{incl_cond, include},{excl_app_filters, ["^priv"]}]},
+     {app, oauth, [{incl_cond, include}]},
+     {app, rexi, [{incl_cond, include}]},
+     {app, snappy, [{incl_cond, include}]}
+@@ -83,8 +90,7 @@
+     {copy, "overlay/bin"},
+     {copy, "overlay/etc"},
+     {copy, "../src/couch/priv/couchjs", "bin/couchjs"},
+-    {copy, "../share/server/main.js", "share/server/main.js"},
+-    {copy, "../share/server/coffee-script.js", "share/server/coffee-script.js"},
++    {copy, "../share"},
+     {copy, "files/sys.config", "releases/\{\{rel_vsn\}\}/sys.config"},
+     {copy, "files/vm.args", "releases/\{\{rel_vsn\}\}/vm.args"},
+     {template, "overlay/etc/default.ini", "etc/default.ini"},
