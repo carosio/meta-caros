@@ -1,0 +1,62 @@
+Index: zeromq-2.1.11/src/tcp_connecter.cpp
+===================================================================
+--- zeromq-2.1.11.orig/src/tcp_connecter.cpp	2011-09-15 20:50:27.000000000 +0200
++++ zeromq-2.1.11/src/tcp_connecter.cpp	2014-07-11 12:02:04.118472718 +0200
+@@ -201,6 +201,12 @@
+             sizeof (int));
+         errno_assert (rc == 0);
+ 
++	// Enable TCP KEEPALIVE
++        flag = 1;
++        rc = setsockopt (s, SOL_SOCKET, SO_KEEPALIVE, (char*) &flag,
++            sizeof (int));
++        errno_assert (rc == 0);
++
+ #ifdef ZMQ_HAVE_OPENVMS
+         //  Disable delayed acknowledgements.
+         flag = 1;
+Index: zeromq-2.1.11/src/tcp_listener.cpp
+===================================================================
+--- zeromq-2.1.11.orig/src/tcp_listener.cpp	2011-09-02 16:24:42.000000000 +0200
++++ zeromq-2.1.11/src/tcp_listener.cpp	2014-07-11 11:58:55.166467658 +0200
+@@ -356,6 +356,12 @@
+             sizeof (int));
+         errno_assert (rc == 0);
+ 
++	// Enable TCP KEEPALIVE
++        flag = 1;
++        rc = setsockopt (sock, SOL_SOCKET, SO_KEEPALIVE, (char*) &flag,
++            sizeof (int));
++        errno_assert (rc == 0);
++
+ #ifdef ZMQ_HAVE_OPENVMS
+         //  Disable delayed acknowledgements.
+         flag = 1;
+Index: zeromq-2.1.11/src/tcp_socket.cpp
+===================================================================
+--- zeromq-2.1.11.orig/src/tcp_socket.cpp	2011-11-30 21:00:24.000000000 +0100
++++ zeromq-2.1.11/src/tcp_socket.cpp	2014-07-11 11:56:43.654464137 +0200
+@@ -149,6 +149,7 @@
+ {
+     assert (s == retired_fd);
+     s = fd_;
++    int set, rc;
+ 
+     if (sndbuf_) {
+         int sz = (int) sndbuf_;
+@@ -162,9 +163,13 @@
+         errno_assert (rc == 0);
+     }
+ 
++    set = 1;
++    rc = setsockopt (s, SOL_SOCKET, SO_KEEPALIVE, &set, sizeof (int));
++    errno_assert (rc == 0);
++
+ #if defined ZMQ_HAVE_OSX || defined ZMQ_HAVE_FREEBSD
+-    int set = 1;
+-    int rc = setsockopt (s, SOL_SOCKET, SO_NOSIGPIPE, &set, sizeof (int));
++    set = 1;
++    rc = setsockopt (s, SOL_SOCKET, SO_NOSIGPIPE, &set, sizeof (int));
+     errno_assert (rc == 0);
+ #endif
+     return 0;

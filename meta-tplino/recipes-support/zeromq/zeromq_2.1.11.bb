@@ -3,11 +3,12 @@ HOMEPAGE = "http://www.zeromq.org"
 LICENSE = "LGPLv3+"
 LIC_FILES_CHKSUM = "file://COPYING.LESSER;md5=66ea8704398d7996daeacd2fbd2b9dbd"
 
-PR = "r0"
+PR = "r1"
 
 DEPENDS += "util-linux"
 
-SRC_URI = "http://download.zeromq.org/zeromq-${PV}.tar.gz"
+SRC_URI = "http://download.zeromq.org/zeromq-${PV}.tar.gz \
+	   file://keepalive.patch"
 
 inherit autotools
 
