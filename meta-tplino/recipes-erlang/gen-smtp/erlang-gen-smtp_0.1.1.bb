@@ -1,20 +1,27 @@
-DESCRIPTION = "Erlang SMTP server framework"
+DESCRIPTION = "An erlang SMTP server/client framework"
 SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=2836c20a9a9293da518007b3786dbcfb"
-SRCREV = "5b62692539ea51c5fb3a033b66a318e7299747f5"
 
-PR = "r1"
+PR = "r2"
 
-SRC_URI = "git://git@git.tpip.net/gen_smtp.git;protocol=ssh"
+SRCREV = "fd0426c46468c33c21332335c267ae6e13e01afb"
 
-DEPENDS_append = " erlang-iconv "
-RDEPENDS_${PN}_append = " erlang-iconv "
+SRC_URI = "https://github.com/Vagabond/gen_smtp/archive/${SRCREV}.tar.gz;downloadfilename=gen_smtp-${SRCREV}.tar.gz"
+SRC_URI[md5sum] = "3ec4f24e8baf317ca994cc13141ec581"
+SRC_URI[sha256sum] = "46ed13bb72ffaaab5fdec67d8aefa56fb22ec034b80bfdad373ecd0610824417"
 
-S = "${WORKDIR}/git"
+S = "${WORKDIR}/gen_smtp-${SRCREV}"
+
+TETRAPAK_OPTS += "-o build.version ${PV}~~fd0426c"
+TETRAPAK_OPTS += "-o package.maintainer 'Travelping GmbH <info@travelping.com>'"
+TETRAPAK_OPTS += "-o package.exclude '^\.gitignore|^\.travis\.yml|^Emakefile|^Makefile|^README\.markdown|^rebar|^rebar\.config|^rebar\.test\.config|^testdata'"
 
 inherit tetrapak
 
+DEPENDS += "erlang-iconv"
+RDEPENDS_${PN} += "erlang-iconv"
+
 python () {
-    erlang_def_package("gen-smtp", "gen_smtp-*", "ebin priv", "src include testdata LICENSE Makefile Emakefile .gitignore rebar rebar.config README.markdown", d)
+    erlang_def_package("gen-smtp", "gen_smtp*", "ebin", "LICENSE src test", d)
 }
