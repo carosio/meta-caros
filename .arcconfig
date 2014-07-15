@@ -1,4 +1,5 @@
 {
   "project_id" : "tplino-core",
-  "conduit_uri" : "https://REVIEWSERVER/"
+  "conduit_uri" : "https://REVIEWSERVER/",
+  "history.immutable" : true
 }
