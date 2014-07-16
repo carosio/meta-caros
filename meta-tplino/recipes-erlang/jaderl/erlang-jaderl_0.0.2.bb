@@ -3,18 +3,25 @@ SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://src/jaderl.erl;md5=7a9e7abea03db1447e8f7f69595a5f56"
 
-SRCREV="536a66e5c9c5979d08e9c85888470883bd464a31"
-PR = "r1"
+PR = "r2"
 
-SRC_URI = "git://git@git.tpip.net/jaderl.git;protocol=ssh"
+SRCREV = "14a80dafd92037d041dd352466fc3ddef5ae091e"
 
-S = "${WORKDIR}/git"
+SRC_URI = "https://github.com/erlydtl/jaderl/archive/${SRCREV}.tar.gz;downloadfilename=jaderl-${SRCREV}.tar.gz"
+SRC_URI[md5sum] = "b44bcca0b27befa8a23f2f5e71ee2617"
+SRC_URI[sha256sum] = "786765c35c9d6cbf04d418245ef8a8bc4696c6987176a7103cb7375f58abfcc3"
+
+S = "${WORKDIR}/jaderl-${SRCREV}"
+
+TETRAPAK_OPTS += "-o build.version ${PV}"
+TETRAPAK_OPTS += "-o package.maintainer 'Travelping GmbH <info@travelping.com>'"
+TETRAPAK_OPTS += "-o package.exclude '^rebar|^rebar\.config|^spec\.odt|^tests'"
 
 inherit tetrapak
 
-DEPENDS_append = " erlang-dynamic-compile  "
-RDEPENDS_${PN}_append = " erlang-dynamic-compile  "
+DEPENDS += "erlang-dynamic-compile"
+RDEPENDS_${PN} += "erlang-dynamic-compile"
 
 python () {
-    erlang_def_package("jaderl", "jaderl*", "ebin priv", "src include", d)
+    erlang_def_package("jaderl", "jaderl*", "ebin", "README.md src", d)
 }
