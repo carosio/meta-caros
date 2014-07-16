@@ -3,7 +3,7 @@ SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://LICENSE-MIT-SockJS;md5=8dadf7be2665a431cf0828ff8506e5c4"
 
-SRC_URI = "git://github.com/sockjs/sockjs-erlang.git;protocol=git"
+SRC_URI = "git://github.com/travelping/sockjs-erlang.git"
 SRCREV="${AUTOREV}"
 PV = "git${SRCPV}"
 PR = "r1"
