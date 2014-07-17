@@ -16,8 +16,10 @@ inherit tetrapak
 
 DEPENDS += "erlang-tetrapak-yang erlang-cowboy erlang-erlzmq erlang-ex-uri erlang-ibrowse"
 RDEPENDS_${PN} += "erlang-cowboy erlang-yang erlang-erlzmq erlang-ex-uri erlang-ibrowse"
+
 RCONFLICTS_${PN} = "erlang-hello2"
+RREPLACES_${PN} = "erlang-hello2"
 
 python () {
-    erlang_def_package("hello", "hello-*", "ebin priv", "src include README.md", d)
+    erlang_def_package("hello", "hello-*", "ebin priv", "src include NEWS.md README.md", d)
 }
