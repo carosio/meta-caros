@@ -1,0 +1,37 @@
+From 896fa02c24347e6e9259812cfda187b1d6ca6199 Mon Sep 17 00:00:00 2001
+From: Jiang Lu <lu.jiang@windriver.com>
+Date: Wed, 13 Nov 2013 10:38:08 +0800
+Subject: [PATCH] Qemu:Arm:versatilepb: Add memory size checking
+
+The machine can not work with memory over 256M, so add a checking
+at startup. If the memory size exceed 256M, just stop emulation then
+throw out warning about memory limitation.
+
+Upstream-Status: Pending
+
+Signed-off-by: Jiang Lu <lu.jiang@windriver.com>
+
+Updated it on 2014-01-15 for rebasing
+
+Signed-off-by: Robert Yang <liezhi.yang@windriver.com>
+---
+ hw/arm/versatilepb.c |    6 ++++++
+ 1 file changed, 6 insertions(+)
+
+Index: qemu-2.1.0-rc1/hw/arm/versatilepb.c
+===================================================================
+--- qemu-2.1.0-rc1.orig/hw/arm/versatilepb.c	2014-07-09 13:56:45.078029543 +0200
++++ qemu-2.1.0-rc1/hw/arm/versatilepb.c	2014-07-09 13:57:37.158030938 +0200
+@@ -198,6 +198,12 @@
+         fprintf(stderr, "Unable to find CPU definition\n");
+         exit(1);
+     }
++    if (ram_size > (256 << 20)) {
++        fprintf(stderr,
++                "qemu: Too much memory for this machine: %d MB, maximum 256 MB\n",
++                ((unsigned int)ram_size / (1 << 20)));
++        exit(1);
++    }
+     memory_region_init_ram(ram, NULL, "versatile.ram", machine->ram_size);
+     vmstate_register_ram_global(ram);
+     /* ??? RAM should repeat to fill physical memory space.  */
