@@ -6,16 +6,16 @@ LICENSE = "BSD"
 
 inherit systemd
 
-LIC_FILES_CHKSUM = "file://LICENSE;md5=0d645f970023c604645486fea08b22aa"
+LIC_FILES_CHKSUM = "file://LICENSE;md5=9d3b27bad611f5204a84ba6a572698e1"
 
-PR = "r2"
+PR = "r1"
 
 SRC_URI = "http://nginx.org/download/nginx-${PV}.tar.gz \
            file://allow-cross.patch \
-	   file://nginx.service"
+           file://nginx.service"
 
-SRC_URI[md5sum] = "1350d26eb9b66364d9143fb3c4366ab6"
-SRC_URI[sha256sum] = "0510af71adac4b90484ac8caf3b8bd519a0f7126250c2799554d7a751a2db388"
+SRC_URI[md5sum] = "2b7f37f86e0af9bbb109c4dc225c6247"
+SRC_URI[sha256sum] = "337380c9e2c69dede82c709c110c036aead3ffe7087bb25185ed88e7f93a9504"
 
 DEPENDS = "libpcre logrotate openssl"
 
@@ -43,9 +43,9 @@ do_configure() {
 
 do_install() {
     install -d ${D}${localstatedir}/lib/nginx \
-	       ${D}${localstatedir}/nginx \
-	       ${D}${sysconfdir}/logrotate.d \
-	       ${D}${systemd_unitdir}/system
+               ${D}${localstatedir}/nginx \
+               ${D}${sysconfdir}/logrotate.d \
+               ${D}${systemd_unitdir}/system
 
     install -m 0644 ${THISDIR}/files/nginx.logrotate ${D}${sysconfdir}/logrotate.d
     install -m 644 ${WORKDIR}/*.service ${D}/${systemd_unitdir}/system
