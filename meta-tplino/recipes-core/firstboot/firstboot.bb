@@ -1,6 +1,6 @@
 DESCRIPTION = "Setup script run on first boot"
 LICENSE = "CLOSED"
-PR = "r0"
+PR = "r1"
 
 SRC_URI = "file://firstboot.sh \
            file://firstboot.service"
