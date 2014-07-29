@@ -45,6 +45,8 @@ FILES_${PN}-dbg += "${BIGCOUCH_PREFIX}/bin/.debug \
                     ${BIGCOUCH_PREFIX}/lib/jiffy-*/priv/.debug \
                     ${BIGCOUCH_PREFIX}/lib/snappy-*/priv/.debug"
 
+CONFFILES_${PN} += "${BIGCOUCH_PREFIX}/etc/local.conf ${BIGCOUCH_PREFIX}/etc/vm.args"
+
 SYSTEMD_SERVICE_${PN} = "bigcouch.service"
 
 do_configure() {
