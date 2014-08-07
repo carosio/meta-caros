@@ -35,27 +35,34 @@ CONFFILES_${PN}_append = " \
 do_install() {
 
     # /etc/enit and /var/lib/enit
-    install -d ${D}${sysconfdir}/enit/${NODENAME} \
-               ${D}${localstatedir}/lib/enit/${NODENAME} \
+    install -d "${D}${sysconfdir}/enit/${NODENAME}" \
+               "${D}${localstatedir}/lib/enit/${NODENAME}" \
                ${D}${systemd_unitdir}/system \
                ${D}${libdir}/tmpfiles.d \
 
     # Logdir
     install -d -m 0775 -o ${NODEUSER} -g ${NODEGROUP} ${D}${LOGDIR}
 
-    # tmpfiles
+    # tmpfiles if present
     if [ -f "${S}/files/tmpfiles" ]; then
-        install -m 0644 -o "root" -g "root" ${S}/files/tmpfiles ${D}${libdir}/tmpfiles.d/${NODENAME}.conf
+        install -m 0644 -o "root" -g "root" "${S}/files/tmpfiles" "${D}${libdir}/tmpfiles.d/${NODENAME}.conf"
     fi
 
-    install -m 644 ${WORKDIR}/user.config ${D}${sysconfdir}/enit/${NODENAME}/99-user.config
-    install -m 644 ${WORKDIR}/defaults.config ${D}${sysconfdir}/enit/${NODENAME}/00-defaults.config
+    # sysctl.d files if present
+    if [ -f "${WORKDIR}/${NODENAME}.sysctl.d" ]; then
+        install -d ${D}${sysconfdir}/sysctl.d
+        install -m 0644 -o "root" -g "root" "${WORKDIR}/${NODENAME}.sysctl.d" "${D}${sysconfdir}/sysctl.d/${NODENAME}.conf"
+    fi
 
-    install -m 644 ${WORKDIR}/release.enit ${D}${localstatedir}/lib/enit/${NODENAME}
+
+    install -m 644 ${WORKDIR}/user.config "${D}${sysconfdir}/enit/${NODENAME}/99-user.config"
+    install -m 644 ${WORKDIR}/defaults.config "${D}${sysconfdir}/enit/${NODENAME}/00-defaults.config"
+
+    install -m 644 ${WORKDIR}/release.enit "${D}${localstatedir}/lib/enit/${NODENAME}"
 
     # logrotate
     install -m 755 -o "root" -g "root" -d ${D}${sysconfdir}/logrotate.d
-    install -m 644 ${WORKDIR}/logrotate ${D}${sysconfdir}/logrotate.d/${NODENAME}
+    install -m 644 ${WORKDIR}/logrotate "${D}${sysconfdir}/logrotate.d/${NODENAME}"
 
     # systemd units
     install -m 644 ${WORKDIR}/*.service ${D}/${systemd_unitdir}/system
