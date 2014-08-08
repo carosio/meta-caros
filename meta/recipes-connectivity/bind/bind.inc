@@ -8,8 +8,7 @@ LIC_FILES_CHKSUM = "file://COPYRIGHT;md5=70a3b234bb402e38258a6aa54b3d25f3"
 DEPENDS = "openssl libcap"
 PR = "r10"
 
-SRC_URI = "file://bind.service \
-		"
+SRC_URI = "file://bind.service"
 
 inherit systemd
 
@@ -23,8 +22,7 @@ EXTRA_OECONF = " --enable-ipv6=no --with-randomdev=/dev/random --disable-threads
                  --sysconfdir=${sysconfdir}/bind \
                  --with-openssl=${STAGING_LIBDIR}/.. --with-libxml2=${STAGING_LIBDIR}/.. \
                  --enable-exportlib --with-export-includedir=${includedir} --with-export-libdir=${libdir} \
-		 --with-ecdsa=no \
-               "
+                 --with-ecdsa=no"
 
 inherit autotools
 
