@@ -20,6 +20,7 @@ SYSTEMD_SERVICE_${PN} = "${PN}.service"
 do_install_append() {
         rm "${D}${bindir}/nslookup"
         rm "${D}${mandir}/man1/nslookup.1"
+        rm -rf "${D}/run" "${D}/var/run"
         install -d "${D}${sysconfdir}/bind" "${D}${systemd_unitdir}/system" "${D}/var/cache/bind"
         install -m 644 ${S}/conf/* "${D}${sysconfdir}/bind/"
         install -m 644 ${WORKDIR}/*.service "${D}${systemd_unitdir}/system/."
