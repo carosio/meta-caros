@@ -6,14 +6,7 @@ LICENSE = "ISC & BSD"
 LIC_FILES_CHKSUM = "file://COPYRIGHT;md5=70a3b234bb402e38258a6aa54b3d25f3"
 
 DEPENDS = "openssl libcap"
-PR = "r10"
-
-SRC_URI = "file://bind.service"
-
-inherit systemd
-
-SYSTEMD_PACKAGES = "${PN}"
-SYSTEMD_SERVICE_${PN} = "${PN}.service"
+PR = "r11"
 
 # --enable-exportlib is necessary for building dhcp
 EXTRA_OECONF = " --enable-ipv6=no --with-randomdev=/dev/random --disable-threads \
