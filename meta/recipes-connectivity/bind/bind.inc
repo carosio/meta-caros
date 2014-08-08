@@ -22,7 +22,7 @@ EXTRA_OECONF = " --enable-ipv6=no --with-randomdev=/dev/random --disable-threads
                  --sysconfdir=${sysconfdir}/bind \
                  --with-openssl=${STAGING_LIBDIR}/.. --with-libxml2=${STAGING_LIBDIR}/.. \
                  --enable-exportlib --with-export-includedir=${includedir} --with-export-libdir=${libdir} \
-                 --with-ecdsa=no"
+                 --with-ecdsa=no --without-readline"
 
 inherit autotools
 
