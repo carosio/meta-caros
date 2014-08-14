@@ -10,25 +10,23 @@ SRCREV="2ad91d591c45a5c910bee32d9c60651d8f25152e"
 PE = "1"
 PR = "r2"
 
-SRC_URI = " \
+SRC_URI = "\
     git://codebasin.net/xdpd.git;protocol=git \
-    file://cli.cfg \
-"
+    file://xdpd.service \
+    file://cli.cfg"
 
-FILES_${PN} += " \
-    ${systemd_unitdir}/system/xdpd.service \
-    ${sysconfdir}/xdpd/cli.cfg \
-"
+FILES_${PN} += "\
+    ${sysconfdir}/xdpd/cli.cfg"
 
-CONFFILES_${PN} += " \
-    ${sysconfdir}/xdpd/cli.cfg \
-"
+CONFFILES_${PN} += "\
+    ${sysconfdir}/xdpd/cli.cfg"
 
 S = "${WORKDIR}/git"
 
 inherit autotools systemd
 
-SYSTEMD_PACKAGES = "${PN}"
+SYSTEMD_SERVICE_${PN} = "xdpd.service"
+SYSTEMD_AUTO_ENABLE ?= "disable"
 
 EXTRA_OECONF += "--enable-gnu-linux \
              ${@base_contains("IMAGE_FEATURES", 'debug-tweaks-rofl', '--enable-debug', '', d)}"
@@ -46,7 +44,8 @@ do_patch_append() {
 }
 
 do_install_append() {
-    install -d ${D}${sysconfdir}/xdpd/
-
+    install -d ${D}${sysconfdir}/xdpd/ \
+               ${D}${systemd_unitdir}/system/
     install -m 0744 ${WORKDIR}/cli.cfg ${D}${sysconfdir}/xdpd/
+    install -m 0644 ${WORKDIR}/xdpd.service ${D}${systemd_unitdir}/system/
 }

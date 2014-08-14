@@ -1,0 +1,11 @@
+[Unit]
+​Description=xdpd
+​After=multi-user.target
+​​
+​[Service]
+​ExecStart=/usr/sbin/xdpd --config-file /etc/xdpd/cli.cfg
+​Type=simple
+​Restart=always
+​
+​[Install]
+​WantedBy=multi-user.target
