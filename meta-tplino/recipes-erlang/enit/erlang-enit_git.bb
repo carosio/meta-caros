@@ -1,10 +1,16 @@
 DESCRIPTION = "Dynamic Erlang release management"
 SECTION = "devel"
 LICENSE = "MIT"
+LIC_FILES_CHKSUM = "file://README.md;beginline=4;endline=4;md5=b9978f90bd7e8e056279603677171252"
 
-INC_PR = "r1"
+PR = "r0"
 
 SRC_URI = "git://git@git.tpip.net/enit.git;protocol=ssh"
+SRCREV="${AUTOREV}"
+PV = "git${SRCPV}"
+PR = "r1"
+
+DEFAULT_PREFERENCE = "-1"
 
 S = "${WORKDIR}/git"
 
