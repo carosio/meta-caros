@@ -1,11 +1,11 @@
 DESCRIPTION = "BigCouch DB"
 SECTION = "devel"
 LICENSE = "Apache-2.0"
-LIC_FILES_CHKSUM = "file://LICENSE;md5=08c8f8678f4dae8c7e726dbd67938f8d"
+LIC_FILES_CHKSUM = "file://LICENSE;md5=d1d0149ed2d0955d0b2545d326d60d54"
 
 SRCREV = "${AUTOREV}"
 PV = "git${SRCPV}"
-PR = "r1"
+PR = "r2"
 
 DEFAULT_PREFERENCE = "-1"
 
@@ -41,11 +41,13 @@ FILES_${PN}-dbg += "${BIGCOUCH_PREFIX}/bin/.debug \
                     ${BIGCOUCH_PREFIX}/erts-*/bin/.debug \
                     ${BIGCOUCH_PREFIX}/lib/*/priv/lib/.debug \
                     ${BIGCOUCH_PREFIX}/lib/*/priv/bin/.debug \
+                    ${BIGCOUCH_PREFIX}/lib/b64url-*/priv/.debug \
                     ${BIGCOUCH_PREFIX}/lib/couch-*/priv/.debug \
                     ${BIGCOUCH_PREFIX}/lib/jiffy-*/priv/.debug \
+                    ${BIGCOUCH_PREFIX}/lib/khash-*/priv/.debug \
                     ${BIGCOUCH_PREFIX}/lib/snappy-*/priv/.debug"
 
-CONFFILES_${PN} += "${BIGCOUCH_PREFIX}/etc/local.conf ${BIGCOUCH_PREFIX}/etc/vm.args"
+CONFFILES_${PN} += "${BIGCOUCH_PREFIX}/etc/local.ini ${BIGCOUCH_PREFIX}/etc/vm.args"
 
 SYSTEMD_SERVICE_${PN} = "bigcouch.service"
 

@@ -1,8 +1,8 @@
-Index: git/rel/reltool.config
-===================================================================
---- git.orig/rel/reltool.config	2014-07-08 16:27:38.811958274 +0200
-+++ git/rel/reltool.config	2014-07-08 16:56:57.300005365 +0200
-@@ -39,8 +39,11 @@
+diff --git a/rel/reltool.config b/rel/reltool.config
+index d709348..31688cd 100644
+--- a/rel/reltool.config
++++ b/rel/reltool.config
+@@ -57,8 +57,11 @@
      {rel, "start_clean", "", [kernel, stdlib]},
      {boot_rel, "couchdb"},
      {profile, embedded},
@@ -15,29 +15,37 @@ Index: git/rel/reltool.config
      {incl_cond, exclude},
  
      %% stdlib
-@@ -62,16 +65,20 @@
+@@ -77,6 +80,8 @@
+     {app, xmerl, [{incl_cond, include}]},
+ 
+     %% couchdb
++    {app, b64url, [{incl_cond, include}]},
++    {app, bear, [{incl_cond, include}]},
+     {app, cassim, [{incl_cond, include}]},
      {app, chttpd, [{incl_cond, include}]},
      {app, config, [{incl_cond, include}]},
-     {app, couch, [{incl_cond, include}]},
-+    {app, couch_index, [{incl_cond, include}]},
-     {app, couch_log, [{incl_cond, include}]},
-+    {app, couch_mrview, [{incl_cond, include}]},
+@@ -88,16 +93,18 @@
+     {app, couch_plugins, [{incl_cond, include}]},
      {app, couch_replicator, [{incl_cond, include}]},
+     {app, couch_event, [{incl_cond, include}]},
++    {app, couch_stats, [{incl_cond, include}]},
      {app, ddoc_cache, [{incl_cond, include}]},
      {app, ets_lru, [{incl_cond, include}]},
      {app, fabric, [{incl_cond, include}]},
-+    {app, fauxton, [{incl_cond, include}]},
-     {app, goldrush, [{incl_cond, include}]},
++    {app, folsom, [{incl_cond, include}]},
+     {app, global_changes, [{incl_cond, include}]},
+-    {app, goldrush, [{incl_cond, include}]},
++    {app, goldrush, [{incl_cond, include},{excl_app_filters, ["^priv"]}]},
      {app, ibrowse, [{incl_cond, include}]},
-+    {app, jiffy, [{incl_cond, include}]},
-     {app, lager, [{incl_cond, include}]},
+     {app, ioq, [{incl_cond, include}]},
+     {app, jiffy, [{incl_cond, include}]},
+     {app, khash, [{incl_cond, include}]},
+-    {app, lager, [{incl_cond, include}]},
++    {app, lager, [{incl_cond, include},{excl_app_filters, ["^priv"]}]},
      {app, mem3, [{incl_cond, include}]},
--    {app, mochiweb, [{incl_cond, include}]},
-+    {app, mochiweb, [{incl_cond, include},{excl_app_filters, ["^priv"]}]},
+     {app, mochiweb, [{incl_cond, include}]},
      {app, oauth, [{incl_cond, include}]},
-     {app, rexi, [{incl_cond, include}]},
-     {app, snappy, [{incl_cond, include}]}
-@@ -83,8 +90,7 @@
+@@ -111,8 +118,7 @@
      {copy, "overlay/bin"},
      {copy, "overlay/etc"},
      {copy, "../src/couch/priv/couchjs", "bin/couchjs"},
