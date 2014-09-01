@@ -1,0 +1,35 @@
+Index: src/Makefile.in
+===================================================================
+--- src.orig/Makefile.in
++++ src/Makefile.in
+@@ -505,8 +505,6 @@ endif
+ 
+ include $(topsrcdir)/config/config.mk
+ 
+-EXTRA_DSO_LDOPTS += $(NSPR_LIBS)
+-
+ ifndef BUILD_OPT
+ MOCHAFILE	= 1
+ endif
+Index: src/config/rules.mk
+===================================================================
+--- src.orig/config/rules.mk
++++ src/config/rules.mk
+@@ -1333,7 +1333,7 @@ endif
+ 		ofiles=`$(AR_LIST) $${lib}`; \
+ 		$(AR_DELETE) $${lib} $$ofiles; \
+ 	done
+-	$(MKSHLIB) $(SHLIB_LDSTARTFILE) $(OBJS) $(LOBJS) $(SUB_SHLOBJS) $(DTRACE_PROBE_OBJ) $(PROBE_LOBJS) $(RESFILE) $(LDFLAGS) $(EXTRA_DSO_LDOPTS) $(call EXPAND_FAKELIBS,$(OS_LIBS) $(EXTRA_LIBS)) $(DEF_FILE) $(SHLIB_LDENDFILE)
++	$(MKSHLIB) $(SHLIB_LDSTARTFILE) $(OBJS) $(LOBJS) $(SUB_SHLOBJS) $(DTRACE_PROBE_OBJ) $(PROBE_LOBJS) $(RESFILE) $(LDFLAGS) $(NSPR_LIBS) $(EXTRA_DSO_LDOPTS) $(call EXPAND_FAKELIBS,$(OS_LIBS) $(EXTRA_LIBS)) $(DEF_FILE) $(SHLIB_LDENDFILE)
+ 	@rm -f $(PROBE_LOBJS)
+ 	@rm -f $(DTRACE_PROBE_OBJ)
+ 	@for lib in $(MOZILLA_PROBE_LIBS); do \
+@@ -1342,7 +1342,7 @@ endif
+ 	@rm -f $(MOZILLA_PROBE_LIBS)
+ 
+ else # ! DTRACE_LIB_DEPENDENT
+-	$(MKSHLIB) $(SHLIB_LDSTARTFILE) $(OBJS) $(DTRACE_PROBE_OBJ) $(LOBJS) $(SUB_SHLOBJS) $(RESFILE) $(LDFLAGS) $(EXTRA_DSO_LDOPTS) $(call EXPAND_FAKELIBS,$(OS_LIBS) $(EXTRA_LIBS)) $(DEF_FILE) $(SHLIB_LDENDFILE)
++	$(MKSHLIB) $(SHLIB_LDSTARTFILE) $(OBJS) $(DTRACE_PROBE_OBJ) $(LOBJS) $(SUB_SHLOBJS) $(RESFILE) $(LDFLAGS) $(NSPR_LIBS) $(EXTRA_DSO_LDOPTS) $(call EXPAND_FAKELIBS,$(OS_LIBS) $(EXTRA_LIBS)) $(DEF_FILE) $(SHLIB_LDENDFILE)
+ endif # DTRACE_LIB_DEPENDENT
+ 
+ ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
