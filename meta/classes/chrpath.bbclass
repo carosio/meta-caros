@@ -1,16 +1,81 @@
 CHRPATH_BIN ?= "chrpath"
 PREPROCESS_RELOCATE_DIRS ?= ""
 
-def process_dir (directory, d):
+def process_file_linux(cmd, fpath, rootdir, baseprefix, tmpdir, d):
     import subprocess as sub
+
+    p = sub.Popen([cmd, '-l', fpath],stdout=sub.PIPE,stderr=sub.PIPE)
+    err, out = p.communicate()
+    # If returned succesfully, process stderr for results
+    if p.returncode != 0:
+        return
+
+    # Throw away everything other than the rpath list
+    curr_rpath = err.partition("RPATH=")[2]
+    #bb.note("Current rpath for %s is %s" % (fpath, curr_rpath.strip()))
+    rpaths = curr_rpath.split(":")
+    new_rpaths = []
+    modified = False
+    for rpath in rpaths:
+        # If rpath is already dynamic copy it to new_rpath and continue
+        if rpath.find("$ORIGIN") != -1:
+            new_rpaths.append(rpath.strip())
+            continue
+        rpath =  os.path.normpath(rpath)
+        if baseprefix not in rpath and tmpdir not in rpath:
+            new_rpaths.append(rpath.strip())
+            continue
+        new_rpaths.append("$ORIGIN/" + os.path.relpath(rpath.strip(), os.path.dirname(fpath.replace(rootdir, "/"))))
+        modified = True
+
+    # if we have modified some rpaths call chrpath to update the binary
+    if modified:
+        args = ":".join(new_rpaths)
+        #bb.note("Setting rpath for %s to %s" %(fpath, args))
+        p = sub.Popen([cmd, '-r', args, fpath],stdout=sub.PIPE,stderr=sub.PIPE)
+        out, err = p.communicate()
+        if p.returncode != 0:
+            bb.error("%s: chrpath command failed with exit code %d:\n%s%s" % (d.getVar('PN', True), p.returncode, out, err))
+            raise bb.build.FuncFailed
+
+def process_file_darwin(cmd, fpath, rootdir, baseprefix, tmpdir, d):
+    import subprocess as sub
+
+    p = sub.Popen([d.expand("${HOST_PREFIX}otool"), '-L', fpath],stdout=sub.PIPE,stderr=sub.PIPE)
+    err, out = p.communicate()
+    # If returned succesfully, process stderr for results
+    if p.returncode != 0:
+        return
+    for l in err.split("\n"):
+        if "(compatibility" not in l:
+            continue
+        rpath = l.partition("(compatibility")[0].strip()
+        if baseprefix not in rpath:
+            continue
+
+        newpath = "@loader_path/" + os.path.relpath(rpath, os.path.dirname(fpath.replace(rootdir, "/")))
+        p = sub.Popen([d.expand("${HOST_PREFIX}install_name_tool"), '-change', rpath, newpath, fpath],stdout=sub.PIPE,stderr=sub.PIPE)
+        err, out = p.communicate()
+
+def process_dir (rootdir, directory, d):
     import stat
 
+    rootdir = os.path.normpath(rootdir)
     cmd = d.expand('${CHRPATH_BIN}')
     tmpdir = os.path.normpath(d.getVar('TMPDIR'))
-    basedir = os.path.normpath(d.expand('${base_prefix}'))
+    baseprefix = os.path.normpath(d.expand('${base_prefix}'))
+    hostos = d.getVar("HOST_OS", True)
 
     #bb.debug("Checking %s for binaries to process" % directory)
     if not os.path.exists(directory):
+        return
+
+    if "linux" in hostos:
+        process_file = process_file_linux
+    elif "darwin" in hostos:
+        process_file = process_file_darwin
+    else:
+        # Relocations not supported
         return
 
     dirs = os.listdir(directory)
@@ -22,7 +87,7 @@ def process_dir (directory, d):
             continue
 
         if os.path.isdir(fpath):
-            process_dir(fpath, d)
+            process_dir(rootdir, fpath, d)
         else:
             #bb.note("Testing %s for relocatability" % fpath)
 
@@ -35,55 +100,8 @@ def process_dir (directory, d):
             else:
                 # Temporarily make the file writeable so we can chrpath it
                 os.chmod(fpath, perms|stat.S_IRWXU)
-
-            p = sub.Popen([cmd, '-l', fpath],stdout=sub.PIPE,stderr=sub.PIPE)
-            err, out = p.communicate()
-            # If returned succesfully, process stderr for results
-            if p.returncode != 0:
-                continue
-
-            # Throw away everything other than the rpath list
-            curr_rpath = err.partition("RPATH=")[2]
-            #bb.note("Current rpath for %s is %s" % (fpath, curr_rpath.strip()))
-            rpaths = curr_rpath.split(":")
-            new_rpaths = []
-            for rpath in rpaths:
-                # If rpath is already dynamic copy it to new_rpath and continue
-                if rpath.find("$ORIGIN") != -1:
-                    new_rpaths.append(rpath.strip())
-                    continue
-                rpath =  os.path.normpath(rpath)
-                # If the rpath shares a root with base_prefix determine a new dynamic rpath from the
-                # base_prefix shared root
-                if rpath.find(basedir) != -1:
-                    depth = fpath.partition(basedir)[2].count('/')
-                    libpath = rpath.partition(basedir)[2].strip()
-                # otherwise (i.e. cross packages) determine a shared root based on the TMPDIR
-                # NOTE: This will not work reliably for cross packages, particularly in the case
-                # where your TMPDIR is a short path (i.e. /usr/poky) as chrpath cannot insert an
-                # rpath longer than that which is already set.
-                elif rpath.find(tmpdir) != -1:
-                    depth = fpath.rpartition(tmpdir)[2].count('/')
-                    libpath = rpath.partition(tmpdir)[2].strip()
-                else:
-                    new_rpaths.append(rpath.strip())
-                    continue
-                base = "$ORIGIN"
-                while depth > 1:
-                    base += "/.."
-                    depth-=1
-                new_rpaths.append("%s%s" % (base, libpath))
-
-            # if we have modified some rpaths call chrpath to update the binary
-            if len(new_rpaths):
-                args = ":".join(new_rpaths)
-                #bb.note("Setting rpath for %s to %s" %(fpath, args))
-                p = sub.Popen([cmd, '-r', args, fpath],stdout=sub.PIPE,stderr=sub.PIPE)
-                out, err = p.communicate()
-                if p.returncode != 0:
-                    bb.error("%s: chrpath command failed with exit code %d:\n%s%s" % (d.getVar('PN', True), p.returncode, out, err))
-                    raise bb.build.FuncFailed
-
+            process_file(cmd, fpath, rootdir, baseprefix, tmpdir, d)
+                
             if perms:
                 os.chmod(fpath, perms)
 
@@ -93,5 +111,5 @@ def rpath_replace (path, d):
     for bindir in bindirs:
         #bb.note ("Processing directory " + bindir)
         directory = path + "/" + bindir
-        process_dir (directory, d)
+        process_dir (path, directory, d)
 

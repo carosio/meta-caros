@@ -6,13 +6,12 @@ HOMEPAGE = "http://alioth.debian.org/projects/chrpath/"
 BUGTRACKER = "http://alioth.debian.org/tracker/?atid=412807&group_id=31052"
 LICENSE = "GPLv2"
 LIC_FILES_CHKSUM = "file://COPYING;md5=59530bdf33659b29e73d4adb9f9f6552"
-PR = "r0"
 
-SRC_URI = "http://alioth.debian.org/frs/download.php/3648/chrpath-${PV}.tar.gz \
+SRC_URI = "http://alioth.debian.org/frs/download.php/file/3979/chrpath-0.16.tar.gz \
            file://standarddoc.patch"
 
-SRC_URI[md5sum] = "ea6b212b23393bf58b0ef9bcf6491b86"
-SRC_URI[sha256sum] = "a1bc9abc42d2b97efc3a0ced7c5dbed37d5debff600386193750315fa5823eaa"
+SRC_URI[md5sum] = "2bf8d1d1ee345fc8a7915576f5649982"
+SRC_URI[sha256sum] = "bb0d4c54bac2990e1bdf8132f2c9477ae752859d523e141e72b3b11a12c26e7b"
 
 inherit autotools
 
