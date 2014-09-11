@@ -113,8 +113,8 @@ do_configure() {
 	-e"/\"folsom\"/ s|{branch[^}]*}|\"${SRCREV_FOLSOM}\"|g" \
 	-e"/\"global-changes\"/ s|{branch[^}]*}|\"${SRCREV_GLOBAL_CHANGES}\"|g" \
 	-e"/\"goldrush\"/ s|{branch[^}]*}|\"${SRCREV_GOLDRUSH}\"|g" \
-	-e"/\"ibrowse\"/ s|{tag[^}]*}|\"${SRCREV_IBROWSE}\"|g" \
-	-e"/\"ioq\"/ s|{tag[^}]*}|\"${SRCREV_IOQ}\"|g" \
+	-e"/\"ibrowse\"/ s|{branch[^}]*}|\"${SRCREV_IBROWSE}\"|g" \
+	-e"/\"ioq\"/ s|{branch[^}]*}|\"${SRCREV_IOQ}\"|g" \
 	-e"/\"jiffy\"/ s|{branch[^}]*}|\"${SRCREV_JIFFY}\"|g" \
 	-e"/\"khash\"/ s|{branch[^}]*}|\"${SRCREV_KHASH}\"|g" \
 	-e"/\"lager\"/ s|{branch[^}]*}|\"${SRCREV_LAGER}\"|g" \
