@@ -3,7 +3,7 @@ Description=bigcouch
 After=multi-user.target
 
 [Service]
-Environment="HOME=/home/root"
+Environment="HOME=/home/root" "ERL_EPMD_PORT=4370"
 Type=simple
 ExecStart=/opt/bigcouch/bin/couchdb -b
 
