@@ -3,8 +3,8 @@ SECTION = "devel"
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=ff253ad767462c46be284da12dda33e8"
 
-SRCREV = "ad400896af5b1ad8b4f7a4d34e609b5a990640bb"
-PR = "r2"
+SRCREV = "b6b6cebcb27ccff8acc59ae775acebc2f52e4926"
+PR = "r0"
 
 SRC_URI = "git://github.com/basho/lager.git;protocol=git \
            file://add-tetrapak.patch;apply=yes \
