@@ -13,7 +13,7 @@ RDEPENDS_erlang += "erlang-epmd"
 DEPENDS += "openssl zlib ncurses"
 export OE_LDFLAGS="-lz"
 
-inherit autotools erlang systemd
+inherit autotools-brokensep erlang systemd
 
 PRINC="2"
 

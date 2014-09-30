@@ -4,7 +4,7 @@ PROVIDES += "virtual/erlang-native"
 
 DEPENDS += "openssl-native"
 
-inherit autotools native
+inherit autotools-brokensep native
 
 EXTRA_OECONF = "\
 	     --enable-smp-support \
