@@ -4,9 +4,6 @@
 DESCRIPTION = "Image with TPLino components."
 LICENSE = "MIT"
 
-include recipes-vmware/ovf/vmware-ovf.inc
-inherit core-image-tplino core-image
-
 IMAGE_FEATURES += "splash ssh-server-dropbear ${TPLINO_IMAGE_FEATURES}"
 
-
+inherit core-image-tplino core-image distro_features_check
