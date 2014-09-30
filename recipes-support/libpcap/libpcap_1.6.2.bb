@@ -1,13 +1,8 @@
 require libpcap.inc
 
-PR = "${INC_PR}.0"
-
-SRC_URI += "file://aclocal.patch \
-            file://ieee80215-arphrd.patch \
-           "
-
-SRC_URI[md5sum] = "56e88a5aabdd1e04414985ac24f7e76c"
-SRC_URI[sha256sum] = "7c6a2a4f71e8ab09804e6b4fb3aff998c5583108ac42c0e2967eee8e1dbc7406"
+SRC_URI += "file://aclocal.patch"
+SRC_URI[md5sum] = "5f14191c1a684a75532c739c2c4059fa"
+SRC_URI[sha256sum] = "5db3e2998f1eeba2c76da55da5d474248fe19c44f49e15cac8a796a2c7e19690"
 
 #
 # make install doesn't cover the shared lib
