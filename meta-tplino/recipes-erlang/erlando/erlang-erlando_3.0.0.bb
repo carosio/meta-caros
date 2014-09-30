@@ -3,7 +3,7 @@ SECTION = "net"
 LICENSE = "MPL-1.0"
 LIC_FILES_CHKSUM = "file://README.md;beginline=617;md5=b5d78b4446f5ee806a90c7416aada096"
 
-PR = "r2"
+PR = "r3"
 
 # Note: ChicagoBoss forked and uses our version for R17.0 compatibility,
 #       so keeping out repo in here is ok, last checked: 26-06-2014 (as)
