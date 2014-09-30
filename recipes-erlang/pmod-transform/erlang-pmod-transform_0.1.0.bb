@@ -6,7 +6,7 @@ LIC_FILES_CHKSUM = "file://EPLICENCE;md5=f4e586d08cc73e9c7373939f6806d647"
 SRCREV="7d51412387617b8f4635afa24f666826b93d81fc"
 PR = "r3"
 
-SRC_URI = "git://git@git.tpip.net/pmod_transform.git;protocol=ssh"
+SRC_URI = "git://git@git.tpip.net/pmod_transform.git;protocol=ssh;branch=travelping"
 
 S = "${WORKDIR}/git"
 
