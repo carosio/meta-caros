@@ -1,8 +1,0 @@
-[Unit]
-Description=logrotate
-
-[Install]
-WantedBy=multi-user.target
-
-[Timer]
-OnCalendar=hourly

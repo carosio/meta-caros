@@ -1,5 +1,0 @@
-# glib
-ac_cv_alignof_guint32=4
-ac_cv_alignof_guint64=8
-ac_cv_alignof_unsigned_long=4
-

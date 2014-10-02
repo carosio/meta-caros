@@ -1,6 +1,0 @@
-#!/bin/bash
-
-. /etc/init.d/functions
-
-LSB=LSB-1.1 killproc $*
-exit $?

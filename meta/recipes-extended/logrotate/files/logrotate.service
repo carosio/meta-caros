@@ -1,6 +1,0 @@
-[Unit]
-Description=logrotate
-
-[Service]
-Type=oneshot
-ExecStart=/usr/sbin/logrotate /etc/logrotate.conf
