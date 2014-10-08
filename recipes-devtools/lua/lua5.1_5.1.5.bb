@@ -24,7 +24,7 @@ SRC_URI_append_libc-uclibc = "${UCLIBC_PATCHES}"
 TARGET_CC_ARCH += " -fPIC ${LDFLAGS}"
 EXTRA_OEMAKE = "'CC=${CC} -fPIC' 'MYCFLAGS=${CFLAGS} -DLUA_USE_LINUX -fPIC' MYLDFLAGS='${LDFLAGS}'"
 
-PACKAGES_prepend = "lib${PN} lib${PN}-dev lib${PN}-staticdev "
+PACKAGES =+ "lib${PN} lib${PN}-dev lib${PN}-staticdev "
 
 FILES_lib${PN} = "${libdir}/liblua.so.*"
 FILES_lib${PN}-dev += "${libdir}/liblua.so"
