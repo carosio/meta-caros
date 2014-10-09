@@ -19,5 +19,5 @@ S = "${WORKDIR}/git"
 inherit tetrapak
 
 python () {
-    erlang_def_package("lager", "lager-*", "ebin", "include src test LICENSE README.md", d)
+    erlang_def_package("lager", "lager-*", "ebin", "include src test LICENSE README.md tools.mk", d)
 }
