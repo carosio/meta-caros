@@ -83,7 +83,7 @@ python emit_erlang_deps() {
 
         appnames = []
         for app in apps:
-           escript = '{ok, C} = file:consult("'+app+'"), {_, AppName, Props} = lists:keyfind(application, 1, C), Apps = proplists:get_value(applications, Props, []), io:format("~s ~s~n", [AppName, string:join([atom_to_list(X) || X <- Apps], " ")]).'
+           escript = '{ok, C} = file:consult("'+app+'"), {_, AppName, Props} = lists:keyfind(application, 1, C), Apps = proplists:get_value(applications, Props, []) ++ proplists:get_value(included_applications, Props, []), io:format("~s ~s~n", [AppName, string:join([atom_to_list(X) || X <- Apps], " ")]).'
            deps = os.popen(erlrun + " -eval '" + escript + "' -s erlang halt").readlines()[0].split()
            appname = app_to_pkg(pkg_prefix, deps.pop(0))
            if appname not in provides:
