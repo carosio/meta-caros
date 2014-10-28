@@ -1,6 +1,6 @@
 require eglibc.inc
 
-PR = "r2"
+PR = "r3"
 
 DEPENDS += "gperf-native kconfig-frontends-native"
 
@@ -34,6 +34,7 @@ SRC_URI = "http://downloads.yoctoproject.org/releases/eglibc/eglibc-${PV}-svnr22
 BACKPORTS = "\
            file://eglibc-2.17/eglibc-2.17-r22178.patch \
            file://eglibc-2.17/eglibc-2.17-PR15003-r22243.patch \
+           file://eglibc-2.17/fix_dl_tlsdesc_resolve_hold.patch \
           "
 
 SRC_URI[md5sum] = "1464af54779c2c7d1078df9ce2e41791"
