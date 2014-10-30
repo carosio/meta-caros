@@ -1,0 +1,25 @@
+Date: Tue, 26 Nov 2013 12:46:29 +0100
+From: =?utf-8?B?T25kxZllaiBCw61sa2E=?= <neleai at seznam dot cz>
+To: libc-alpha at sourceware dot org
+Subject: [COMMITED] Fix typo in _dl_tlsdesc_resolve_hold
+
+Hi, as mentioned in other thread when porting tls to x64 from x86 there
+was a leftover jump that uses only lower 32bits.
+
+Fix commited as obvious.
+
+	* sysdeps/x86_64/dl-tlsdesc.S (_dl_tlsdesc_resolve_hold): Fix typo.
+
+diff --git a/sysdeps/x86_64/dl-tlsdesc.S b/sysdeps/x86_64/dl-tlsdesc.S
+index de5219a..3468045 100644
+--- a/sysdeps/x86_64/dl-tlsdesc.S
++++ b/sysdeps/x86_64/dl-tlsdesc.S
+@@ -239,6 +239,6 @@ _dl_tlsdesc_resolve_hold:
+ 	movq	64(%rsp), %rcx
+ 	addq	$72, %rsp
+ 	cfi_adjust_cfa_offset (-72)
+-	jmp	*(%eax)
++	jmp	*(%rax)
+ 	cfi_endproc
+ 	.size	_dl_tlsdesc_resolve_hold, .-_dl_tlsdesc_resolve_hold
+
