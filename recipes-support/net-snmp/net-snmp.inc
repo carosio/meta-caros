@@ -11,7 +11,7 @@ RDEPENDS_${PN}-dev = "net-snmp-client (= ${EXTENDPV}) net-snmp-server (= ${EXTEN
 RRECOMMENDS_${PN}-dbg = "net-snmp-client (= ${EXTENDPV}) net-snmp-server (= ${EXTENDPV})"
 INC_PR = "r6"
 
-inherit autotools update-rc.d siteinfo
+inherit autotools-brokensep update-rc.d siteinfo
 
 TARGET_CC_ARCH += "${LDFLAGS}"
 
