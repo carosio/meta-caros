@@ -3,11 +3,11 @@ SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://README.md;beginline=4;endline=4;md5=b9978f90bd7e8e056279603677171252"
 
-PR = "r2"
+PR = "r1"
 
 SRC_URI = "https://github.com/travelping/enit/archive/${PV}.tar.gz;downloadfilename=enit-${PV}.tar.gz"
-SRC_URI[md5sum] = "573b33c3d96dd4c0a034f47b24c40633"
-SRC_URI[sha256sum] = "d73ccbaa85e9ab5c13851084356347b0d23a1e356830f62d55fcefd7a3aa35ea"
+SRC_URI[md5sum] = "67a00e33c5d730becef839f392f7da51"
+SRC_URI[sha256sum] = "a8039c62bda383d295b090a90000a183b07b4e9e64449f044b089253d48f1ff0"
 
 S = "${WORKDIR}/enit-${PV}"
 
