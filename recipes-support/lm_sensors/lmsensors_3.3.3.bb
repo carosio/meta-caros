@@ -28,7 +28,8 @@ S = "${WORKDIR}/lm_sensors-${PV}"
 
 EXTRA_OEMAKE = 'LINUX=${STAGING_KERNEL_DIR} EXLDFLAGS="${LDFLAGS}" \
         MACHINE=${TARGET_ARCH} PREFIX=${prefix} MANDIR=${mandir} \
-        LIBDIR=${libdir} \
+        LIBDIR=${libdir} BUILD_STATIC_LIB=0 \
+        CFLAGS="${CFLAGS}" CPPFLAGS="${CPPFLAGS}" \
         CC="${CC}" AR="${AR}"'
 
 do_compile() {
