@@ -13,11 +13,11 @@ Subject: [PATCH] Add a new 'lcm162' subdriver to the hd44780 display driver.
  create mode 100644 server/drivers/hd44780-lcm162.c
  create mode 100644 server/drivers/hd44780-lcm162.h
 
-Index: lcdproc-0.5.6/acinclude.m4
+Index: lcdproc-0.5.7/acinclude.m4
 ===================================================================
---- lcdproc-0.5.6.orig/acinclude.m4	2012-09-01 23:34:24.000000000 +0200
-+++ lcdproc-0.5.6/acinclude.m4	2013-02-19 11:37:49.842545217 +0100
-@@ -213,7 +213,7 @@
+--- lcdproc-0.5.7.orig/acinclude.m4
++++ lcdproc-0.5.7/acinclude.m4
+@@ -216,7 +216,7 @@ dnl			else
  		hd44780)
  			HD44780_DRIVERS="hd44780-hd44780-serial.o hd44780-hd44780-lis2.o hd44780-hd44780-usblcd.o"
  			if test "$ac_cv_port_have_lpt" = yes ; then
@@ -26,23 +26,23 @@ Index: lcdproc-0.5.6/acinclude.m4
  			fi
  			if test "$enable_libusb" = yes ; then
  				HD44780_DRIVERS="$HD44780_DRIVERS hd44780-hd44780-bwct-usb.o hd44780-hd44780-lcd2usb.o hd44780-hd44780-uss720.o hd44780-hd44780-usbtiny.o hd44780-hd44780-usb4all.o"
-Index: lcdproc-0.5.6/server/drivers/Makefile.am
+Index: lcdproc-0.5.7/server/drivers/Makefile.am
 ===================================================================
---- lcdproc-0.5.6.orig/server/drivers/Makefile.am	2012-08-19 16:29:08.000000000 +0200
-+++ lcdproc-0.5.6/server/drivers/Makefile.am	2013-02-19 11:38:52.850224984 +0100
-@@ -95,7 +95,7 @@
+--- lcdproc-0.5.7.orig/server/drivers/Makefile.am
++++ lcdproc-0.5.7/server/drivers/Makefile.am
+@@ -95,7 +95,7 @@ EXTRA_glcd_SOURCES = glcd-t6963.c t6963_
  glcdlib_SOURCES =    lcd.h lcd_lib.h glcdlib.h glcdlib.c report.h
  glk_SOURCES =        lcd.h glk.c glk.h glkproto.c glkproto.h report.h
  hd44780_SOURCES =    lcd.h lcd_lib.h hd44780.h hd44780.c hd44780-drivers.h hd44780-low.h hd44780-charmap.h report.h adv_bignum.h
--EXTRA_hd44780_SOURCES = hd44780-4bit.c hd44780-4bit.h hd44780-ext8bit.c hd44780-ext8bit.h lcd_sem.c lcd_sem.h hd44780-serialLpt.c hd44780-serialLpt.h hd44780-serial.c hd44780-serial.h hd44780-winamp.c hd44780-winamp.h hd44780-bwct-usb.c hd44780-bwct-usb.h hd44780-lcd2usb.c hd44780-lcd2usb.h hd44780-usbtiny.c hd44780-usbtiny.h hd44780-lis2.c hd44780-lis2.h hd44780-i2c.c hd44780-i2c.h hd44780-ftdi.c hd44780-ftdi.h hd44780-ethlcd.c hd44780-ethlcd.h hd44780-uss720.c hd44780-uss720.h hd44780-usblcd.c hd44780-usblcd.h hd44780-usb4all.c hd44780-usb4all.h port.h lpt-port.h timing.h
-+EXTRA_hd44780_SOURCES = hd44780-4bit.c hd44780-4bit.h hd44780-ext8bit.c hd44780-ext8bit.h lcd_sem.c lcd_sem.h hd44780-serialLpt.c hd44780-serialLpt.h hd44780-serial.c hd44780-serial.h hd44780-winamp.c hd44780-winamp.h hd44780-bwct-usb.c hd44780-bwct-usb.h hd44780-lcd2usb.c hd44780-lcd2usb.h hd44780-usbtiny.c hd44780-usbtiny.h hd44780-lis2.c hd44780-lis2.h hd44780-i2c.c hd44780-i2c.h hd44780-ftdi.c hd44780-ftdi.h hd44780-ethlcd.c hd44780-ethlcd.h hd44780-uss720.c hd44780-uss720.h hd44780-usblcd.c hd44780-usblcd.h hd44780-usb4all.c hd44780-usb4all.h port.h lpt-port.h timing.h hd44780-lcm162.c hd44780-lcm162.h
+-EXTRA_hd44780_SOURCES = port.h lpt-port.h timing.h lcd_sem.c lcd_sem.h hd44780-4bit.c hd44780-4bit.h hd44780-bwct-usb.c hd44780-bwct-usb.h hd44780-ethlcd.c hd44780-ethlcd.h hd44780-ext8bit.c hd44780-ext8bit.h hd44780-ftdi.c hd44780-ftdi.h hd44780-i2c.c hd44780-i2c.h hd44780-lcd2usb.c hd44780-lcd2usb.h hd44780-lis2.c hd44780-lis2.h hd44780-pifacecad.c hd44780-pifacecad.h hd44780-piplate.c hd44780-piplate.h hd44780-rpi.c hd44780-rpi.h hd44780-serial.c hd44780-serial.h hd44780-serialLpt.c hd44780-serialLpt.h hd44780-spi.c hd44780-spi.h hd44780-usb4all.c hd44780-usb4all.h hd44780-usblcd.c hd44780-usblcd.h hd44780-usbtiny.c hd44780-usbtiny.h hd44780-uss720.c hd44780-uss720.h hd44780-winamp.c hd44780-winamp.h
++EXTRA_hd44780_SOURCES = port.h lpt-port.h timing.h lcd_sem.c lcd_sem.h hd44780-4bit.c hd44780-4bit.h hd44780-bwct-usb.c hd44780-bwct-usb.h hd44780-ethlcd.c hd44780-ethlcd.h hd44780-ext8bit.c hd44780-ext8bit.h hd44780-ftdi.c hd44780-ftdi.h hd44780-i2c.c hd44780-i2c.h hd44780-lcd2usb.c hd44780-lcd2usb.h hd44780-lis2.c hd44780-lis2.h hd44780-pifacecad.c hd44780-pifacecad.h hd44780-piplate.c hd44780-piplate.h hd44780-rpi.c hd44780-rpi.h hd44780-serial.c hd44780-serial.h hd44780-serialLpt.c hd44780-serialLpt.h hd44780-spi.c hd44780-spi.h hd44780-usb4all.c hd44780-usb4all.h hd44780-usblcd.c hd44780-usblcd.h hd44780-usbtiny.c hd44780-usbtiny.h hd44780-uss720.c hd44780-uss720.h hd44780-winamp.c hd44780-winamp.h hd44780-lcm162.c hd44780-lcm162.h
  i2500vfd_SOURCES =   lcd.h i2500vfd.c i2500vfd.h glcd_font5x8.h report.h
  icp_a106_SOURCES =   lcd.h lcd_lib.h icp_a106.c icp_a106.h report.h
  imon_SOURCES =       lcd.h lcd_lib.h hd44780-charmap.h imon.h imon.c report.h adv_bignum.h
-Index: lcdproc-0.5.6/server/drivers/hd44780-drivers.h
+Index: lcdproc-0.5.7/server/drivers/hd44780-drivers.h
 ===================================================================
---- lcdproc-0.5.6.orig/server/drivers/hd44780-drivers.h	2012-08-19 16:29:08.000000000 +0200
-+++ lcdproc-0.5.6/server/drivers/hd44780-drivers.h	2013-02-19 11:40:08.889838536 +0100
+--- lcdproc-0.5.7.orig/server/drivers/hd44780-drivers.h
++++ lcdproc-0.5.7/server/drivers/hd44780-drivers.h
 @@ -16,6 +16,7 @@
  # include "hd44780-ext8bit.h"
  # include "hd44780-serialLpt.h"
@@ -51,7 +51,7 @@ Index: lcdproc-0.5.6/server/drivers/hd44780-drivers.h
  #endif
  #include "hd44780-serial.h"
  #include "hd44780-lis2.h"
-@@ -52,6 +53,7 @@
+@@ -60,6 +61,7 @@ static const ConnectionMapping connectio
  	{ "8bit",          HD44780_CT_8BIT,          IF_TYPE_PARPORT, hd_init_ext8bit   },
  	{ "serialLpt",     HD44780_CT_SERIALLPT,     IF_TYPE_PARPORT, hd_init_serialLpt },
  	{ "winamp",        HD44780_CT_WINAMP,        IF_TYPE_PARPORT, hd_init_winamp    },
@@ -59,10 +59,10 @@ Index: lcdproc-0.5.6/server/drivers/hd44780-drivers.h
  #endif
  	/* serial connection types */
  	{ "picanlcd",      HD44780_CT_PICANLCD,      IF_TYPE_SERIAL,  hd_init_serial    },
-Index: lcdproc-0.5.6/server/drivers/hd44780-lcm162.c
+Index: lcdproc-0.5.7/server/drivers/hd44780-lcm162.c
 ===================================================================
---- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ lcdproc-0.5.6/server/drivers/hd44780-lcm162.c	2013-02-19 14:57:31.331740829 +0100
+--- /dev/null
++++ lcdproc-0.5.7/server/drivers/hd44780-lcm162.c
 @@ -0,0 +1,190 @@
 +/*
 + * 8-bit driver module for Hitachi HD44780 based LCD displays.
@@ -254,10 +254,10 @@ Index: lcdproc-0.5.6/server/drivers/hd44780-lcm162.c
 +	} else
 +		return 0;
 +}
-Index: lcdproc-0.5.6/server/drivers/hd44780-lcm162.h
+Index: lcdproc-0.5.7/server/drivers/hd44780-lcm162.h
 ===================================================================
---- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ lcdproc-0.5.6/server/drivers/hd44780-lcm162.h	2013-02-19 11:37:49.854545156 +0100
+--- /dev/null
++++ lcdproc-0.5.7/server/drivers/hd44780-lcm162.h
 @@ -0,0 +1,9 @@
 +#ifndef HD_LCM162_H
 +#define HD_LCM162_H
@@ -268,15 +268,15 @@ Index: lcdproc-0.5.6/server/drivers/hd44780-lcm162.h
 +int hd_init_lcm162(Driver *drvthis);
 +
 +#endif
-Index: lcdproc-0.5.6/server/drivers/hd44780-low.h
+Index: lcdproc-0.5.7/server/drivers/hd44780-low.h
 ===================================================================
---- lcdproc-0.5.6.orig/server/drivers/hd44780-low.h	2013-02-19 13:59:35.394252743 +0100
-+++ lcdproc-0.5.6/server/drivers/hd44780-low.h	2013-02-19 13:59:26.834297406 +0100
-@@ -53,6 +53,7 @@
- #define HD44780_CT_USBLCD		19
- #define HD44780_CT_USBTINY		20
- #define HD44780_CT_USB4ALL		21
-+#define HD44780_CT_LCM162		22
+--- lcdproc-0.5.7.orig/server/drivers/hd44780-low.h
++++ lcdproc-0.5.7/server/drivers/hd44780-low.h
+@@ -57,6 +57,7 @@
+ #define HD44780_CT_PIPLATE		23
+ #define HD44780_CT_SPI			24
+ #define HD44780_CT_PIFACECAD		25
++#define HD44780_CT_LCM162		26
  /**@}*/
  
  /** \name Symbolic names for interface types
