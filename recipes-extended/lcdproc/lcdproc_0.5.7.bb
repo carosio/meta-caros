@@ -13,6 +13,7 @@ LIC_FILES_CHKSUM = "file://COPYING;md5=18810669f13b87348459e611d31ab760 \
 PR = "r1"
 
 SRC_URI = "${SOURCEFORGE_MIRROR}/lcdproc/${P}.tar.gz \
+	   file://fix_sem_ops.patch \
 	   file://0001-Add-a-new-lcm162-subdriver-to-the-hd44780-display-dr.patch \
 	   file://lcdproc.service \
 	   file://LCDd.service"
