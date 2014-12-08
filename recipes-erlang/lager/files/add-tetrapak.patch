@@ -12,4 +12,4 @@ index 0000000..c4d0050
 +exclude = "^\\.gitignore|^priv\|^test/|^Makefile|^rebar|^rebar\\.config|^\\.travis\\.yml|^dialyzer\\.ignore\\-warnings|^\\.pc|^patches|^TODO"
 +
 +[xref]
-+ignore_undef = [{lager_default_tracer, info, 1}]
++ignore_undef = [{lager_default_tracer, info, 1}, {erlang, is_map, 1}, {erlang, map_size, 1}, {maps ,to_list, 1}]
