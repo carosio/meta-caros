@@ -4,7 +4,12 @@ LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://MIT_LICENSE;md5=7a8830d51731fc79efbb8166db8d2859"
 
 S = "${WORKDIR}/git"
-INC_PR = "r1"
+
+SRCREV="fc6461f33cbbfd0032dde86d9e56a8b4481205b2"
+
+PR = "r1"
+
+SRC_URI = "git://github.com/travelping/eradius.git;protocol=git"
 
 inherit tetrapak
 
