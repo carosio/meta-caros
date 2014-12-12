@@ -1,0 +1,12 @@
+[Unit]
+Description=SSH Key Generation
+ConditionPathExists=!/etc/dropbear/dropbear_rsa_host_key
+ConditionPathExists=!/etc/dropbear/dropbear_dss_host_key
+ConditionPathExists=!/etc/dropbear/dropbear_ecdsa_host_key
+
+[Service]
+Type=oneshot
+ExecStart=@SBINDIR@/dropbearkey -t rsa -f /etc/dropbear/dropbear_rsa_host_key
+ExecStart=@SBINDIR@/dropbearkey -t dss -f /etc/dropbear/dropbear_dss_host_key
+ExecStart=@SBINDIR@/dropbearkey -t ecdsa -f /etc/dropbear/dropbear_ecdsa_host_key
+RemainAfterExit=yes
