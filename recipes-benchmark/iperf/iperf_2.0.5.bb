@@ -33,20 +33,12 @@ S="${WORKDIR}/iperf-${PV}"
 EXTRA_OECONF = "--exec-prefix=${STAGING_DIR_HOST}${layout_exec_prefix}"
 
 do_configure() {
-	export ac_cv_func_malloc_0_nonnull=yes
-	gnu-configize
-	oe_runconf
+    export ac_cv_func_malloc_0_nonnull=yes
+    gnu-configize --force ${S}
+    oe_runconf
 }
 
-do_compile() {
-	cd ${WORKDIR}/iperf-${PV}
-	oe_runmake
-}
-
-do_install() {
-	cd ${WORKDIR}/iperf-${PV}/src
-	oe_runmake DESTDIR=${D} install
-
+do_install_append() {
     install -d ${D}${systemd_unitdir}/system
     install -m 644 ${WORKDIR}/*.service ${D}${systemd_unitdir}/system
 }
