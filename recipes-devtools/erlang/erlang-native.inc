@@ -6,6 +6,8 @@ DEPENDS += "openssl-native"
 
 inherit autotools-brokensep native
 
+INC_PR="r1"
+
 EXTRA_OECONF = "\
 	     --enable-smp-support \
 	     --without-termcap \
