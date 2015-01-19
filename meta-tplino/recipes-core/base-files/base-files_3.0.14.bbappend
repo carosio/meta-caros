@@ -2,7 +2,7 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
 SRC_URI += "file://arp-security.conf"
 
-PR := "${PR}.1"
+PRINC := "${@int(PRINC) + 1}"
 
 do_install_append() {
     install -d 0755 "${D}${sysconfdir}/sysctl.d"
