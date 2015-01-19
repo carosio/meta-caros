@@ -11,7 +11,7 @@ SRC_URI[sha256sum] = "55998adf6e10d6fb2bcacb5e3fbb52d5250e40e6651cf0592aef92cd76
 S = "${WORKDIR}/otp-OTP-${PV}"
 
 PE = "1"
-PR = "r1"
+PR = "${INC_PR}.1"
 
 SYSTEMD_SERVICE_erlang-epmd += "epmd.socket"
 

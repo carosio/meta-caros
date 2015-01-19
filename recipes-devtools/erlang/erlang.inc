@@ -15,7 +15,7 @@ export OE_LDFLAGS="-lz"
 
 inherit autotools-brokensep erlang systemd
 
-PRINC="2"
+INC_PR="r3"
 
 SYSTEMD_PACKAGES = "erlang-epmd"
 SYSTEMD_SERVICE_erlang-epmd = "epmd.service"
