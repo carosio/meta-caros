@@ -1,0 +1,22 @@
+Description: SNMP GET REQUESTS with REQUEST ID 0 triggered a memory leak that
+ is fixed by this patch
+Origin: upstream bug tracker
+Bug: http://sourceforge.net/p/net-snmp/bugs/2387/
+Forwarded: https://bugs.debian.org/746225
+Author: Roland Stigge <stigge@antcom.de>
+Reviewed-by: gregor herrmann <gregoa@debian.org>
+Last-Update: 2014-07-18
+Applied-Upstream: http://sourceforge.net/p/net-snmp/patches/1040/
+
+--- a/snmplib/snmp_api.c
++++ b/snmplib/snmp_api.c
+@@ -4998,6 +4998,9 @@
+         /*
+          * No response expected...  
+          */
++        if ((reqid == 0) && (pdu->command == SNMP_MSG_RESPONSE)) {
++            reqid = 2;
++        }
+         if (reqid) {
+             /*
+              * Free v1 or v2 TRAP PDU iff no error  
