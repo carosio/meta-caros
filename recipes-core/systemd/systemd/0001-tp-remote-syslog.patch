@@ -1,0 +1,217 @@
+diff --git a/src/journal/journald-gperf.gperf b/src/journal/journald-gperf.gperf
+index 74554c1..703d247 100644
+--- a/src/journal/journald-gperf.gperf
++++ b/src/journal/journald-gperf.gperf
+@@ -30,6 +30,7 @@ Journal.RuntimeKeepFree,    config_parse_iec_off,    0, offsetof(Server, runtime
+ Journal.MaxRetentionSec,    config_parse_sec,        0, offsetof(Server, max_retention_usec)
+ Journal.MaxFileSec,         config_parse_sec,        0, offsetof(Server, max_file_usec)
+ Journal.ForwardToSyslog,    config_parse_bool,       0, offsetof(Server, forward_to_syslog)
++Journal.RemoteSyslogTarget, config_parse_remotesyslogtarget, 0, 0
+ Journal.ForwardToKMsg,      config_parse_bool,       0, offsetof(Server, forward_to_kmsg)
+ Journal.ForwardToConsole,   config_parse_bool,       0, offsetof(Server, forward_to_console)
+ Journal.ForwardToWall,      config_parse_bool,       0, offsetof(Server, forward_to_wall)
+diff --git a/src/journal/journald-server.c b/src/journal/journald-server.c
+index 01da38b..19be96b 100644
+--- a/src/journal/journald-server.c
++++ b/src/journal/journald-server.c
+@@ -51,6 +51,7 @@
+ #include "journald-console.h"
+ #include "journald-native.h"
+ #include "journald-server.h"
++#include "in-addr-util.h"
+ 
+ #ifdef HAVE_ACL
+ #include <sys/acl.h>
+@@ -1349,6 +1350,54 @@ static int server_dispatch_sync(sd_event_source *es, usec_t t, void *userdata) {
+         return 0;
+ }
+ 
++int config_parse_remotesyslogtarget(const char *unit,
++                const char *filename, unsigned line,
++                const char *section, unsigned section_line,
++                const char *lvalue, int ltype,
++                const char *rvalue,
++                void *data, void *userdata) {
++
++        int r;
++        int family;
++        char *sep;
++        int port = 514;
++        union in_addr_union buffer;
++
++        Server *s = userdata;
++        assert(s);
++
++        assert(filename);
++        assert(section);
++        assert(lvalue);
++        assert(rvalue);
++        assert(data);
++
++        sep = strchr(rvalue, ':');
++        if (sep && sep[1]) { // \0 termination of rvalue assumed
++            if (sscanf(sep+1, "%i", &port)) {
++                log_warning("failed to parse RemoteSyslogTarget port");
++            }
++            *sep='\0';
++        }
++
++        r = in_addr_from_string_auto(rvalue, &family, &buffer);
++        if (r < 0) {
++            log_syntax(unit, LOG_ERR, filename, line, EINVAL,
++                    "RemoteSyslogTarget is invalid, ignoring assignment: %s", rvalue);
++            return 0;
++        }
++        if (family != AF_INET) {
++            log_syntax(unit, LOG_ERR, filename, line, EINVAL,
++                    "RemoteSyslogTarget is non-AF_INET, ignoring assignment: %s", rvalue);
++            // sorry for not taking care of AF_INET6 right now
++            return 0;
++        }
++        s->remote_syslog_dest.in.sin_family = family;
++        s->remote_syslog_dest.in.sin_addr = buffer.in;
++        s->remote_syslog_dest.in.sin_port = htons(port);
++        return 0;
++}
++
+ int server_schedule_sync(Server *s, int priority) {
+         int r;
+ 
+@@ -1449,7 +1498,9 @@ int server_init(Server *s) {
+         assert(s);
+ 
+         zero(*s);
+-        s->syslog_fd = s->native_fd = s->stdout_fd = s->dev_kmsg_fd = s->hostname_fd = -1;
++        s->syslog_fd = s->remote_syslog_fd = s->native_fd = s->stdout_fd = s->dev_kmsg_fd = s->hostname_fd = -1;
++        s->remote_syslog_dest.in.sin_addr.s_addr = INADDR_NONE;
++
+         s->compress = true;
+         s->seal = true;
+ 
+diff --git a/src/journal/journald-server.h b/src/journal/journald-server.h
+index 42a2235..23d5112 100644
+--- a/src/journal/journald-server.h
++++ b/src/journal/journald-server.h
+@@ -35,6 +35,8 @@
+ #include "journald-rate-limit.h"
+ #include "list.h"
+ 
++#include "socket-util.h"
++
+ typedef enum Storage {
+         STORAGE_AUTO,
+         STORAGE_VOLATILE,
+@@ -56,6 +58,7 @@ typedef struct StdoutStream StdoutStream;
+ 
+ typedef struct Server {
+         int syslog_fd;
++        int remote_syslog_fd;
+         int native_fd;
+         int stdout_fd;
+         int dev_kmsg_fd;
+@@ -99,6 +102,7 @@ typedef struct Server {
+         bool forward_to_console;
+         bool forward_to_wall;
+ 
++        union sockaddr_union remote_syslog_dest;
+         unsigned n_forward_syslog_missed;
+         usec_t last_warn_forward_syslog_missed;
+ 
+@@ -156,6 +160,13 @@ const struct ConfigPerfItem* journald_gperf_lookup(const char *key, unsigned len
+ 
+ int config_parse_storage(const char *unit, const char *filename, unsigned line, const char *section, unsigned section_line, const char *lvalue, int ltype, const char *rvalue, void *data, void *userdata);
+ 
++int config_parse_remotesyslogtarget(const char *unit,
++                const char *filename, unsigned line,
++                const char *section, unsigned section_line,
++                const char *lvalue, int ltype,
++                const char *rvalue,
++                void *data, void *userdata);
++
+ const char *storage_to_string(Storage s) _const_;
+ Storage storage_from_string(const char *s) _pure_;
+ 
+diff --git a/src/journal/journald-syslog.c b/src/journal/journald-syslog.c
+index 656dc72..2409ef1 100644
+--- a/src/journal/journald-syslog.c
++++ b/src/journal/journald-syslog.c
+@@ -22,6 +22,9 @@
+ #include <unistd.h>
+ #include <stddef.h>
+ #include <sys/epoll.h>
++#include <sys/socket.h>
++#include <netinet/in.h>
++#include <arpa/inet.h>
+ 
+ #include "systemd/sd-messages.h"
+ #include "socket-util.h"
+@@ -109,6 +112,53 @@ static void forward_syslog_iovec(Server *s, const struct iovec *iovec, unsigned
+                 log_debug("Failed to forward syslog message: %m");
+ }
+ 
++static int maybe_open_remote_syslog(Server *s) {
++        int fd;
++
++        assert(s);
++
++        if (s->remote_syslog_fd > 0) return s->remote_syslog_fd;
++
++        if (s->remote_syslog_dest.in.sin_addr.s_addr == INADDR_NONE) {
++                return 0;
++        } else {
++                log_warning("remote syslog forwarding target configured: %s",
++                                inet_ntoa(s->remote_syslog_dest.in.sin_addr));
++        }
++        if (s->remote_syslog_dest.in.sin_family != AF_INET) { // set in config
++                log_warning("non AF_INET target for remote syslog forwarding configured. ignoring.");
++                return 0;
++        }
++
++        fd = socket(AF_INET, SOCK_DGRAM|SOCK_CLOEXEC|SOCK_NONBLOCK, 0);
++        if (fd < 0) {
++                log_error("socket() failed for remote syslog forwarding: %m");
++                return 0;
++        } else {
++                s->remote_syslog_fd = fd;
++        }
++
++        return s->remote_syslog_fd;
++}
++
++static void forward_remote_syslog(Server *s, const struct iovec *iovec, unsigned n_iovec) {
++        int fd;
++        assert(s);
++        assert(iovec);
++
++        fd = maybe_open_remote_syslog(s);
++        if (!fd) return;
++        struct msghdr msghdr = {
++                .msg_iov = (struct iovec *) iovec,
++                .msg_iovlen = n_iovec,
++                .msg_name = (struct sockaddr*) &s->remote_syslog_dest,
++                .msg_namelen = sizeof(s->remote_syslog_dest),
++        };
++        sendmsg(fd, &msghdr, MSG_NOSIGNAL);
++        // this might fail and indeed, we do ignore it
++        // (logging shall not wait for network to become available)
++}
++
+ static void forward_syslog_raw(Server *s, int priority, const char *buffer, struct ucred *ucred, struct timeval *tv) {
+         struct iovec iovec;
+ 
+@@ -120,6 +170,7 @@ static void forward_syslog_raw(Server *s, int priority, const char *buffer, stru
+ 
+         IOVEC_SET_STRING(iovec, buffer);
+         forward_syslog_iovec(s, &iovec, 1, ucred, tv);
++        forward_remote_syslog(s, &iovec, 1);
+ }
+ 
+ void server_forward_syslog(Server *s, int priority, const char *identifier, const char *message, struct ucred *ucred, struct timeval *tv) {
+@@ -175,6 +226,7 @@ void server_forward_syslog(Server *s, int priority, const char *identifier, cons
+         IOVEC_SET_STRING(iovec[n++], message);
+ 
+         forward_syslog_iovec(s, iovec, n, ucred, tv);
++        forward_remote_syslog(s, iovec, n); 
+ 
+         free(ident_buf);
+ }
