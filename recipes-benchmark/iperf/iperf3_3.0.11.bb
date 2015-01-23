@@ -6,7 +6,7 @@ LIC_FILES_CHKSUM = "file://LICENSE;md5=ab59a0c3a4bc3954d1ece68ea19d77a4"
 
 PR = "r1"
 
-SRC_URI = "https://github.com/esnet/${PN}/archive/${PV}.tar.gz \
+SRC_URI = "https://github.com/esnet/${PN}/archive/${PV}.tar.gz;downloadfilename=${PN}-${PV}.tar.gz \
            file://iperf3.service \
           "
 

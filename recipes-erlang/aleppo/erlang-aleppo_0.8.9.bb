@@ -5,7 +5,7 @@ LIC_FILES_CHKSUM = "file://Emakefile;md5=df5da8c3142fc783e2ddc3695068f02e"
 
 PR = "r1"
 
-SRC_URI = "https://github.com/ChicagoBoss/aleppo/archive/v${PV}.tar.gz \
+SRC_URI = "https://github.com/ChicagoBoss/aleppo/archive/v${PV}.tar.gz;downloadfilename=aleppo-${PV}.tar.gz \
            file://tetrapakize.patch"
 
 SRC_URI[md5sum] = "ba28bba098043b6a758b319dccfdafcd"

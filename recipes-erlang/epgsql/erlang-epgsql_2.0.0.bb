@@ -5,7 +5,7 @@ LIC_FILES_CHKSUM = "file://LICENSE;md5=9f05431c7ad1940db8f544ddb9cf8b80"
 
 PR = "r1"
 
-SRC_URI = "https://github.com/epgsql/epgsql/archive/${PV}.tar.gz \
+SRC_URI = "https://github.com/epgsql/epgsql/archive/${PV}.tar.gz;downloadfilename=epgsql-${PV}.tar.gz \
            file://tetrapakize.patch"
 
 SRC_URI[md5sum] = "7d383a0ecd909dd346c1900daf9387fe"
