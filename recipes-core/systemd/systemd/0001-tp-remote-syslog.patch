@@ -1,17 +1,31 @@
 diff --git a/src/journal/journald-gperf.gperf b/src/journal/journald-gperf.gperf
-index 74554c1..703d247 100644
+index 74554c1..3451d1a 100644
 --- a/src/journal/journald-gperf.gperf
 +++ b/src/journal/journald-gperf.gperf
-@@ -30,6 +30,7 @@ Journal.RuntimeKeepFree,    config_parse_iec_off,    0, offsetof(Server, runtime
+@@ -30,6 +30,8 @@ Journal.RuntimeKeepFree,    config_parse_iec_off,    0, offsetof(Server, runtime
  Journal.MaxRetentionSec,    config_parse_sec,        0, offsetof(Server, max_retention_usec)
  Journal.MaxFileSec,         config_parse_sec,        0, offsetof(Server, max_file_usec)
  Journal.ForwardToSyslog,    config_parse_bool,       0, offsetof(Server, forward_to_syslog)
++Journal.ForwardToRemoteSyslog, config_parse_bool,    0, offsetof(Server, forward_to_remote_syslog)
 +Journal.RemoteSyslogTarget, config_parse_remotesyslogtarget, 0, 0
  Journal.ForwardToKMsg,      config_parse_bool,       0, offsetof(Server, forward_to_kmsg)
  Journal.ForwardToConsole,   config_parse_bool,       0, offsetof(Server, forward_to_console)
  Journal.ForwardToWall,      config_parse_bool,       0, offsetof(Server, forward_to_wall)
+diff --git a/src/journal/journald-native.c b/src/journal/journald-native.c
+index ac2d0ba..5c84203 100644
+--- a/src/journal/journald-native.c
++++ b/src/journal/journald-native.c
+@@ -268,7 +268,7 @@ void server_process_native_message(
+         }
+ 
+         if (message) {
+-                if (s->forward_to_syslog)
++                if (s->forward_to_syslog || s->forward_to_remote_syslog)
+                         server_forward_syslog(s, priority, identifier, message, ucred, tv);
+ 
+                 if (s->forward_to_kmsg)
 diff --git a/src/journal/journald-server.c b/src/journal/journald-server.c
-index 01da38b..19be96b 100644
+index 01da38b..978aef9 100644
 --- a/src/journal/journald-server.c
 +++ b/src/journal/journald-server.c
 @@ -51,6 +51,7 @@
@@ -22,7 +36,20 @@ index 01da38b..19be96b 100644
  
  #ifdef HAVE_ACL
  #include <sys/acl.h>
-@@ -1349,6 +1350,54 @@ static int server_dispatch_sync(sd_event_source *es, usec_t t, void *userdata) {
+@@ -1305,6 +1306,12 @@ static int server_parse_proc_cmdline(Server *s) {
+                                 log_warning("Failed to parse forward to syslog switch %s. Ignoring.", word + 35);
+                         else
+                                 s->forward_to_syslog = r;
++                } else if (startswith(word, "systemd.journald.forward_to_remote_syslog=")) {
++                        r = parse_boolean(word + 42);
++                        if (r < 0)
++                                log_warning("Failed to parse forward to remote syslog switch %s. Ignoring.", word + 42);
++                        else
++                                s->forward_to_remote_syslog = r;
+                 } else if (startswith(word, "systemd.journald.forward_to_kmsg=")) {
+                         r = parse_boolean(word + 33);
+                         if (r < 0)
+@@ -1349,6 +1356,58 @@ static int server_dispatch_sync(sd_event_source *es, usec_t t, void *userdata) {
          return 0;
  }
  
@@ -50,8 +77,12 @@ index 01da38b..19be96b 100644
 +
 +        sep = strchr(rvalue, ':');
 +        if (sep && sep[1]) { // \0 termination of rvalue assumed
-+            if (sscanf(sep+1, "%i", &port)) {
-+                log_warning("failed to parse RemoteSyslogTarget port");
++            char *endptr = (char*)"invalid"; // anything != NULL for strtoul
++            port = strtoul(sep+1, &endptr, 10);
++            if ((endptr && *endptr) || (port <= 0 || port > UINT16_MAX)) {
++                log_syntax(unit, LOG_ERR, filename, line, EINVAL,
++                        "RemoteSyslogTarget (port) is invalid. Ignoring port specification.");
++                port = 514;
 +            }
 +            *sep='\0';
 +        }
@@ -77,7 +108,7 @@ index 01da38b..19be96b 100644
  int server_schedule_sync(Server *s, int priority) {
          int r;
  
-@@ -1449,7 +1498,9 @@ int server_init(Server *s) {
+@@ -1449,7 +1508,9 @@ int server_init(Server *s) {
          assert(s);
  
          zero(*s);
@@ -89,7 +120,7 @@ index 01da38b..19be96b 100644
          s->seal = true;
  
 diff --git a/src/journal/journald-server.h b/src/journal/journald-server.h
-index 42a2235..23d5112 100644
+index 42a2235..dc3e943 100644
 --- a/src/journal/journald-server.h
 +++ b/src/journal/journald-server.h
 @@ -35,6 +35,8 @@
@@ -109,7 +140,11 @@ index 42a2235..23d5112 100644
          int native_fd;
          int stdout_fd;
          int dev_kmsg_fd;
-@@ -99,6 +102,7 @@ typedef struct Server {
+@@ -96,9 +99,11 @@ typedef struct Server {
+ 
+         bool forward_to_kmsg;
+         bool forward_to_syslog;
++        bool forward_to_remote_syslog;
          bool forward_to_console;
          bool forward_to_wall;
  
@@ -117,7 +152,7 @@ index 42a2235..23d5112 100644
          unsigned n_forward_syslog_missed;
          usec_t last_warn_forward_syslog_missed;
  
-@@ -156,6 +160,13 @@ const struct ConfigPerfItem* journald_gperf_lookup(const char *key, unsigned len
+@@ -156,6 +161,13 @@ const struct ConfigPerfItem* journald_gperf_lookup(const char *key, unsigned len
  
  int config_parse_storage(const char *unit, const char *filename, unsigned line, const char *section, unsigned section_line, const char *lvalue, int ltype, const char *rvalue, void *data, void *userdata);
  
@@ -131,8 +166,21 @@ index 42a2235..23d5112 100644
  const char *storage_to_string(Storage s) _const_;
  Storage storage_from_string(const char *s) _pure_;
  
+diff --git a/src/journal/journald-stream.c b/src/journal/journald-stream.c
+index 8a983d8..cae4ffc 100644
+--- a/src/journal/journald-stream.c
++++ b/src/journal/journald-stream.c
+@@ -98,7 +98,7 @@ static int stdout_stream_log(StdoutStream *s, const char *p) {
+         if (s->level_prefix)
+                 syslog_parse_priority(&p, &priority, false);
+ 
+-        if (s->forward_to_syslog || s->server->forward_to_syslog)
++        if (s->forward_to_syslog || s->server->forward_to_remote_syslog || s->server->forward_to_syslog)
+                 server_forward_syslog(s->server, syslog_fixup_facility(priority), s->identifier, p, &s->ucred, NULL);
+ 
+         if (s->forward_to_kmsg || s->server->forward_to_kmsg)
 diff --git a/src/journal/journald-syslog.c b/src/journal/journald-syslog.c
-index 656dc72..2409ef1 100644
+index 656dc72..5f93b6e 100644
 --- a/src/journal/journald-syslog.c
 +++ b/src/journal/journald-syslog.c
 @@ -22,6 +22,9 @@
@@ -178,7 +226,7 @@ index 656dc72..2409ef1 100644
 +        return s->remote_syslog_fd;
 +}
 +
-+static void forward_remote_syslog(Server *s, const struct iovec *iovec, unsigned n_iovec) {
++static void forward_remote_syslog_iovec(Server *s, const struct iovec *iovec, unsigned n_iovec) {
 +        int fd;
 +        assert(s);
 +        assert(iovec);
@@ -199,19 +247,256 @@ index 656dc72..2409ef1 100644
  static void forward_syslog_raw(Server *s, int priority, const char *buffer, struct ucred *ucred, struct timeval *tv) {
          struct iovec iovec;
  
-@@ -120,6 +170,7 @@ static void forward_syslog_raw(Server *s, int priority, const char *buffer, stru
- 
-         IOVEC_SET_STRING(iovec, buffer);
+@@ -122,13 +172,72 @@ static void forward_syslog_raw(Server *s, int priority, const char *buffer, stru
          forward_syslog_iovec(s, &iovec, 1, ucred, tv);
-+        forward_remote_syslog(s, &iovec, 1);
  }
  
++static int syslog_fill_iovec(SyslogMessage *sm, struct iovec *iovec, unsigned *n_iovec) {
++        enum rfc5424 {PRIVER=0, TIMESTAMP, HOSTNAME, SP_HOSTNAME, APPNAME, SP_APPNAME, PROCID, MSGID, STRUDATA, MSG};
++        int offset;
++
++        if (*n_iovec < MSG+1) return -1;
++        assert(sm);
++        /* valid rfc5424 range of prioriy is 0..191
++         * (3 bit severity from 0 to 7;
++         *  5 bit facility from 0 to 23)
++         */
++        if (sm->priority>>3>23)
++                sm->priority = (sm->priority&7) + (23<<3); /* limit facility to 0..23 */
++
++        /* priority and version */
++        zero(sm->_priver);
++        sprintf(sm->_priver, "<%i>1 ", sm->priority);
++        IOVEC_SET_STRING(iovec[PRIVER], sm->_priver);
++
++        /* timestamp */
++        if (strftime(sm->_timestamp, sizeof(sm->_timestamp), "%Y-%m-%dT%H:%M:%S%z ", &sm->timestamp) <= 0) {
++                IOVEC_SET_STRING(iovec[TIMESTAMP], "- ");
++        } else {
++                IOVEC_SET_STRING(iovec[TIMESTAMP], sm->_timestamp);
++        }
++
++        offset = 0;
++        if (strncmp("_HOSTNAME=", sm->hostname, 10) == 0) offset = 10;
++        IOVEC_SET_STRING(iovec[HOSTNAME], sm->hostname+offset);
++        IOVEC_SET_STRING(iovec[SP_HOSTNAME], " ");
++        IOVEC_SET_STRING(iovec[APPNAME], sm->appname);
++        IOVEC_SET_STRING(iovec[SP_APPNAME], " ");
++
++        if (sm->procid) {
++                snprintf(sm->_procid, sizeof(sm->_procid), "["PID_FMT"]: ", sm->procid);
++                char_array_0(sm->_procid);
++        } else {
++                sprintf(sm->_procid, "- ");
++        }
++        IOVEC_SET_STRING(iovec[PROCID], sm->_procid);
++
++        IOVEC_SET_STRING(iovec[MSGID], sm->msgid);
++        IOVEC_SET_STRING(iovec[STRUDATA], " - ");
++
++        IOVEC_SET_STRING(iovec[MSG], sm->message);
++        *n_iovec = MSG+1;
++        return *n_iovec;
++}
++
++static void syslog_init_message(SyslogMessage *sm) {
++        /* some parts of a rfc5424 syslog message may
++         * be carry a "-" if respective data is n/a.
++         */
++        sm->priority = 14;
++        sm->procid = 0;
++        sm->hostname =
++        sm->appname =
++        sm->msgid =
++        sm->message = "-";
++}
++
  void server_forward_syslog(Server *s, int priority, const char *identifier, const char *message, struct ucred *ucred, struct timeval *tv) {
-@@ -175,6 +226,7 @@ void server_forward_syslog(Server *s, int priority, const char *identifier, cons
-         IOVEC_SET_STRING(iovec[n++], message);
+-        struct iovec iovec[5];
+-        char header_priority[6], header_time[64], header_pid[16];
++        struct iovec iovec[10];
+         int n = 0;
+         time_t t;
+-        struct tm *tm;
+         char *ident_buf = NULL;
++        SyslogMessage sm;
  
-         forward_syslog_iovec(s, iovec, n, ucred, tv);
-+        forward_remote_syslog(s, iovec, n); 
+         assert(s);
+         assert(priority >= 0);
+@@ -138,43 +247,42 @@ void server_forward_syslog(Server *s, int priority, const char *identifier, cons
+         if (LOG_PRI(priority) > s->max_level_syslog)
+                 return;
+ 
+-        /* First: priority field */
+-        snprintf(header_priority, sizeof(header_priority), "<%i>", priority);
+-        char_array_0(header_priority);
+-        IOVEC_SET_STRING(iovec[n++], header_priority);
++        syslog_init_message(&sm);
++
++        /* First: priority field and VERSION */
++        sm.priority = priority;
+ 
+         /* Second: timestamp */
+         t = tv ? tv->tv_sec : ((time_t) (now(CLOCK_REALTIME) / USEC_PER_SEC));
+-        tm = localtime(&t);
+-        if (!tm)
+-                return;
+-        if (strftime(header_time, sizeof(header_time), "%h %e %T ", tm) <= 0)
++        if (!localtime_r(&t, &sm.timestamp))
+                 return;
+-        IOVEC_SET_STRING(iovec[n++], header_time);
+ 
+-        /* Third: identifier and PID */
++        if (!isempty(s->hostname_field))
++                sm.hostname = s->hostname_field;
++
+         if (ucred) {
+                 if (!identifier) {
+                         get_process_comm(ucred->pid, &ident_buf);
+                         identifier = ident_buf;
+                 }
+ 
+-                snprintf(header_pid, sizeof(header_pid), "["PID_FMT"]: ", ucred->pid);
+-                char_array_0(header_pid);
++                sm.procid = ucred->pid;
++        }
+ 
+-                if (identifier)
+-                        IOVEC_SET_STRING(iovec[n++], identifier);
++        if (identifier) sm.appname = identifier;
+ 
+-                IOVEC_SET_STRING(iovec[n++], header_pid);
+-        } else if (identifier) {
+-                IOVEC_SET_STRING(iovec[n++], identifier);
+-                IOVEC_SET_STRING(iovec[n++], ": ");
+-        }
++        sm.message = message;
+ 
+-        /* Fourth: message */
+-        IOVEC_SET_STRING(iovec[n++], message);
++        /* fill iovec from SyslogMessage struct */
++        n = sizeof(iovec)/sizeof(struct iovec);
++        if (syslog_fill_iovec(&sm, (struct iovec*)iovec, &n) <= 0)
++                return;
++
++        if (s->forward_to_syslog)
++                forward_syslog_iovec(s, iovec, n, ucred, tv);
+ 
+-        forward_syslog_iovec(s, iovec, n, ucred, tv);
++        if (s->forward_to_remote_syslog)
++                forward_remote_syslog_iovec(s, iovec, n);
  
          free(ident_buf);
  }
+@@ -361,16 +469,18 @@ void server_process_syslog_message(
+         unsigned n = 0;
+         int priority = LOG_USER | LOG_INFO;
+         char *identifier = NULL, *pid = NULL;
+-        const char *orig;
++        time_t t;
++        SyslogMessage sm;
+ 
+         assert(s);
+         assert(buf);
+ 
+-        orig = buf;
+-        syslog_parse_priority(&buf, &priority, true);
++        syslog_init_message(&sm);
+ 
+-        if (s->forward_to_syslog)
+-                forward_syslog_raw(s, priority, orig, ucred, tv);
++        if (!isempty(s->hostname_field))
++                sm.hostname = s->hostname_field;
++
++        syslog_parse_priority(&buf, &priority, true);
+ 
+         syslog_skip_date((char**) &buf);
+         syslog_parse_identifier(&buf, &identifier, &pid);
+@@ -388,6 +498,7 @@ void server_process_syslog_message(
+ 
+         if (asprintf(&syslog_priority, "PRIORITY=%i", priority & LOG_PRIMASK) >= 0)
+                 IOVEC_SET_STRING(iovec[n++], syslog_priority);
++        sm.priority = priority;
+ 
+         if (priority & LOG_FACMASK)
+                 if (asprintf(&syslog_facility, "SYSLOG_FACILITY=%i", LOG_FAC(priority)) >= 0)
+@@ -397,20 +508,44 @@ void server_process_syslog_message(
+                 syslog_identifier = strappend("SYSLOG_IDENTIFIER=", identifier);
+                 if (syslog_identifier)
+                         IOVEC_SET_STRING(iovec[n++], syslog_identifier);
++                sm.appname = identifier;
+         }
+ 
+         if (pid) {
+                 syslog_pid = strappend("SYSLOG_PID=", pid);
+                 if (syslog_pid)
+                         IOVEC_SET_STRING(iovec[n++], syslog_pid);
++                if (parse_pid(pid, &sm.procid)) sm.procid = 0;
+         }
+ 
+         message = strappend("MESSAGE=", buf);
+-        if (message)
++        if (message) {
+                 IOVEC_SET_STRING(iovec[n++], message);
++                sm.message = buf;
++        }
+ 
+         server_dispatch_message(s, iovec, n, ELEMENTSOF(iovec), ucred, tv, label, label_len, NULL, priority, 0);
+ 
++        /* timestamp for SyslogMessage struct: */
++        t = tv ? tv->tv_sec : ((time_t) (now(CLOCK_REALTIME) / USEC_PER_SEC));
++        if (!localtime_r(&t, &sm.timestamp))
++                return;
++
++        /* fill iovec from SyslogMessage struct */
++        n = sizeof(iovec)/sizeof(struct iovec);
++        if (syslog_fill_iovec(&sm, (struct iovec*)iovec, &n) <= 0)
++                return;
++
++        if (s->forward_to_syslog)
++                forward_syslog_iovec(s, iovec, n, ucred, tv);
++                /* TODO: decision between raw and rewritten rfc5424
++                 * should be configurable
++                 * forward_syslog_raw(s, priority, orig, ucred, tv);
++                 */
++
++        if (s->forward_to_remote_syslog)
++                forward_remote_syslog_iovec(s, iovec, n);
++
+         free(message);
+         free(identifier);
+         free(pid);
+diff --git a/src/journal/journald-syslog.h b/src/journal/journald-syslog.h
+index 057ea79..c7cc305 100644
+--- a/src/journal/journald-syslog.h
++++ b/src/journal/journald-syslog.h
+@@ -23,6 +23,29 @@
+ 
+ #include "journald-server.h"
+ 
++typedef struct SyslogMessage {
++/* obey rfc5424:
++ *       SYSLOG-MSG      = HEADER SP STRUCTURED-DATA [SP MSG]
++ *
++ *       HEADER          = PRI VERSION SP TIMESTAMP SP HOSTNAME
++ *                         SP APP-NAME SP PROCID SP MSGID
++ * [...]
++ */
++        int priority;
++        struct tm timestamp;
++        const char *hostname;
++        const char *appname;
++        pid_t procid;
++        const char *msgid;
++        /* we don't do STRUCTURED-DATA */
++        const char *message;
++
++        char _priver[8];
++        char _procid[16];
++        char _timestamp[64];
++
++} SyslogMessage;
++
+ int syslog_fixup_facility(int priority) _const_;
+ 
+ void syslog_parse_priority(const char **p, int *priority, bool with_facility);

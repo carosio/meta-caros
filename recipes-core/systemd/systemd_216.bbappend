@@ -1,6 +1,6 @@
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
-PR := "${PR}.2"
+PR := "${PR}.3"
 
 SRC_URI += "file://0001-tp-remote-syslog.patch \
 	    file://timesyncd.conf"
