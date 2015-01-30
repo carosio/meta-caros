@@ -1,0 +1,10 @@
+[Unit]
+Description=Updates the operating system whilst offline
+OnFailure=reboot.target
+
+[Install]
+WantedBy=system-update.target
+
+[Service]
+ExecStart=#LIBEXECDIR#/caros-offline-update
+
