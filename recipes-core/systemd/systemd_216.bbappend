@@ -5,7 +5,7 @@ PR := "${PR}.3"
 SRC_URI += "file://0001-tp-remote-syslog.patch \
 	    file://timesyncd.conf"
 
-CONFFILES_${PN} = "${sysconfdir}/systemd/timesyncd.conf"
+CONFFILES_${PN} += "${sysconfdir}/systemd/timesyncd.conf"
 
 # workarround for bug in systemd.class
 #
