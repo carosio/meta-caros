@@ -2,7 +2,7 @@ SUMMARY = "Various tools relating to the Simple Network Management Protocol"
 HOMEPAGE = "http://www.net-snmp.org/"
 LICENSE = "BSD"
 
-PR = "r1"
+PR = "r3"
 
 LIC_FILES_CHKSUM = "file://README;beginline=3;endline=8;md5=7f7f00ba639ac8e8deb5a622ea24634e"
 
@@ -10,6 +10,7 @@ DEPENDS = "openssl libnl pciutils"
 
 SRC_URI = "${SOURCEFORGE_MIRROR}/net-snmp/net-snmp-${PV}.zip \
         file://0001-Added-checks-for-printing-variables-with-wrong-types.patch \
+        file://0001-implement-partial-linux-network-namespace-support.patch \
         file://init \
         file://snmpd.conf \
         file://snmptrapd.conf \

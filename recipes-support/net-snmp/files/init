@@ -6,6 +6,7 @@ test -x /usr/sbin/snmptrapd || exit 0
 
 # Defaults
 export MIBDIRS=/usr/share/snmp/mibs
+export SNMP_NETNS=1
 SNMPDRUN=yes
 SNMPDOPTS='-Lsd -Lf /dev/null -p /var/run/snmpd.pid'
 TRAPDRUN=no

@@ -1,0 +1,523 @@
+From 39c93628cfd9a004b95df2e824f744939d2b2b0a Mon Sep 17 00:00:00 2001
+From: Tobias Hintze <thintze+git@tpip.net>
+Date: Wed, 28 Jan 2015 23:56:50 +0100
+Subject: [PATCH] implement partial linux network-namespace support
+
+---
+ README.netns                                       |  32 ++++++
+ agent/mibgroup/host/hr_network.c                   |   5 +-
+ agent/mibgroup/if-mib/data_access/interface.c      |  29 ++++-
+ .../mibgroup/if-mib/data_access/interface_ioctl.c  |  10 +-
+ .../mibgroup/if-mib/data_access/interface_linux.c  | 126 ++++++++++++++++++---
+ agent/mibgroup/if-mib/ifTable/ifTable.c            |   2 +-
+ agent/mibgroup/if-mib/ifTable/ifTable_interface.c  |   4 +-
+ .../ip-mib/data_access/defaultrouter_linux.c       |   2 +
+ include/net-snmp/data_access/interface.h           |   4 +-
+ 9 files changed, 184 insertions(+), 30 deletions(-)
+ create mode 100644 README.netns
+
+diff --git a/README.netns b/README.netns
+new file mode 100644
+index 0000000..863ef36
+--- /dev/null
++++ b/README.netns
+@@ -0,0 +1,32 @@
++This text comments on the partial support for network namespaces in net-snmp.
++
++Background:
++	When you move one of your Linux network interfaces into a network namespace,
++	net-snmp will no longer be able to collect data on that interface.
++	This modification starts to add some network-namespace awareness to the
++	if-mib part of net-snmp.
++	The new behaviour is disabled by default. You can enable it by setting
++	environment variable $SNMP_NETNS to "1".
++
++Approach:
++	* enumerate namespaces by accessing /var/run/netns/
++	* wrapping the appropriate netlink and ioctl action into a pair of setns() calls
++	* prefixing exposed interface names with the name of the netns and a "/"
++	* limit interface indices to SNMP_IFINDEX_BITS bits and use the remainder to
++	  store the netns index; this is done to achieve uniqueness for interface indices
++	  (namespace names are lexicographically sorted to get some persistence)
++
++Example Output:
++	.1.3.6.1.2.1.2.2.1.2.1 = STRING: lo
++	.1.3.6.1.2.1.2.2.1.2.2 = STRING: em1
++	.1.3.6.1.2.1.2.2.1.2.3 = STRING: docker0
++	.1.3.6.1.2.1.2.2.1.2.5 = STRING: tap0
++	.1.3.6.1.2.1.2.2.1.2.1025 = STRING: test3/lo
++	.1.3.6.1.2.1.2.2.1.2.1028 = STRING: test3/tap0
++	.1.3.6.1.2.1.2.2.1.2.2049 = STRING: test2/lo
++	.1.3.6.1.2.1.2.2.1.2.2052 = STRING: test2/tap0
++
++	(In this example there are 2 non-global namespaces "test2" and "test3".)
++
++Author / Copyright:
++	Travelping GmbH (http://travelping.com) -- Tobias Hintze <tobias.hintze+ip@travelping.com>
+diff --git a/agent/mibgroup/host/hr_network.c b/agent/mibgroup/host/hr_network.c
+index 6cce58c..f5aaabe 100644
+--- a/agent/mibgroup/host/hr_network.c
++++ b/agent/mibgroup/host/hr_network.c
+@@ -213,7 +213,7 @@ static struct ifnet HRN_ifnet;
+ #ifdef hpux11
+ static char     HRN_savedName[MAX_PHYSADDR_LEN];
+ #else
+-static char     HRN_savedName[16];
++static char     HRN_savedName[64]; /* may include namespace prefix */
+ #endif
+ static u_short  HRN_savedFlags;
+ static int      HRN_savedErrors;
+@@ -257,7 +257,8 @@ int      HRN_index;
+ void
+ Save_HR_Network_Info(void)
+ {
+-    strcpy(HRN_savedName, HRN_name);
++    strncpy(HRN_savedName, HRN_name, sizeof(HRN_savedName)-1);
++    HRN_savedName[sizeof(HRN_savedName)-1] = 0;
+ #if defined( USING_IF_MIB_IFTABLE_IFTABLE_DATA_ACCESS_MODULE )
+     HRN_savedFlags  = HRN_ifnet->os_flags;
+     HRN_savedErrors = HRN_ifnet->stats.ierrors + HRN_ifnet->stats.oerrors;
+diff --git a/agent/mibgroup/if-mib/data_access/interface.c b/agent/mibgroup/if-mib/data_access/interface.c
+index 26e31fc..29975e2 100644
+--- a/agent/mibgroup/if-mib/data_access/interface.c
++++ b/agent/mibgroup/if-mib/data_access/interface.c
+@@ -279,7 +279,7 @@ netsnmp_access_interface_name_find(oid index)
+ /**
+  */
+ netsnmp_interface_entry *
+-netsnmp_access_interface_entry_create(const char *name, oid if_index)
++netsnmp_access_interface_entry_create(const char *localname, const char *ns, oid if_index)
+ {
+     netsnmp_interface_entry *entry =
+         SNMP_MALLOC_TYPEDEF(netsnmp_interface_entry);
+@@ -290,21 +290,32 @@ netsnmp_access_interface_entry_create(const char *name, oid if_index)
+     if(NULL == entry)
+         return NULL;
+ 
+-    if(NULL != name)
+-        entry->name = strdup(name);
++    if (localname && ns) {
++		netsnmp_assert( entry->name = malloc(strlen(ns)+1+strlen(localname)+1) );
++		sprintf(entry->name, "%s/%s", ns, localname);
++	} else if (localname) {
++		entry->name = strdup(localname);
++	} else {
++		return NULL;
++	}
++
++	if(NULL != localname)
++		entry->localname = strdup(localname);
++	if(NULL != ns)
++		entry->ns = strdup(ns);
+ 
+     /*
+      * get if index, and save name for reverse lookup
+      */
+ #ifndef NETSNMP_ACCESS_INTERFACE_NOARCH
+     if (0 == if_index)
+-        entry->index = netsnmp_access_interface_index_find(name);
++        entry->index = netsnmp_access_interface_index_find(localname);
+     else
+ #endif
+         entry->index = if_index;
+-    _access_interface_entry_save_name(name, entry->index);
++    _access_interface_entry_save_name(localname, entry->index);
+ 
+-    entry->descr = strdup(name);
++	entry->descr = strdup(entry->name);
+ 
+     /*
+      * make some assumptions
+@@ -338,6 +349,12 @@ netsnmp_access_interface_entry_free(netsnmp_interface_entry * entry)
+     if (NULL != entry->name)
+         free(entry->name);
+ 
++    if (NULL != entry->localname)
++        free(entry->localname);
++
++    if (NULL != entry->ns)
++        free(entry->ns);
++
+     if (NULL != entry->descr)
+         free(entry->descr);
+ 
+diff --git a/agent/mibgroup/if-mib/data_access/interface_ioctl.c b/agent/mibgroup/if-mib/data_access/interface_ioctl.c
+index db2c245..4c21447 100644
+--- a/agent/mibgroup/if-mib/data_access/interface_ioctl.c
++++ b/agent/mibgroup/if-mib/data_access/interface_ioctl.c
+@@ -126,7 +126,7 @@ netsnmp_access_interface_ioctl_physaddr_get(int fd,
+          */
+         memset(ifrq.ifr_hwaddr.sa_data, (0), IFHWADDRLEN);
+         ifentry->paddr_len = IFHWADDRLEN;
+-        rc = _ioctl_get(fd, SIOCGIFHWADDR, &ifrq, ifentry->name);
++        rc = _ioctl_get(fd, SIOCGIFHWADDR, &ifrq, ifentry->localname);
+         if (rc < 0) {
+             memset(ifentry->paddr, (0), IFHWADDRLEN);
+             rc = -3; /* msg already logged */
+@@ -243,7 +243,7 @@ netsnmp_access_interface_ioctl_flags_get(int fd,
+ 
+     DEBUGMSGTL(("access:interface:ioctl", "flags_get\n"));
+ 
+-    rc = _ioctl_get(fd, SIOCGIFFLAGS, &ifrq, ifentry->name);
++    rc = _ioctl_get(fd, SIOCGIFFLAGS, &ifrq, ifentry->localname);
+     if (rc < 0) {
+         ifentry->ns_flags &= ~NETSNMP_INTERFACE_FLAGS_HAS_IF_FLAGS;
+         return rc; /* msg already logged */
+@@ -311,7 +311,7 @@ netsnmp_access_interface_ioctl_flags_set(int fd,
+     /*
+      * sanity checks
+      */
+-    if((NULL == ifentry) || (NULL == ifentry->name)) {
++    if((NULL == ifentry) || (NULL == ifentry->localname)) {
+         snmp_log(LOG_ERR, "invalid ifentry\n");
+         return -1;
+     }
+@@ -327,7 +327,7 @@ netsnmp_access_interface_ioctl_flags_set(int fd,
+         }
+     }
+ 
+-    strlcpy(ifrq.ifr_name, ifentry->name, sizeof(ifrq.ifr_name));
++    strlcpy(ifrq.ifr_name, ifentry->localname, sizeof(ifrq.ifr_name));
+     rc = ioctl(fd, SIOCGIFFLAGS, &ifrq);
+     if(rc < 0) {
+         snmp_log(LOG_ERR,"error getting flags\n");
+@@ -377,7 +377,7 @@ netsnmp_access_interface_ioctl_mtu_get(int fd,
+ 
+     DEBUGMSGTL(("access:interface:ioctl", "mtu_get\n"));
+ 
+-    rc = _ioctl_get(fd, SIOCGIFMTU, &ifrq, ifentry->name);
++    rc = _ioctl_get(fd, SIOCGIFMTU, &ifrq, ifentry->localname);
+     if (rc < 0) {
+         ifentry->mtu = 0;
+         return rc; /* msg already logged */
+diff --git a/agent/mibgroup/if-mib/data_access/interface_linux.c b/agent/mibgroup/if-mib/data_access/interface_linux.c
+index f196fc8..04552bf 100644
+--- a/agent/mibgroup/if-mib/data_access/interface_linux.c
++++ b/agent/mibgroup/if-mib/data_access/interface_linux.c
+@@ -6,6 +6,11 @@
+ #include <net-snmp/net-snmp-config.h>
+ #include <net-snmp/net-snmp-features.h>
+ #include <net-snmp/net-snmp-includes.h>
++#include <dirent.h> /* for namespaces /var/run/netns/... */
++
++#define SNMP_IFINDEX_BITS 10
++#define SNMP_IFINDEX_BITS_POW 1024
++#define SNMP_NETNS_NAME_MAXLENGTH 48
+ 
+ netsnmp_feature_require(fd_event_manager)
+ netsnmp_feature_require(delete_prefix_info)
+@@ -45,6 +50,11 @@ netsnmp_pci_error(char *msg, ...)
+ }
+ #endif
+ 
++/* sorting function for persistent netns order */
++static int cmpstringp(const void *p1, const void *p2) {
++	return strcmp(* (char * const *) p1, * (char * const *) p2);
++}
++
+ #ifdef HAVE_LINUX_ETHTOOL_H
+ #include <linux/types.h>
+ #ifndef HAVE_PCI_LOOKUP_NAME
+@@ -303,7 +313,7 @@ _arch_interface_flags_v4_get(netsnmp_interface_entry *entry)
+      * get the retransmit time
+      */
+     snprintf(line,sizeof(line), proc_sys_retrans_time, 4,
+-             entry->name);
++             entry->localname);
+     if (!(fin = fopen(line, "r"))) {
+         DEBUGMSGTL(("access:interface",
+                     "Failed to open %s\n", line));
+@@ -355,13 +365,13 @@ _arch_interface_description_get(netsnmp_interface_entry *entry)
+ 	return;
+ 
+     snprintf(buf, sizeof(buf),
+-	     "/sys/class/net/%s/device/vendor", entry->name);
++	     "/sys/class/net/%s/device/vendor", entry->localname);
+ 
+     if (!sysfs_get_id(buf, &vendor_id))
+ 	return;
+ 
+     snprintf(buf, sizeof(buf),
+-	     "/sys/class/net/%s/device/device", entry->name);
++	     "/sys/class/net/%s/device/device", entry->localname);
+ 
+     if (!sysfs_get_id(buf, &device_id))
+ 	return;
+@@ -395,7 +405,7 @@ _arch_interface_flags_v6_get(netsnmp_interface_entry *entry)
+      * get the retransmit time
+      */
+     snprintf(line,sizeof(line), proc_sys_retrans_time, 6,
+-             entry->name);
++             entry->localname);
+     if (!(fin = fopen(line, "r"))) {
+         DEBUGMSGTL(("access:interface",
+                     "Failed to open %s\n", line));
+@@ -412,7 +422,7 @@ _arch_interface_flags_v6_get(netsnmp_interface_entry *entry)
+      * get the forwarding status
+      */
+     snprintf(line, sizeof(line), "/proc/sys/net/ipv6/conf/%s/forwarding",
+-             entry->name);
++             entry->localname);
+     if (!(fin = fopen(line, "r"))) {
+         DEBUGMSGTL(("access:interface",
+                     "Failed to open %s\n", line));
+@@ -428,7 +438,7 @@ _arch_interface_flags_v6_get(netsnmp_interface_entry *entry)
+     /*
+      * get the reachable time
+      */
+-    snprintf(line, sizeof(line), proc_sys_basereachable_time, 6, entry->name);
++    snprintf(line, sizeof(line), proc_sys_basereachable_time, 6, entry->localname);
+     if (!(fin = fopen(line, "r"))) {
+         DEBUGMSGTL(("access:interface",
+                     "Failed to open %s\n", line));
+@@ -546,7 +556,7 @@ _parse_stats(netsnmp_interface_entry *entry, char *stats, int expected)
+     /*
+      * linux previous to 1.3.~13 may miss transmitted loopback pkts: 
+      */
+-    if (!strcmp(entry->name, "lo") && rec_pkt > 0 && !snd_pkt)
++    if (!strcmp(entry->localname, "lo") && rec_pkt > 0 && !snd_pkt)
+         snd_pkt = rec_pkt;
+     
+     /*
+@@ -592,9 +602,9 @@ _parse_stats(netsnmp_interface_entry *entry, char *stats, int expected)
+  * @retval -2 could not open /proc/net/dev
+  * @retval -3 could not create entry (probably malloc)
+  */
+-int
+-netsnmp_arch_interface_container_load(netsnmp_container* container,
+-                                      u_int load_flags)
++static int
++netsnmp_arch_interface_container_load_entry(netsnmp_container* container,
++                                      u_int load_flags, const char *ns, int nsindex, const char *ifprefix)
+ {
+     FILE           *devin;
+     char            line[256];
+@@ -605,6 +615,8 @@ netsnmp_arch_interface_container_load(netsnmp_container* container,
+     netsnmp_container *addr_container;
+ #endif
+ 
++	netsnmp_assert(nsindex < SNMP_IFINDEX_BITS_POW);
++
+     DEBUGMSGTL(("access:interface:container:arch", "load (flags %x)\n",
+                 load_flags));
+ 
+@@ -613,7 +625,15 @@ netsnmp_arch_interface_container_load(netsnmp_container* container,
+         return -1;
+     }
+ 
++	int ns_prev_fd, ns_fd;
++	if (ns) {
++		ns_prev_fd = open("/proc/self/ns/net", 0/*O_RDONLY*/);
++		ns_fd = open(ns, 0/*O_RDONLY*/);
++		setns(ns_fd, 0);
++	}
++
+     if (!(devin = fopen("/proc/net/dev", "r"))) {
++		if (ns) { close(ns_fd); setns(ns_prev_fd, 0); close(ns_prev_fd); }
+         DEBUGMSGTL(("access:interface",
+                     "Failed to load Interface Table (linux1)\n"));
+         NETSNMP_LOGONCE((LOG_ERR, "cannot open /proc/net/dev ...\n"));
+@@ -625,6 +645,7 @@ netsnmp_arch_interface_container_load(netsnmp_container* container,
+      */
+     fd = socket(AF_INET, SOCK_DGRAM, 0);
+     if(fd < 0) {
++		if (ns) { close(ns_fd); setns(ns_prev_fd, 0); close(ns_prev_fd); }
+         snmp_log(LOG_ERR, "could not create socket\n");
+         fclose(devin);
+         return -2;
+@@ -698,7 +719,13 @@ netsnmp_arch_interface_container_load(netsnmp_container* container,
+          */
+         *stats++ = 0; /* null terminate name */
+ 
+-        if_index = netsnmp_arch_interface_index_find(ifstart);
++		/* interface index is composed of:
++		 * SNMP_IFINDEX_BITS (least significant) bits: the netns local iface index,
++		 * remaining bits: ns-index in the sorted list of namespaces
++		 * (this obviously gives a limit of 2^SNMP_IFINDEX_BITS interfaces
++		 * per network-namespace */
++        if_index = netsnmp_arch_interface_index_find(ifstart) | (nsindex << SNMP_IFINDEX_BITS);
++		DEBUGMSGTL(("access:interface:arch:netns", "netns id: %s -> %i\n", ns, if_index));
+ 
+         /*
+          * set address type flags.
+@@ -724,8 +751,18 @@ netsnmp_arch_interface_container_load(netsnmp_container* container,
+             continue;
+         }
+ 
+-        entry = netsnmp_access_interface_entry_create(ifstart, 0);
++		if (ifprefix && *ifprefix) {
++			entry = netsnmp_access_interface_entry_create(ifstart, ifprefix, if_index);
++			if (entry) {
++				DEBUGMSGTL(("access:interface:arch:netns", "found interface [%s] @%i in netns [%s]\n",
++							entry->localname, entry->index, entry->ns));
++			}
++
++		} else {
++			entry = netsnmp_access_interface_entry_create(ifstart, NULL, if_index);
++		}
+         if(NULL == entry) {
++			if (ns) { close(ns_fd); setns(ns_prev_fd, 0); close(ns_prev_fd); }
+ #ifdef NETSNMP_ENABLE_IPV6
+             netsnmp_access_ipaddress_container_free(addr_container, 0);
+ #endif
+@@ -780,7 +817,7 @@ netsnmp_arch_interface_container_load(netsnmp_container* container,
+             
+             for (pm = lmatch_if; pm->mi_name; pm++) {
+                 len = strlen(pm->mi_name);
+-                if (0 == strncmp(entry->name, pm->mi_name, len)) {
++                if (0 == strncmp(entry->localname, pm->mi_name, len)) {
+                     entry->type = pm->mi_type;
+                     break;
+                 }
+@@ -830,7 +867,7 @@ netsnmp_arch_interface_container_load(netsnmp_container* container,
+                 defaultspeed = 0;
+             }
+             speed = netsnmp_linux_interface_get_if_speed(fd,
+-                    entry->name, defaultspeed);
++                    entry->localname, defaultspeed);
+             if (speed > 0xffffffffL) {
+                 entry->speed = 0xffffffff;
+             } else
+@@ -894,7 +931,9 @@ netsnmp_arch_interface_container_load(netsnmp_container* container,
+          * add to container
+          */
+         CONTAINER_INSERT(container, entry);
++		snmp_log(LOG_DEBUG, "interface inserted [%s / %s]\n",ns, ifstart);
+     }
++	if (ns) { close(ns_fd); setns(ns_prev_fd, 0); close(ns_prev_fd); }
+ #ifdef NETSNMP_ENABLE_IPV6
+     netsnmp_access_ipaddress_container_free(addr_container, 0);
+ #endif
+@@ -903,6 +942,65 @@ netsnmp_arch_interface_container_load(netsnmp_container* container,
+     return 0;
+ }
+ 
++int
++netsnmp_arch_interface_container_load(netsnmp_container* container,
++                                      u_int load_flags)
++{
++	int rc = 0;
++	struct dirent *dent;
++	DIR *dir;
++	char ns[128];
++	char nsdir[] = "/var/run/netns/";
++	char *nstable[SNMP_IFINDEX_BITS_POW];
++	int nsindex=0;
++
++	netsnmp_assert(SNMP_NETNS_NAME_MAXLENGTH <= sizeof(ns)-sizeof(nsdir));
++
++	const char *SNMP_NETNS = getenv("SNMP_NETNS");
++
++	if (SNMP_NETNS && (SNMP_NETNS[0]!='0') && (SNMP_NETNS[0]!='n')) {
++		dir = opendir(nsdir);
++		if (dir) {
++			while ((dent = readdir(dir)) != NULL) {
++				if (strcmp(dent->d_name, ".") == 0) continue;
++				if (strcmp(dent->d_name, "..") == 0) continue;
++				if (strlen(dent->d_name) + 1 >= SNMP_NETNS_NAME_MAXLENGTH) {
++					snmp_log(LOG_ERR, "skipping one netns (name limit: %i)\n", SNMP_NETNS_NAME_MAXLENGTH);
++					continue;
++				}
++				if (nsindex >= sizeof(nstable)/sizeof(char*) - 1) { /* nstable[] is NULL terminated */
++					snmp_log(LOG_ERR,
++							"netsnmp_arch_interface_container_load: "
++							"too many network namespaces: %i.\n", nsindex);
++					break;
++				}
++				snprintf(ns, sizeof(ns)-1, "%s%s", nsdir, dent->d_name);
++				ns[sizeof(ns)-1] = '\0';
++				nstable[nsindex++] = strdup(ns);
++			}
++			nstable[nsindex]=NULL;
++			closedir(dir);
++
++			qsort(&nstable, nsindex, sizeof(char*), cmpstringp);
++
++			for (nsindex=0; ; nsindex++) {
++				if (NULL == nstable[nsindex]) break;
++				DEBUGMSGTL(("access:interface:arch:netns", "following netns [%s] netns#%i\n", ns, nsindex));
++				rc |= netsnmp_arch_interface_container_load_entry(
++						container, load_flags, nstable[nsindex], nsindex+1, nstable[nsindex] + sizeof(nsdir)-1);
++						/* index 0 is reserved for global ns (this nsindex+1) */
++			}
++		} else {
++			DEBUGMSGTL(("access:interface:arch:netns", "unable to read netns dir [%s]\n", nsdir));
++		}
++	} else {
++			DEBUGMSGTL(("access:interface:arch:netns", "netns disabled by env [%s]\n", SNMP_NETNS));
++	}
++	rc |= netsnmp_arch_interface_container_load_entry(container, load_flags, NULL, 0, NULL);
++	DEBUGMSGTL(("access:interface:arch:netns", "leaving netsnmp_arch_interface_container_load\n"));
++	return rc;
++}
++
+ #ifndef NETSNMP_FEATURE_REMOVE_INTERFACE_ARCH_SET_ADMIN_STATUS
+ int
+ netsnmp_arch_set_admin_status(netsnmp_interface_entry * entry,
+diff --git a/agent/mibgroup/if-mib/ifTable/ifTable.c b/agent/mibgroup/if-mib/ifTable/ifTable.c
+index d9b7252..1340ba4 100644
+--- a/agent/mibgroup/if-mib/ifTable/ifTable.c
++++ b/agent/mibgroup/if-mib/ifTable/ifTable.c
+@@ -202,7 +202,7 @@ ifTable_rowreq_ctx_init(ifTable_rowreq_ctx * rowreq_ctx,
+      */
+     if (NULL == user_init_ctx)
+         rowreq_ctx->data.ifentry =
+-            netsnmp_access_interface_entry_create(NULL, 0);
++            netsnmp_access_interface_entry_create(NULL, NULL, 0);
+     else
+         rowreq_ctx->data.ifentry =
+             (netsnmp_interface_entry *) user_init_ctx;
+diff --git a/agent/mibgroup/if-mib/ifTable/ifTable_interface.c b/agent/mibgroup/if-mib/ifTable/ifTable_interface.c
+index 41d38ee..00120a7 100644
+--- a/agent/mibgroup/if-mib/ifTable/ifTable_interface.c
++++ b/agent/mibgroup/if-mib/ifTable/ifTable_interface.c
+@@ -1416,7 +1416,9 @@ _mfd_ifTable_undo_setup_allocate(ifTable_rowreq_ctx *rowreq_ctx)
+         else {
+             rowreq_ctx->undo->ifentry =
+                 netsnmp_access_interface_entry_create(rowreq_ctx->data.ifentry->
+-                                                      name,
++                                                      localname,
++                                                      rowreq_ctx->data.ifentry->
++                                                      ns,
+                                                       rowreq_ctx->data.ifentry->
+                                                       index);
+             if (NULL == rowreq_ctx->undo->ifentry) {
+diff --git a/agent/mibgroup/ip-mib/data_access/defaultrouter_linux.c b/agent/mibgroup/ip-mib/data_access/defaultrouter_linux.c
+index 038016a..b501224 100644
+--- a/agent/mibgroup/ip-mib/data_access/defaultrouter_linux.c
++++ b/agent/mibgroup/ip-mib/data_access/defaultrouter_linux.c
+@@ -115,7 +115,9 @@ _load(netsnmp_container *container)
+     /*
+      * Open a netlink socket
+      */
++
+     nlsk = socket(AF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE);
++
+     if (nlsk < 0) {
+         snmp_log(LOG_ERR, "Could not open netlink socket : %s\n",
+                  strerror(errno));
+diff --git a/include/net-snmp/data_access/interface.h b/include/net-snmp/data_access/interface.h
+index 20013ed..7f66ea8 100644
+--- a/include/net-snmp/data_access/interface.h
++++ b/include/net-snmp/data_access/interface.h
+@@ -148,6 +148,8 @@ typedef struct netsnmp_interface_entry_s {
+      *  Typically constant for a given interface
+      */
+     char   *name;
++    char   *localname;
++    char   *ns;
+     char   *descr;
+     int     type;
+     u_int   speed;
+@@ -239,7 +241,7 @@ void netsnmp_access_interface_container_free(netsnmp_container *container,
+  * create/free an ifentry
+  */
+ netsnmp_interface_entry *
+-netsnmp_access_interface_entry_create(const char *name, oid if_index);
++netsnmp_access_interface_entry_create(const char *localname, const char *ns, oid if_index);
+ 
+ void netsnmp_access_interface_entry_free(netsnmp_interface_entry * entry);
+ 
+-- 
+1.9.1
+
