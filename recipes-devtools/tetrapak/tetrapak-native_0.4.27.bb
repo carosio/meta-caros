@@ -8,8 +8,8 @@ PR = "r1"
 
 SRC_URI = "https://github.com/travelping/tetrapak/archive/${SRCREV}.tar.gz;downloadfilename=tetrapak-${SRCREV}.tar.gz \
            file://plugin_auto_search_false.patch;apply=yes"
-SRC_URI[md5sum] = "47008bc56816ad2490e9fadc1bbb9a90"
-SRC_URI[sha256sum] = "edd7c4205803fc34ad82fd2d33ccc7ca2c6e508231c84ab1fd7bd23908500338"
+SRC_URI[md5sum] = "e347844013ac1c96424f44fb009c6a60"
+SRC_URI[sha256sum] = "de9dda3dd78b956c3cf125baf7b8ab9cfa4728925207e8bd4b1b117851b83b57"
 
 S = "${WORKDIR}/tetrapak-${SRCREV}"
 
