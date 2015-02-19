@@ -151,6 +151,7 @@ FILES_${PN} = '${erlbindir}/erlc \
                ${erldir}/erts-*/bin/child_setup.hybrid \
                ${erldir}/releases \
                ${erllibdir}/erl_interface-*/bin/erl_call \
+               ${erllibdir}/erl_interface-*/ebin \
                ${erllibdir}/erts-*/ebin \
                ${erllibdir}/compiler-*/ebin \
                ${erllibdir}/kernel-*/ebin \
