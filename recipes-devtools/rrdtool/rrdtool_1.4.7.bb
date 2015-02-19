@@ -8,7 +8,7 @@ DEPENDS = "zlib glib-2.0 libxml2"
 
 PR = "r3"
 
-SRC_URI = "http://oss.oetiker.ch/rrdtool/pub/rrdtool-${PV}.tar.gz \
+SRC_URI = "https://dl.caros.io/mirror/rrdtool-${PV}.tar.gz \
            file://0001-rrdtool-eradicate-tcl-support.patch \
            file://remove_hardcoded_xml_include.patch \
 "
