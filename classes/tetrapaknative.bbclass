@@ -12,5 +12,6 @@ do_compile() {
 }
 
 do_install() {
+    rm -rfv ./patches
     ERL_LIBS=${erllibs} tetrapak install -prefix ${D}/${base_prefix}
 }
