@@ -17,6 +17,8 @@ CONFFILES_${PN} += "${sysconfdir}/systemd/timesyncd.conf"
 
 SYSTEMD_PACKAGES += "${PN}-binfmt"
 
+PACKAGECONFIG += "microhttpd"
+
 do_install_append() {
 	install -m 0644 ${WORKDIR}/timesyncd.conf ${D}${sysconfdir}/systemd/timesyncd.conf
 
