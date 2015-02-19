@@ -14,6 +14,7 @@ do_compile() {
 
 do_install() {
     bbnote "Running tetrapak install -prefix ${D} ${TETRAPAK_OPTS}"
+    rm -rfv ./patches
     ERL_LIBS=${erllibs} tetrapak install -prefix ${D} ${TETRAPAK_OPTS}
 }
 
