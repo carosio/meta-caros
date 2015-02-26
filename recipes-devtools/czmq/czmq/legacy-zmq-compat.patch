@@ -1,0 +1,24 @@
+Fix compilation against zmq-2.1
+
+diff -Naurw czmq-2.2.0-orig/src/zbeacon.c czmq-2.2.0/src/zbeacon.c
+--- czmq-2.2.0-orig/src/zbeacon.c	2015-02-26 23:41:28.900472144 +0100
++++ czmq-2.2.0/src/zbeacon.c	2015-02-26 23:44:14.208473363 +0100
+@@ -198,6 +198,10 @@
+ void
+ zbeacon_test (bool verbose)
+ {
++#if ( (ZMQ_VERSION_MAJOR == 2) && (ZMQ_VERSION_MINOR == 1) )
++	return; // zsocket_set_rcvtimeo undeclared
++#else
++
+     printf (" * zbeacon: ");
+ 
+     //  @selftest
+@@ -290,6 +294,7 @@
+     zctx_destroy (&ctx);
+     //  @end
+     printf ("OK\n");
++#endif
+ }
+ 
+ 
