@@ -1,8 +1,9 @@
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
-PR := "${PR}.3"
+PR := "${PR}.4"
 
 SRC_URI += "file://0001-tp-remote-syslog.patch \
+	file://journal-remote-fix.patch \
 	    file://timesyncd.conf"
 
 CONFFILES_${PN} += "${sysconfdir}/systemd/timesyncd.conf"

@@ -1,0 +1,39 @@
+From 22259a00fdb54dee818eeb1019421e2c516a330d Mon Sep 17 00:00:00 2001
+From: Jonathan Liu <net147@gmail.com>
+Date: Wed, 24 Sep 2014 23:59:06 +1000
+Subject: journal-remote: initialize writer hashmap before use
+
+https://bugs.freedesktop.org/show_bug.cgi?id=83682
+
+[zj: move the initalization even earlier, before any sockets are
+     looked at.]
+
+diff --git a/src/journal-remote/journal-remote.c b/src/journal-remote/journal-remote.c
+index f06c2cb..ad87783 100644
+--- a/src/journal-remote/journal-remote.c
++++ b/src/journal-remote/journal-remote.c
+@@ -819,6 +819,10 @@ static int remoteserver_init(RemoteServer *s,
+         assert(server == NULL);
+         server = s;
+ 
++        r = init_writer_hashmap(s);
++        if (r < 0)
++                return r;
++
+         n = sd_listen_fds(true);
+         if (n < 0) {
+                 log_error("Failed to read listening file descriptors from environment: %s",
+@@ -942,10 +946,6 @@ static int remoteserver_init(RemoteServer *s,
+                 return -EINVAL;
+         }
+ 
+-        r = init_writer_hashmap(s);
+-        if (r < 0)
+-                return r;
+-
+         if (arg_split_mode == JOURNAL_WRITE_SPLIT_NONE) {
+                 /* In this case we know what the writer will be
+                    called, so we can create it and verify that we can
+-- 
+cgit v0.10.2
+
