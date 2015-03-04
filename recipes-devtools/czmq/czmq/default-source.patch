@@ -1,0 +1,19 @@
+Fix compilation with recent glibc-2.20
+
+see https://github.com/zeromq/czmq/pull/648
+(already landed upstream)
+
+diff -Naurw czmq-2.2.0-orig/include/czmq_prelude.h czmq-2.2.0/include/czmq_prelude.h
+--- czmq-2.2.0-orig/include/czmq_prelude.h	2015-02-26 23:19:49.396462565 +0100
++++ czmq-2.2.0/include/czmq_prelude.h	2015-02-26 23:28:20.404466332 +0100
+@@ -152,8 +152,8 @@
+ #   ifndef __NO_CTYPE
+ #   define __NO_CTYPE                   //  Suppress warnings on tolower()
+ #   endif
+-#   ifndef _BSD_SOURCE
+-#   define _BSD_SOURCE                  //  Include stuff from 4.3 BSD Unix
++#   ifndef _DEFAULT_SOURCE
++#   define _DEFAULT_SOURCE                  //  Include stuff from 4.3 BSD Unix
+ #   endif
+ #elif (defined (Mips))
+ #   define __UTYPE_MIPS
