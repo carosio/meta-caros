@@ -11,8 +11,19 @@ S = "${WORKDIR}/git"
 
 inherit tetrapak
 
-DEPENDS = "erlang-lager erlang-cowboy erlang-erlzmq erlang-ex-uri erlang-ibrowse erlang-tetrapak-yang"
-RDEPENDS_${PN} += "erlang-lager erlang-cowboy erlang-erlzmq erlang-ex-uri erlang-ibrowse erlang-yang"
+DEPENDS += "erlang-cowboy"
+DEPENDS += "erlang-erlzmq"
+DEPENDS += "erlang-ex-uri"
+DEPENDS += "erlang-ibrowse"
+DEPENDS += "erlang-lager"
+DEPENDS += "erlang-tetrapak-yang"
+
+RDEPENDS_${PN} += "erlang-cowboy"
+RDEPENDS_${PN} += "erlang-erlzmq"
+RDEPENDS_${PN} += "erlang-ex-uri"
+RDEPENDS_${PN} += "erlang-ibrowse"
+RDEPENDS_${PN} += "erlang-lager"
+RDEPENDS_${PN} += "erlang-yang"
 
 python () {
     erlang_def_package("hello", "hello-*", "ebin priv", "src include README.md examples NEWS.md", d)
