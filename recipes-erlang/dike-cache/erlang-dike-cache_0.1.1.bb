@@ -6,8 +6,8 @@ LIC_FILES_CHKSUM = "file://LICENSE;md5=65d26fcc2f35ea6a181ac777e42db1ea"
 PR = "r2"
 
 SRC_URI = "https://github.com/travelping/dike_cache/archive/${PV}.tar.gz;downloadfilename=${PN}-${PV}.tar.gz"
-SRC_URI[md5sum] = "4c0df3dfe09cc033b304977b2a388394"
-SRC_URI[sha256sum] = "2d7b701448581d99b44e9d60354efda3c319528e4316940e7f7c3bc168c43f1d"
+SRC_URI[md5sum] = "34036244629ad02278371d6b6da785da"
+SRC_URI[sha256sum] = "60abede5c49c8d996a146aa5cac4edee1c81766c8323ceededd2f1d4f07f0cb9"
 
 S = "${WORKDIR}/dike_cache-${PV}"
 
