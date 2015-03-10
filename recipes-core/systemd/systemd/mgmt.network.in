@@ -1,0 +1,21 @@
+# Basic DHCP-configuration for interface @@MGMT_IF@@
+# See http://www.freedesktop.org/software/systemd/man/systemd.network.html
+# for available configuration options
+[Match]
+Name = @@MGMT_IF@@
+
+[Network]
+# Enables DHCPv4 and/or DHCPv6 support.
+# Accepts "yes", "no", "ipv4", or "ipv6".
+DHCP = yes
+
+# A static IPv4 or IPv6 address and its
+# prefix length, separated by a "/" character.
+# Specify this key more than once to configure several addresses.
+# Address = 192.168.0.2/24
+
+# The gateway address.
+# Gateway = 192.168.0.1
+
+# A DNS server address.
+# DNS = 192.168.0.1

@@ -1,12 +1,21 @@
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
-PR := "${PR}.4"
+PR := "${PR}.5"
 
-SRC_URI += "file://0001-tp-remote-syslog.patch \
+SRC_URI += " \
+	file://0001-tp-remote-syslog.patch \
+	file://mgmt.network.in \
 	file://journal-remote-fix.patch \
-	    file://timesyncd.conf"
+	file://timesyncd.conf \
+"
 
 CONFFILES_${PN} += "${sysconfdir}/systemd/timesyncd.conf"
+CONFFILES_${PN} += "${sysconfdir}/systemd/network/mgmt.network"
+
+MGMT_IF ?= "eth0"
+MGMT_IF_vmware ?= "ven0"
+MGMT_IF_lanner-fw8758 ?= "ge0p5"
+
 
 # workarround for bug in systemd.class
 #
@@ -23,6 +32,11 @@ PACKAGECONFIG += "microhttpd"
 do_install_append() {
 	install -m 0644 ${WORKDIR}/timesyncd.conf ${D}${sysconfdir}/systemd/timesyncd.conf
 
-        # Remove virtualization condition from timesyncd service
+	# Remove virtualization condition from timesyncd service
 	sed -i -e '/ConditionVirtualization=/d' ${D}${systemd_unitdir}/system/systemd-timesyncd.service
+
+	# install default network configuration
+	install -d -m 0755 "${D}${sysconfdir}/systemd/network/"
+	install -m 0644 ${WORKDIR}/mgmt.network.in ${D}${sysconfdir}/systemd/network/mgmt.network
+	sed -i -e "s/@@MGMT_IF@@/${MGMT_IF}/" ${D}${sysconfdir}/systemd/network/mgmt.network
 }
