@@ -3,9 +3,9 @@ SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=9445ab65d571cee0b2d6e3b4e35953cc"
 
-PR = "r1"
+PR = "r2"
 
-SRC_URI = "https://github.com/ChicagoBoss/boss_db/archive/v${PV}.tar.gz;filename=boss_db-${PV}.tar.gz \
+SRC_URI = "https://github.com/ChicagoBoss/boss_db/archive/v${PV}.tar.gz;dowloadfilename=${P}.tar.gz \
            file://config.ini"
 SRC_URI[md5sum] = "8b3be547ff2098bee6e38b605c191940"
 SRC_URI[sha256sum] = "ee67842af25c312f419923196ab9bee93aef308e30eaa7d170c5306a6cdc8128"
