@@ -7,6 +7,7 @@ SRC_URI += " \
 	file://mgmt.network.in \
 	file://journal-remote-fix.patch \
 	file://timesyncd.conf \
+	file://multiline-fix.patch \
 "
 
 CONFFILES_${PN} += "${sysconfdir}/systemd/timesyncd.conf"
