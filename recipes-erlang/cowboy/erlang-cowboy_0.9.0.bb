@@ -3,7 +3,7 @@ SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=8a87a00323cbb9706ca2b35e5107b437"
 
-PR = "r1"
+PR = "r2"
 
 SRCREV = "${PV}"
 
@@ -20,7 +20,6 @@ TETRAPAK_OPTS += "-o package.exclude '^\.erlang\.mk\.packages\.v1|^\.gitignore|^
 inherit tetrapak
 
 DEPENDS +=  "erlang-ranch erlang-cowlib"
-RDEPENDS_${PN} += "erlang-ranch erlang-cowlib"
 
 python () {
     erlang_def_package("cowboy", "cowboy*", "ebin", "examples README.md src test", d)

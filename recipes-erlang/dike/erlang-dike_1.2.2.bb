@@ -7,11 +7,11 @@ SRC_URI = "https://github.com/travelping/dike/archive/${PV}.tar.gz;downloadfilen
 SRC_URI[md5sum] = "df5074d4f9c10b39c8f18c760b3db472"
 SRC_URI[sha256sum] = "0a9fa9078c38edb36adba90ac417d3ce9727d53eda1d851c20674cce6a3a3078"
 
-PR = "r1"
+PR = "r2"
 
 DEPENDS = "erlang-regine erlang-emdb erlang-lager"
-RDEPENDS_${PN} += "erlang-regine erlang-emdb erlang-lager"
-RDEPENDS_${PN}-dev += "erlang-regine erlang-emdb erlang-lager"
+RDEPENDS_${PN} += "erlang-emdb"
+RDEPENDS_${PN}-dev += "erlang-emdb"
 
 S = "${WORKDIR}/dike-${PV}"
 
