@@ -61,12 +61,14 @@ def erlang_def_package(app, appdir, inc, dev, d):
 ERLRUN = "${STAGING_BINDIR_NATIVE}/erl -noshell"
 
 python emit_erlang_deps() {
+    import copy
 
     def pkg_add_erlang_deps(pkg, d):
         def app_to_pkg(prefix, app):
             return prefix + '-' + app.lower().replace('_', '-')
 
         erlrun = d.expand("${ERLRUN}")
+        pn = d.getVar('PN', True)
         pkgdest = d.getVar('PKGDEST', True)
         path = os.path.join(pkgdest, pkg)
         pkg_prefix = pkg.split('-')[0]
@@ -78,29 +80,48 @@ python emit_erlang_deps() {
                     path = os.path.join(root,file)
                     apps.append(path)
 
-        depends = bb.utils.explode_dep_versions(d.getVar('RDEPENDS_' + pkg, True) or "")
-        provides = bb.utils.explode_dep_versions(d.getVar('RPROVIDES_' + pkg, True) or "")
+        rdepends = bb.utils.explode_dep_versions(d.getVar('RDEPENDS_' + pkg, True) or "")
+        rprovides = bb.utils.explode_dep_versions(d.getVar('RPROVIDES_' + pkg, True) or "")
+
+        dup_rdepends = []
+        ordeps = copy.deepcopy(rdepends)
 
         appnames = []
         for app in apps:
-           escript = '{ok, C} = file:consult("'+app+'"), {_, AppName, Props} = lists:keyfind(application, 1, C), Apps = proplists:get_value(applications, Props, []) ++ proplists:get_value(included_applications, Props, []), io:format("~s ~s~n", [AppName, string:join([atom_to_list(X) || X <- Apps], " ")]).'
+           escript = '{ok, C} = file:consult("'+app+'"), {_, AppName, Props} = lists:keyfind(application, 1, C), Apps = lists:usort(proplists:get_value(applications, Props, []) ++ proplists:get_value(included_applications, Props, [])), io:format("~s ~s~n", [AppName, string:join([atom_to_list(X) || X <- Apps], " ")]).'
            deps = os.popen(erlrun + " -eval '" + escript + "' -s erlang halt").readlines()[0].split()
            appname = app_to_pkg(pkg_prefix, deps.pop(0))
-           if appname not in provides:
-               provides[appname] = ""
+           if appname not in rprovides:
+               rprovides[appname] = ""
+           else:
+               msg = pn + ": RPROVIDES " + appname + " added by erlang.bbclass already present"
+               if "erlang-rprovides" in (d.getVar('INSANE_SKIP_' + pn, True) or "").split():
+                   bb.note("Package %s skipping QA tests: erlang-rprovides" % pn)
+               else:
+                   package_qa_handle_error("erlang-rprovides", msg, d)
 
            for dep in deps:
                dep = app_to_pkg(pkg_prefix, dep)
-               if dep not in depends:
-                   depends[dep] = ""
+               if dep not in rdepends:
+                   rdepends[dep] = ""
+               if dep in ordeps:
+                   dup_rdepends.append(dep)
 
-        d.setVar('RDEPENDS_%s' % pkg, bb.utils.join_deps(depends, commasep=False))
-        d.setVar('RPROVIDES_%s' % pkg, bb.utils.join_deps(provides, commasep=False))
+        if dup_rdepends != []:
+            msg = pn + ": " +  pkg + " RDEPENDS added by erlang.bbclass already present"
+            if "erlang-rdepends" in (d.getVar('INSANE_SKIP_' + pn, True) or "").split():
+                bb.note("Package %s skipping QA tests: erlang-rdepends" % pn)
+            else:
+                for f in dup_rdepends:
+                    msg = msg + "\n  " + f
+                package_qa_handle_error("erlang-rdepends", msg, d)
+
+        d.setVar('RDEPENDS_%s' % pkg, bb.utils.join_deps(rdepends, commasep=False))
+        d.setVar('RPROVIDES_%s' % pkg, bb.utils.join_deps(rprovides, commasep=False))
 
     packages = d.getVar('PACKAGES', True)
-    expostfixs = (d.getVar('ERLDEPCHAIN_EXCLUDEPOST', True) or '-dev -dbg -staticdev -doc').split()
+    expostfixs = tuple((d.getVar('ERLDEPCHAIN_EXCLUDEPOST', True) or '-dev -dbg -staticdev -doc').split())
     for pkg in packages.split():
-        for postfix in expostfixs:
-            if not pkg.endswith(postfix):
-                pkg_add_erlang_deps(pkg, d)
+        if not pkg.endswith(expostfixs):
+            pkg_add_erlang_deps(pkg, d)
 }
