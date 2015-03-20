@@ -1,7 +1,7 @@
-DESCRIPTION = "TPLINO feed configuration"
+DESCRIPTION = "CarOS feed configuration"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://${COREBASE}/meta/COPYING.MIT;md5=3da9cfbcb788c80a0384361b4de20420"
-PR = "r6"
+PR = "r7"
 INHIBIT_DEFAULT_DEPS = "1"
 
 #FEEDNAMEPREFIX ?= "INVALID"
