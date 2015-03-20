@@ -9,7 +9,7 @@ SRCREV="52272c750001914395338f32b5ed767bb3dd5ee8"
 
 PR = "r5"
 
-SRC_URI = "git://github.com/thz/eradius.git;protocol=git"
+SRC_URI = "git://github.com/travelping/eradius.git;protocol=git"
 
 inherit tetrapak
 
