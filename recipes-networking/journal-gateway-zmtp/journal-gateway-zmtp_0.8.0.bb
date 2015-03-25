@@ -5,7 +5,7 @@ DEPENDS += "czmq"
 DEPENDS += "jansson"
 DEPENDS += "systemd"
 LICENSE = "LGPL-2.1"
-PR = "r4"
+PR = "r5"
 
 LIC_FILES_CHKSUM = "file://LICENSE.LGPL2.1;md5=4fbd65380cdd255951079008b364516c"
 
@@ -17,6 +17,7 @@ SRC_URI[sha256sum] = "e4100db17dc53d896786a423e0f6744225c07a60e56c146a4325b3a25b
 
 S = "${WORKDIR}/${PN}-${PV}"
 
+SYSTEMD_AUTO_ENABLE = "disable"
 SYSTEMD_SERVICE_${PN} = "${PN}-sink.service"
 SYSTEMD_SERVICE_${PN} += "${PN}-source.service"
 
