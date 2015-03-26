@@ -1,4 +1,4 @@
-DESCRIPTION = "Netlink socket toolkit"
+SUMMARY = "Netlink socket toolkit"
 SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://src/netlink.erl;beginline=1;endline=19;md5=9c3283402c854efc9254063f52b48bfd"

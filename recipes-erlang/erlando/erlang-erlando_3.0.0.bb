@@ -1,4 +1,4 @@
-DESCRIPTION = "Recipe for erlang-erlando"
+SUMMARY = "Recipe for erlang-erlando"
 SECTION = "net"
 LICENSE = "MPL-1.0"
 LIC_FILES_CHKSUM = "file://README.md;beginline=617;md5=b5d78b4446f5ee806a90c7416aada096"

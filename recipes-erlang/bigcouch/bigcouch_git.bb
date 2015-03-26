@@ -1,4 +1,4 @@
-DESCRIPTION = "BigCouch DB"
+SUMMARY = "BigCouch DB"
 SECTION = "devel"
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=d1d0149ed2d0955d0b2545d326d60d54"

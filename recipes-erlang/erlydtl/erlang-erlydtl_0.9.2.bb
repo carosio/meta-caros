@@ -1,4 +1,4 @@
-DESCRIPTION = "Django Template Language for Erlang"
+SUMMARY = "Django Template Language for Erlang"
 SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://src/erlydtl.erl;md5=bcd0b6dc79c62cb6823e0e073ac08482"

@@ -1,4 +1,4 @@
-DESCRIPTION = "TinyMQ: a diminutive message queue"
+SUMMARY = "TinyMQ: a diminutive message queue"
 SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://Emakefile;md5=3c1a641e9564c70737d27e3079ec85f1"

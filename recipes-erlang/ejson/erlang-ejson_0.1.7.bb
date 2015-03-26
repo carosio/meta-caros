@@ -1,4 +1,4 @@
-DESCRIPTION = "EJSON - decode and encode JSON into/from Erlang terms"
+SUMMARY = "EJSON - decode and encode JSON into/from Erlang terms"
 SECTION = "devel"
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=819a7baf87a425c2d31a198a87803484"

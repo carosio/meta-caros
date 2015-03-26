@@ -1,4 +1,4 @@
-DESCRIPTION = "CAROS Update System"
+SUMMARY = "CAROS Update System"
 SECTION = "console/utils"
 
 LICENSE = "MIT"

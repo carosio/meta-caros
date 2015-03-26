@@ -1,4 +1,4 @@
-DESCRIPTION = "a set of statistics functions for erlang"
+SUMMARY = "a set of statistics functions for erlang"
 SECTION = "devel"
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=8f7bb094c7232b058c7e9f2e431f389c"

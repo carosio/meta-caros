@@ -1,4 +1,4 @@
-DESCRIPTION = "Parse Transform for Parameter Modules"
+SUMMARY = "Parse Transform for Parameter Modules"
 SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://EPLICENCE;md5=f4e586d08cc73e9c7373939f6806d647"

@@ -1,4 +1,4 @@
-DESCRIPTION = "Erlang ZeroMQ Driver"
+SUMMARY = "Erlang ZeroMQ Driver"
 SECTION = "devel"
 LICENSE = "ISC"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=cde9803a34b8d019cb003b557f9ec24f"

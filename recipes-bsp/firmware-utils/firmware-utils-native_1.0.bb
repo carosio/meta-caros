@@ -1,4 +1,4 @@
-DESCRIPTION = "Fireware Utils"
+SUMMARY = "Fireware Utils"
 LICENSE = "GPL-2+"
 LIC_FILES_CHKSUM = "file://${WORKDIR}/LICENSE;md5=94d55d512a9ba36caa9b7df079bae19f"
 

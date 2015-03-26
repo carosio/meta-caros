@@ -1,4 +1,4 @@
-DESCRIPTION = "Socket acceptor pool for TCP protocols."
+SUMMARY = "Socket acceptor pool for TCP protocols."
 SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=09d6d59d144d8f52d9fe5c1cc8f47f0f"

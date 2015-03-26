@@ -1,4 +1,4 @@
-DESCRIPTION = "Medici Tokyo Tyrant interface"
+SUMMARY = "Medici Tokyo Tyrant interface"
 SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://README;md5=8614e07bbe19bc8653206be7fd3dd276"

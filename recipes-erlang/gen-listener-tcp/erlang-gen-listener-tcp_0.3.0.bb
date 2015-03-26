@@ -1,4 +1,4 @@
-DESCRIPTION = "A generic tcp listener process adhering to OTP design principles"
+SUMMARY = "A generic tcp listener process adhering to OTP design principles"
 SECTION = "devel"
 LICENSE = "BSD-3-Clause"
 LIC_FILES_CHKSUM = "file://${COREBASE}/meta/COPYING.MIT;md5=3da9cfbcb788c80a0384361b4de20420"

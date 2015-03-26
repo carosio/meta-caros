@@ -1,4 +1,4 @@
-DESCRIPTION = "Erlang journal binding"
+SUMMARY = "Erlang journal binding"
 SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://src/journald_api.erl;beginline=1;endline=19;md5=68c35caa2bea4511f71968b6fe5921d6"

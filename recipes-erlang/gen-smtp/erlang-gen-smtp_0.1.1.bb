@@ -1,4 +1,4 @@
-DESCRIPTION = "An erlang SMTP server/client framework"
+SUMMARY = "An erlang SMTP server/client framework"
 SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=2836c20a9a9293da518007b3786dbcfb"

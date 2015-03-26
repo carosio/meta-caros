@@ -1,4 +1,4 @@
-DESCRIPTION = "Erlang snmp support"
+SUMMARY = "Erlang snmp support"
 SECTION = "devel"
 LICENSE = "CLOSED"
 

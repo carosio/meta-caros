@@ -1,4 +1,4 @@
-DESCRIPTION = "gen_server2 OTP behaviour - provided as an OTP library"
+SUMMARY = "gen_server2 OTP behaviour - provided as an OTP library"
 SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://README.md;md5=6cfe87e918c30c45d02d316752aee8ec"

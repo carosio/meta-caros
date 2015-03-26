@@ -1,4 +1,4 @@
-DESCRIPTION = "journald gateway for ZMTP based log forwarding"
+SUMMARY = "journald gateway for ZMTP based log forwarding"
 SECTION = "network"
 DEPENDS += "zeromq"
 DEPENDS += "czmq"

@@ -1,4 +1,4 @@
-DESCRIPTION = "Aleppo: ALternative Erlang Pre-ProcessOr"
+SUMMARY = "Aleppo: ALternative Erlang Pre-ProcessOr"
 SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://Emakefile;md5=df5da8c3142fc783e2ddc3695068f02e"

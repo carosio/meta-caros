@@ -1,4 +1,4 @@
-DESCRIPTION = "Regine - generic process registry"
+SUMMARY = "Regine - generic process registry"
 SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://src/regine_server.erl;beginline=1;endline=19;md5=0bd3de365e18dfaf63708df79addef84"

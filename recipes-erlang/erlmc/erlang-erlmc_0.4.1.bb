@@ -1,4 +1,4 @@
-DESCRIPTION = "Erlang binary protocol memcached client"
+SUMMARY = "Erlang binary protocol memcached client"
 SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://README.markdown;md5=3f00652a3923114cd47e27de723cf13a"

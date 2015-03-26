@@ -1,4 +1,4 @@
-DESCRIPTION = "Starting the network"
+SUMMARY = "Starting the network"
 SECTION = "net"
 LICENSE = "CLOSED"
 

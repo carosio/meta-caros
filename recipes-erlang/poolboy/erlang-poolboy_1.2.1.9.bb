@@ -1,4 +1,4 @@
-DESCRIPTION = "A hunky Erlang worker pool factory"
+SUMMARY = "A hunky Erlang worker pool factory"
 SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=3bfd34238ccc26128aef96796a8bbf97"

@@ -1,4 +1,4 @@
-DESCRIPTION = "common lib"
+SUMMARY = "common lib"
 SECTION = "net"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://src/common_lib.erl;beginline=1;endline=28;md5=9ce15051e0553845ff2a71e49388ffcb"

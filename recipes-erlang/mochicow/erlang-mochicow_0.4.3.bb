@@ -1,4 +1,4 @@
-DESCRIPTION = "mochiweb adapter for cowboy"
+SUMMARY = "mochiweb adapter for cowboy"
 SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=1da7ca117f7008b0a376392e96337cde"

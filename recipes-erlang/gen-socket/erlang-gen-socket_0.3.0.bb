@@ -1,4 +1,4 @@
-DESCRIPTION = "generic socket toolkit"
+SUMMARY = "generic socket toolkit"
 SECTION = "devel"
 LICENSE = "BSD-3-Clause"
 LIC_FILES_CHKSUM = "file://src/gen_socket.erl;beginline=1;endline=30;md5=62fc4961b678e7b93ce9f790eef138ae"

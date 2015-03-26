@@ -1,4 +1,4 @@
-DESCRIPTION = "C library for writing portable SSH2 clients."
+SUMMARY = "C library for writing portable SSH2 clients."
 HOMEPAGE = "http://www.libssh2.org"
 SECTION = "libs"
 LICENSE = "BSD"

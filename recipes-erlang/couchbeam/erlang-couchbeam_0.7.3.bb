@@ -1,4 +1,4 @@
-DESCRIPTION = "Erlang CouchDB kit"
+SUMMARY = "Erlang CouchDB kit"
 SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=212a03dbdaf546250bb9c74b04bfdeae"

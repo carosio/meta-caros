@@ -1,4 +1,4 @@
-DESCRIPTION = "An Erlang OAuth 1.0 implementation"
+SUMMARY = "An Erlang OAuth 1.0 implementation"
 SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://License.txt;md5=bf482687f6a03a670436598bcf544644"

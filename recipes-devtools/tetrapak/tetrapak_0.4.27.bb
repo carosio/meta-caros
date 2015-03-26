@@ -1,4 +1,4 @@
-DESCRIPTION = "tetrapak is an extensible build system for Erlang/OTP applications."
+SUMMARY = "tetrapak is an extensible build system for Erlang/OTP applications."
 SCTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://src/tetrapak.erl;beginline=1;endline=19;md5=300d83493c235b71e1a4d58e25379bc5"

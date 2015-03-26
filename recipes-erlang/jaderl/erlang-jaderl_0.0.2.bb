@@ -1,4 +1,4 @@
-DESCRIPTION = "jaderl compiles the Jade template language to Erlang bytecode"
+SUMMARY = "jaderl compiles the Jade template language to Erlang bytecode"
 SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://src/jaderl.erl;md5=7a9e7abea03db1447e8f7f69595a5f56"

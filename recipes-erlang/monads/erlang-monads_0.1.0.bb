@@ -1,4 +1,4 @@
-DESCRIPTION = "Recipe for erlang-monads"
+SUMMARY = "Recipe for erlang-monads"
 SECTION = "net"
 LICENSE = "CLOSED"
 PR = "r1"

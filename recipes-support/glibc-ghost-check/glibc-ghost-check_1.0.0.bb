@@ -1,4 +1,4 @@
-DESCRIPTION = "glibc GHOST vulnerability check"
+SUMMARY = "glibc GHOST vulnerability check"
 HOMEPAGE = "http://www.openwall.com/lists/oss-security/2015/01/27/9"
 SECTION = "security"
 LICENSE = "CLOSED"

@@ -1,4 +1,4 @@
-DESCRIPTION = "BossDB: a sharded, caching, evented ORM"
+SUMMARY = "BossDB: a sharded, caching, evented ORM"
 SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=9445ab65d571cee0b2d6e3b4e35953cc"

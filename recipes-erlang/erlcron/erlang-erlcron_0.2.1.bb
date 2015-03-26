@@ -1,4 +1,4 @@
-DESCRIPTION = "Erlang Implementation of cron"
+SUMMARY = "Erlang Implementation of cron"
 SECTION = "devel"
 LICENSE = "BSD-3-Clause"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=e353635574756e02aec3521297f86ada"

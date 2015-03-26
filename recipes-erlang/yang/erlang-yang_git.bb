@@ -1,4 +1,4 @@
-DESCRIPTION = "Recipe for erlang-yang"
+SUMMARY = "Recipe for erlang-yang"
 SECTION = "net"
 LICENSE = "CLOSED"
 

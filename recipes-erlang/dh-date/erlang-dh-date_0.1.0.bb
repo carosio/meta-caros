@@ -1,4 +1,4 @@
-DESCRIPTION = "Format Dates In Erlang"
+SUMMARY = "Format Dates In Erlang"
 SECTION = "devel"
 LICENSE = "DWTFYW"
 LIC_FILES_CHKSUM = "file://README;md5=131fc5489aad7cc1756b1d8321aa4b97"

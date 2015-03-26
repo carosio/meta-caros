@@ -1,4 +1,4 @@
-DESCRIPTION = "logging framework for Erlang"
+SUMMARY = "logging framework for Erlang"
 SECTION = "devel"
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=ff253ad767462c46be284da12dda33e8"

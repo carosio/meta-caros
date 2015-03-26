@@ -1,4 +1,4 @@
-DESCRIPTION = "MySQL Library"
+SUMMARY = "MySQL Library"
 SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://COPYING.txt;md5=419886945d428c4b26dd4a4f5b2b222b"

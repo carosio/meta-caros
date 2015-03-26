@@ -1,4 +1,4 @@
-DESCRIPTION = "Extended process registry for Erlang."
+SUMMARY = "Extended process registry for Erlang."
 SECTION = "devel"
 LICENSE = "EPL-1.0"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=9567c64d58e18a81951c75d00c10fa98"

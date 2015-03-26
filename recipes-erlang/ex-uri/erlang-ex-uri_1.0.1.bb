@@ -1,4 +1,4 @@
-DESCRIPTION = "An URI-handling library application"
+SUMMARY = "An URI-handling library application"
 SECTION = "devel"
 LICENSE = "BSD-3-Clause"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=8b3666f954af52296686a28bc5f337f0"

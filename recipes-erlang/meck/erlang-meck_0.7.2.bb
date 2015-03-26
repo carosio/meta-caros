@@ -1,4 +1,4 @@
-DESCRIPTION = "A mocking library for Erlang"
+SUMMARY = "A mocking library for Erlang"
 SECTION = "devel"
 LICENSE = "Apache-2.0"
 

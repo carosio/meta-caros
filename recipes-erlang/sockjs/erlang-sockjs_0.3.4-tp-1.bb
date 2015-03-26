@@ -1,4 +1,4 @@
-DESCRIPTION = "WebSocket emulation - Erlang server http://sockjs.org"
+SUMMARY = "WebSocket emulation - Erlang server http://sockjs.org"
 SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://LICENSE-MIT-SockJS;md5=8dadf7be2665a431cf0828ff8506e5c4"

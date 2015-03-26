@@ -1,4 +1,4 @@
-DESCRIPTION = "PostgreSQL Client"
+SUMMARY = "PostgreSQL Client"
 SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=9f05431c7ad1940db8f544ddb9cf8b80"

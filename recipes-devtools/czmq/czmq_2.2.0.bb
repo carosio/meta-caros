@@ -1,4 +1,4 @@
-DESCRIPTION = "High-level C binding for ZeroMQ"
+SUMMARY = "High-level C binding for ZeroMQ"
 HOMEPAGE = "http://czmq.zeromq.org/"
 SECTION = "devel"
 LICENSE = "MPL-2.0"

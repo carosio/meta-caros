@@ -1,4 +1,4 @@
-DESCRIPTION = "Setup script run on first boot"
+SUMMARY = "Setup script run on first boot"
 LICENSE = "CLOSED"
 PR = "r1"
 

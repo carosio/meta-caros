@@ -1,4 +1,4 @@
-DESCRIPTION = "utils for managing LZMA compressed files"
+SUMMARY = "utils for managing LZMA compressed files"
 SECTION = "base"
 
 LICENSE = "PD GPLv2+"

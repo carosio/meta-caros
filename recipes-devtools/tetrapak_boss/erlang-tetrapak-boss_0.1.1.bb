@@ -1,4 +1,4 @@
-DESCRIPTION = "Tetrapak Boss Plugin"
+SUMMARY = "Tetrapak Boss Plugin"
 SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://README.md;md5=a2a1073b572c6d211c2062a7d529fec5"

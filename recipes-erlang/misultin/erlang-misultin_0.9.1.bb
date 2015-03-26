@@ -1,4 +1,4 @@
-DESCRIPTION = "Lightweight HTTP(s) and Websockets Server Library"
+SUMMARY = "Lightweight HTTP(s) and Websockets Server Library"
 SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://LICENSE.txt;md5=aa243523732ab6258fece5095a38dd9f"

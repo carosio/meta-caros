@@ -1,4 +1,4 @@
-DESCRIPTION = "Erlang Round Robin Databases"
+SUMMARY = "Erlang Round Robin Databases"
 SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=32b4bd26a9ae3f739e3ba06649f2905a"

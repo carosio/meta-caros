@@ -1,4 +1,4 @@
-DESCRIPTION = "Chicago Boss web framework, now serving three flavors of Comet"
+SUMMARY = "Chicago Boss web framework, now serving three flavors of Comet"
 SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=9445ab65d571cee0b2d6e3b4e35953cc"

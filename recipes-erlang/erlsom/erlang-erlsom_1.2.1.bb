@@ -1,4 +1,4 @@
-DESCRIPTION = "erlsom XSD parser"
+SUMMARY = "erlsom XSD parser"
 SECTION = "devel"
 LICENSE = "GPLv2"
 LIC_FILES_CHKSUM = "file://COPYING;md5=d32239bcb673463ab874e80d47fae504"

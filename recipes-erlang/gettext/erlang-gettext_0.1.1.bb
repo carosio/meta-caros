@@ -1,4 +1,4 @@
-DESCRIPTION = "gettext handling"
+SUMMARY = "gettext handling"
 SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=e6e621747d07ff2f060109eec33234a9"

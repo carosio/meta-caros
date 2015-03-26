@@ -1,4 +1,4 @@
-DESCRIPTION = "Support library for manipulating Web protocols."
+SUMMARY = "Support library for manipulating Web protocols."
 SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=797dcce8eb39b26403101f234ad9c7e2"

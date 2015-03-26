@@ -1,4 +1,4 @@
-DESCRIPTION = "Dike - a framework for distributed computing and storage"
+SUMMARY = "Dike - a framework for distributed computing and storage"
 SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://src/dike_master.erl;beginline=1;endline=8;md5=69962098c047c6d4113c55dd2f6df435"

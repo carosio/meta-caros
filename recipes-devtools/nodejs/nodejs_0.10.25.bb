@@ -1,4 +1,4 @@
-DESCRIPTION = "nodeJS Evented I/O for V8 JavaScript"
+SUMMARY = "nodeJS Evented I/O for V8 JavaScript"
 HOMEPAGE = "http://nodejs.org"
 LICENSE = "MIT & BSD & Artistic-2.0"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=4a31e6c424761191227143b86f58a1ef"

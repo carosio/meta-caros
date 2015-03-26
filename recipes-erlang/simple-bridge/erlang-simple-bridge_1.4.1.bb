@@ -1,4 +1,4 @@
-DESCRIPTION = "Common Interface to Erlang HTTP Servers"
+SUMMARY = "Common Interface to Erlang HTTP Servers"
 SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://MIT-LICENSE;md5=da9c49784d0b343ab8f8196dd3880ef4"

@@ -1,4 +1,4 @@
-DESCRIPTION = "ABNF parser generator"
+SUMMARY = "ABNF parser generator"
 SECTION = "devel"
 LICENSE = "BSD-3-Clause"
 LIC_FILES_CHKSUM = "file://src/abnfc.erl;beginline=2;endline=4;md5=ba49c52e6dc36b4509bef6848f420503"

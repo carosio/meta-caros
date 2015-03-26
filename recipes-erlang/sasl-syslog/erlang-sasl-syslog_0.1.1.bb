@@ -1,4 +1,4 @@
-DESCRIPTION = "syslog/UDP error logger report handler"
+SUMMARY = "syslog/UDP error logger report handler"
 SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://src/sasl_syslog.erl;beginline=1;endline=19;md5=1f60e6501975c80d633b7d18d3b961f4"

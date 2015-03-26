@@ -1,4 +1,4 @@
-DESCRIPTION = "journald backend for lager"
+SUMMARY = "journald backend for lager"
 SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=9db35a42b923528200d82fcbb74c4dc2"

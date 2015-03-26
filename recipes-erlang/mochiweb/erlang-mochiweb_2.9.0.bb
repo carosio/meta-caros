@@ -1,4 +1,4 @@
-DESCRIPTION = "MochiMedia Web Server"
+SUMMARY = "MochiMedia Web Server"
 SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=5e0144b1f4eb0e6001053e5e37e97db2"

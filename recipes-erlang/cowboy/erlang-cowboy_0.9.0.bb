@@ -1,4 +1,4 @@
-DESCRIPTION = "Small, fast, modular HTTP server."
+SUMMARY = "Small, fast, modular HTTP server."
 SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=8a87a00323cbb9706ca2b35e5107b437"

@@ -1,4 +1,4 @@
-DESCRIPTION = "mimetypes"
+SUMMARY = "mimetypes"
 SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://README.md;md5=f1c71ee46a40b96ff7d635ff987d5c5d"

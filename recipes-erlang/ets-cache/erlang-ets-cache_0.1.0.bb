@@ -1,4 +1,4 @@
-DESCRIPTION = "ETS cache with time to live (TTL)"
+SUMMARY = "ETS cache with time to live (TTL)"
 SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://README.md;md5=3d36f403d1c4de99731df04918c218aa"

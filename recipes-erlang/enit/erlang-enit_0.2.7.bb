@@ -1,4 +1,4 @@
-DESCRIPTION = "Dynamic Erlang release management"
+SUMMARY = "Dynamic Erlang release management"
 SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://README.md;beginline=4;endline=4;md5=b9978f90bd7e8e056279603677171252"

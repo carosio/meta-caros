@@ -1,4 +1,4 @@
-DESCRIPTION = "802.1q vlan support program"
+SUMMARY = "802.1q vlan support program"
 LICENSE = "GPLv2"
 LIC_FILES_CHKSUM = "file://README;md5=ae5a24f54a98660ad86aad6c42052e48"
 RRECOMMENDS_${PN} = "kernel-module-8021q"

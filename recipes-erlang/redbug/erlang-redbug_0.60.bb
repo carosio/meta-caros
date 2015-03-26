@@ -1,4 +1,4 @@
-DESCRIPTION = "Redbug Erlang Debug Framework"
+SUMMARY = "Redbug Erlang Debug Framework"
 SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://include/log.hrl;md5=d3d82191c973b3c2fd41a92d71f0b488"

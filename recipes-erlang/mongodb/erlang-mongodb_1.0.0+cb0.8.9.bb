@@ -1,4 +1,4 @@
-DESCRIPTION = "Client interface to MongoDB"
+SUMMARY = "Client interface to MongoDB"
 SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://README.md;md5=e9afc8235a516dcad63385790d64ab22"

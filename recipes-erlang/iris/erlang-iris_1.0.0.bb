@@ -1,4 +1,4 @@
-DESCRIPTION = "iris"
+SUMMARY = "iris"
 SECTION = "net"
 LICENSE = "CLOSED & MIT"
 LIC_FILES_CHKSUM = "file://src/iris_esme.erl;beginline=1;endline=28;md5=9ce15051e0553845ff2a71e49388ffcb"

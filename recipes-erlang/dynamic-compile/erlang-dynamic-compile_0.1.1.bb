@@ -1,4 +1,4 @@
-DESCRIPTION = "Dynamic Compile Library"
+SUMMARY = "Dynamic Compile Library"
 SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://Makefile;md5=ea83b77d17ce2d1535be8911bc6e0b95"

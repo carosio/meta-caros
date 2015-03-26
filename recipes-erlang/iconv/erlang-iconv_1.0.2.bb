@@ -1,4 +1,4 @@
-DESCRIPTION = "iconv"
+SUMMARY = "iconv"
 SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=5bc2fce46aa4a44a5299323a986c3c79"
