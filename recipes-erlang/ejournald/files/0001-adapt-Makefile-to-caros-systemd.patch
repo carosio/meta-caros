@@ -1,0 +1,25 @@
+From 10c01b803f63dd7cfa4bb45065286d293e8b390b Mon Sep 17 00:00:00 2001
+From: Tobias Hintze <thintze+git@tpip.net>
+Date: Tue, 31 Mar 2015 15:37:41 +0200
+Subject: [PATCH] adapt Makefile to caros' systemd
+
+---
+ c_src/Makefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/c_src/Makefile b/c_src/Makefile
+index d747076..d27f3df 100644
+--- a/c_src/Makefile
++++ b/c_src/Makefile
+@@ -5,7 +5,7 @@ CFLAGS ?= -O2
+ 
+ override CFLAGS += -std=gnu99  -Wall -fpic -I. $(shell erl -noinput -eval 'io:format("-I~s/erts-~s/include", [code:root_dir(), erlang:system_info(version)]), halt(0).') $(shell pkg-config --cflags libsystemd-journal)
+ 
+-override LDFLAGS += -shared -fpic $(shell pkg-config --libs libsystemd-journal)
++override LDFLAGS += -shared -fpic $(shell pkg-config --libs libsystemd)
+ 
+ all : $(PRIVDIR)/journald_api.so
+ 
+-- 
+1.9.1
+
