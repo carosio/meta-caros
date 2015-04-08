@@ -4,7 +4,7 @@ exec tail -n +3 $0
 # menu entries you want to add after this comment.  Be careful not to change
 # the 'exec tail' line above.
 set timeout=10
-menuentry "CarOS" {
+menuentry "__DISTRO_NAME__ __DISTRO_VERSION__" {
     set root=(hd0,3)
     linux /@/boot/bzImage root=__ROOTFS__ rw rootflags=subvol=@ __CONSOLE__ __VIDEO_MODE__ __VGA_MODE__
 }
