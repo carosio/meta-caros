@@ -2,7 +2,7 @@
 # Copyright (C) 2012 Travelping GmbH
 #
 DESCRIPTION = "Image with CarOS components. It includes everything within \
-core-image-caroso plus meta-toolchain, development headers and libraries to \
+core-image-caros plus meta-toolchain, development headers and libraries to \
 form a standalone SDK."
 LICENSE = "MIT"
 
