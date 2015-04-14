@@ -99,7 +99,7 @@ MACHINE ??= "qemux86"
 # Ultimately when creating custom policy, people will likely end up subclassing 
 # these defaults.
 #
-DISTRO ?= "tplino"
+DISTRO ?= "caros"
 
 #
 # Package Management configuration

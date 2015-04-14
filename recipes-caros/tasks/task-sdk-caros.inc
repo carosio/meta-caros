@@ -1,4 +1,4 @@
-SDK-TPLINO = " \
+SDK-CAROS = " \
     task-core-erlang-sdk \
     "
 
