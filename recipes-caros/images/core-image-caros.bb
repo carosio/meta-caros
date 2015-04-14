@@ -4,9 +4,9 @@
 SUMMARY = "Image with CarOS components."
 LICENSE = "MIT"
 
-IMAGE_FEATURES += "splash ssh-server-dropbear ${TPLINO_IMAGE_FEATURES}"
+IMAGE_FEATURES += "splash ssh-server-dropbear ${CAROS_IMAGE_FEATURES}"
 
-inherit core-image-tplino core-image distro_features_check extrausers
+inherit core-image-caros core-image distro_features_check extrausers
 
 # set root password to 'caros'
 #

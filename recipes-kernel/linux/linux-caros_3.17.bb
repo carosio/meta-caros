@@ -23,7 +23,7 @@ SRCREV_meta ?= "b81030f9ec2de3dc6c048e142dcbff62e305cc40"
 SRC_URI = "git://git.yoctoproject.org/linux-yocto-3.17.git;bareclone=1;branch=${KBRANCH},${KMETA};name=machine,meta"
 
 LINUX_VERSION ?= "3.17.6"
-LINUX_VERSION_EXTENSION = "-tplino-${LINUX_KERNEL_TYPE}"
+LINUX_VERSION_EXTENSION = "-caros-${LINUX_KERNEL_TYPE}"
 
 PV = "${LINUX_VERSION}+git${SRCPV}"
 

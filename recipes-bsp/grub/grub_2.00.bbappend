@@ -1,6 +1,6 @@
 PR := "${PR}.1"
 
-export CAROS_GRUB_MENU_CONFIG_FILE = "42_tplino"
+export CAROS_GRUB_MENU_CONFIG_FILE = "42_caros"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
 SRC_URI += "file://${CAROS_GRUB_MENU_CONFIG_FILE}"

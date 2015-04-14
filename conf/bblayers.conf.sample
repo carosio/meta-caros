@@ -9,10 +9,10 @@ BBLAYERS ?= " \
   ##COREBASE##/meta \
   ##COREBASE##/meta-yocto \
   ##COREBASE##/meta-yocto-bsp \
-  ##COREBASE##/meta-tplino \
+  ##COREBASE##/meta-caros \
   "
 BBLAYERS_NON_REMOVABLE ?= " \
   ##COREBASE##/meta \
   ##COREBASE##/meta-yocto \
-  ##COREBASE##/meta-tplino \
+  ##COREBASE##/meta-caros \
   "
