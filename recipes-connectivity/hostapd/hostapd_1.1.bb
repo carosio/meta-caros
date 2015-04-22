@@ -1,5 +1,9 @@
 require hostapd.inc
 
+PR="${INC_PR}.0"
+
+RCONFLICTS_${PN} = "hostapd-capwap-wtp hostapd-capwap-ac"
+
 LICENSE = "GPLv2 | BSD"
 LIC_FILES_CHKSUM = "file://README;md5=9bee93996fecdb70f807baceb29d84b9"
 

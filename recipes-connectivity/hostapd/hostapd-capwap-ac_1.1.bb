@@ -1,10 +1,10 @@
 require hostapd_${PV}.bb
 
+PR="${INC_PR}.0"
+
 SRC_URI += " \
 	file://hostapd-capwap.patch \
 	file://hostapd_ac.conf"
-
-PRINC := "${@int(PRINC) + 1}"
 
 RCONFLICTS_${PN} = "hostapd hostapd-capwap-wtp"
 RDEPENDS_${PN} += " opencapwap-ac "
