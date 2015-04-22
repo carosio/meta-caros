@@ -8,26 +8,23 @@ inherit module autotools systemd
 
 PRINC="6"
 
-DEPENDS += "openssl python perl"
+DEPENDS += "openssl python"
 
-RDEPENDS_${PN} += "util-linux-uuidgen util-linux-libuuid \
-	       python ${PN}-controller"
-RDEPENDS_${PN}-ovsdb = "${PN}-common lsb"
-RDEPENDS_${PN}-vswitchd = "${PN}-common lsb kernel-module-${PN}"
-RDEPENDS_${PN}-controller = "${PN} ${PN}-common lsb ${PN}-pki"
-RDEPENDS_${PN}-tools = "${PN} perl perl-module-strict"
-RDEPENDS_${PN}-pki = "${PN}"
+RDEPENDS_${PN} += "${PN}-vswitchd ${PN}-ovsdb ${PN}-tools ${PN}-pki"
+RDEPENDS_${PN}-ovsdb = "${PN}-common"
+RDEPENDS_${PN}-vswitchd = "${PN}-common kernel-module-${PN}"
+RDEPENDS_${PN}-tools = "${PN}-common ${PN}-python python"
+RDEPENDS_kernel-module-${PN} += "kernel-module-vxlan"
 RRECOMMENDS_${PN} += "kernel-module-${PN}"
 
-SRC_URI += "file://openvswitch.service \
-	    file://openvswitch-ovsdb.service \
+SRC_URI += "file://openvswitch-ovsdb.service \
 	    file://openvswitch-vswitchd.service \
 	    file://modules.load"
 
 EXTRA_OECONF = "--with-linux=${STAGING_KERNEL_DIR} KARCH=${TARGET_ARCH}"
 
 ALLOW_EMPTY_${PN}-pki = "1"
-PACKAGES =+ "${PN}-common ${PN}-ovsdb ${PN}-vswitchd ${PN}-controller ${PN}-tools ${PN}-bugtool ${PN}-pki ${PN}-python"
+PACKAGES =+ "${PN}-common ${PN}-ovsdb ${PN}-vswitchd ${PN}-tools ${PN}-bugtool ${PN}-pki ${PN}-python"
 
 FILES_${PN}-common = "\
 	/etc/openvswitch \
@@ -39,6 +36,7 @@ FILES_${PN}-ovsdb = "\
 	${sbindir}/ovsdb-server \
 	${bindir}/ovsdb-tool \
 	${datadir}/openvswitch/vswitch.ovsschema \
+	${datadir}/openvswitch/vtep.ovsschema \
 	"
 
 FILES_${PN}-vswitchd  = "\
@@ -46,11 +44,9 @@ FILES_${PN}-vswitchd  = "\
 	${sbindir}/ovs-vswitchd \
 	${bindir}/ovs-ofctl \
 	${bindir}/ovs-dpctl \
+	${bindir}/ovs-dpctl-top \
+	${bindir}/vtep-ctl \
 	"
-
-FILES_${PN}-controller = "\
-	${sysconfdir}/openvswitch-controller \
-	${bindir}/ovs-controller"
 
 FILES_${PN}-pki = "\
 	${bindir}/ovs-pki \
@@ -72,6 +68,7 @@ FILES_${PN}-tools = "\
 	${datadir}/openvswitch/scripts/ovs-check-dead-ifs \
 	${datadir}/openvswitch/scripts/ovs-ctl \
 	${datadir}/openvswitch/scripts/ovs-save \
+	${datadir}/openvswitch/scripts/ovs-vtep \
         "
 
 FILES_${PN}-bugtool = "\
@@ -88,7 +85,6 @@ MODULE_PACKAGES = "kernel-module-${PN}"
 MODULE_FILES_kernel-module-${PN} = "/lib/modules"
 
 SYSTEMD_PACKAGES = "${PN} ${PN}-ovsdb ${PN}-vswitchd"
-SYSTEMD_SERVICE_${PN} = "openvswitch.service"
 SYSTEMD_SERVICE_${PN}-ovsdb = "openvswitch-ovsdb.service"
 SYSTEMD_SERVICE_${PN}-vswitchd = "openvswitch-vswitchd.service"
 
@@ -98,7 +94,6 @@ do_install_append() {
 	mkdir -p ${D}/${localstatedir}/lib/openvswitch/pki
 
     install -d ${D}${systemd_unitdir}/system/
-    install -m 0644 ${WORKDIR}/openvswitch.service ${D}${systemd_unitdir}/system/
     install -m 0644 ${WORKDIR}/openvswitch-ovsdb.service ${D}${systemd_unitdir}/system/
     install -m 0644 ${WORKDIR}/openvswitch-vswitchd.service ${D}${systemd_unitdir}/system/
 
@@ -113,27 +108,5 @@ pkg_postinst_${PN}-pki () {
         fi
 	if test ! -d $D/${datadir}/${PN}/pki; then
             ovs-pki init --dir=$D/${datadir}/${PN}/pki
-        fi
-}
-
-pkg_postinst_${PN}-controller () {
-        # can't do this offline
-        if [ "x$D" != "x" ]; then
-                exit 1
-        fi
-
-	cd $D/${sysconfdir}/openvswitch-controller
-        if ! test -e cacert.pem; then
-            ln -s $D/${datadir}/${PN}/pki/switchca/cacert.pem cacert.pem
-        fi
-        if ! test -e privkey.pem || ! test -e cert.pem; then
-            oldumask=$(umask)
-            umask 077
-            ovs-pki req+sign --dir=$D/${datadir}/${PN}/pki tmp controller >/dev/null
-            mv tmp-privkey.pem privkey.pem
-            mv tmp-cert.pem cert.pem
-            mv tmp-req.pem req.pem
-            chmod go+r cert.pem req.pem
-            umask $oldumask
         fi
 }
