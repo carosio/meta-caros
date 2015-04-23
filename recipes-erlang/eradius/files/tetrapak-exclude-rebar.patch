@@ -1,0 +1,10 @@
+diff --git a/tetrapak/config.ini b/tetrapak/config.ini
+index 95a1a31..b7f417e 100644
+--- a/tetrapak/config.ini
++++ b/tetrapak/config.ini
+@@ -5,4 +5,4 @@ erlc_options = [{parse_transform, lager_transform}]
+ [package]
+ include_src = false
+ deb.section = "net"
+-exclude = "\\.gitignore|TODO\\.rst|example\\.config|sample"
++exclude = "\\.gitignore|TODO\\.rst|example\\.config|sample|rebar.*"
