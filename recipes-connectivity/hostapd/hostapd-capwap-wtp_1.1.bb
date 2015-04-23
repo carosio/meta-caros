@@ -1,11 +1,11 @@
 require hostapd_${PV}.bb
 
+PR="${INC_PR}.0"
+
 SRC_URI += " \
 	file://hostapd-capwap.patch \
 	file://idle_deauth_station.patch \
 	file://hostapd_wtp.conf"
-
-PRINC := "${@int(PRINC) + 2}"
 
 RCONFLICTS_${PN} = "hostapd hostapd-capwap-ac"
 

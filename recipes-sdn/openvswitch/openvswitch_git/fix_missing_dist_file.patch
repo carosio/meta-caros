@@ -1,12 +1,14 @@
 diff --git a/Makefile.am b/Makefile.am
-index 328b248..fd194fa 100644
+index b3ff4e3..02a9c30 100644
 --- a/Makefile.am
 +++ b/Makefile.am
-@@ -62,6 +62,7 @@ EXTRA_DIST = \
- 	boot.sh \
+@@ -103,6 +103,9 @@ EXTRA_DIST = \
+ 	build-aux/dist-docs \
  	build-aux/sodepends.pl \
  	build-aux/soexpand.pl \
++	m4/ax_check_openssl.m4 \
++	m4/ax_func_posix_memalign.m4 \
 +	m4/openvswitch.m4 \
  	$(MAN_FRAGMENTS) \
- 	$(MAN_ROOTS)
- bin_PROGRAMS =
+ 	$(MAN_ROOTS) \
+ 	Vagrantfile
