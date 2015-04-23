@@ -5,7 +5,8 @@ SECTION = "libs"
 # the package is licensed under either of the following
 LICENSE = "MPL-1 | GPLv2+ | LGPLv2.1+"
 LIC_FILES_CHKSUM = "file://jsapi.cpp;beginline=4;endline=39;md5=347c6bbf4fb4547de1fa5ad830030063"
-PR = "r1"
+PR = "r2"
+# r1 -> r2 for SECURITY_NO_PIE_CFLAGS / no other change
 
 SRC_URI = "http://ftp.mozilla.org/pub/mozilla.org/js/js185-1.0.0.tar.gz \
 	   file://no-neon-or-softfp-on-arm.patch;apply=yes;striplevel=3 \
