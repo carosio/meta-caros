@@ -6,7 +6,7 @@ LICENSE = "Apache-2"
 
 inherit module autotools systemd
 
-PRINC="6"
+INC_PR = "r0"
 
 DEPENDS += "openssl python"
 

@@ -12,7 +12,7 @@ SRCREV="ebdabd05e9465dd6e50adedb4a0bcb5678e563de"
 
 S = "${WORKDIR}/git"
 
-PR = "r0.1"
+PR = "${INC_PR}.1"
 
 CFLAGS += "-std=gnu11"
 
