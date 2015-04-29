@@ -1,0 +1,12 @@
+diff -Naurw net-snmp-5.7.3-orig/configure.d/config_os_headers net-snmp-5.7.3/configure.d/config_os_headers
+--- net-snmp-5.7.3-orig/configure.d/config_os_headers	2014-12-08 21:23:22.000000000 +0100
++++ net-snmp-5.7.3/configure.d/config_os_headers	2015-03-19 12:52:43.461560770 +0100
+@@ -482,8 +482,6 @@
+     unset ac_cv_header_pkg_h
+     netsnmp_save_CPPFLAGS="$CPPFLAGS"
+     netsnmp_save_LDFLAGS="$LDFLAGS"
+-    CPPFLAGS="$CPPFLAGS -I/usr/local/include"
+-    LDFLAGS="$LDFLAGS -L/usr/local/lib"
+     AC_CHECK_HEADERS(pkg.h,
+         NETSNMP_SEARCH_LIBS(pkg_init, pkg,
+ 	    AC_DEFINE(HAVE_LIBPKG, 1, [define if you have BSD pkg-ng])))
