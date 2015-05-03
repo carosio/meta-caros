@@ -3,7 +3,6 @@ Description=Simple Network Management Protocol (SNMP) Trap Daemon.
 After=syslog.target network.target
 
 [Service]
-Type=notify
 Environment=OPTIONS="-Lsd"
 EnvironmentFile=-/etc/default/snmptrapd
 ExecStart=/usr/sbin/snmptrapd $OPTIONS -f

@@ -3,7 +3,6 @@ Description=Simple Network Management Protocol (SNMP) Daemon.
 After=syslog.target network.target
 
 [Service]
-Type=notify
 Environment=OPTIONS="-LS0-6d" SNMP_NETNS=1
 EnvironmentFile=-/etc/default/snmpd
 ExecStart=/usr/sbin/snmpd $OPTIONS -f
