@@ -4,7 +4,7 @@ HOMEPAGE = "http://oss.oetiker.ch/rrdtool/"
 LICENSE = "GPLv2"
 LIC_FILES_CHKSUM = "file://COPYING;md5=44fee82a1d2ed0676cf35478283e0aa0"
 
-DEPENDS = "zlib glib-2.0 libxml2"
+DEPENDS = "zlib glib-2.0 libxml2 groff-native"
 
 PR = "r3"
 
