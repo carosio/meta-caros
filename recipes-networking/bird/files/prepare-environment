@@ -1,0 +1,28 @@
+#!/bin/sh
+
+set -eu
+
+BIRD_RUN_DIR=/run/bird
+. /etc/bird/envvars
+
+
+mkdir --parents "$BIRD_RUN_DIR";
+
+if [ -n "$BIRD_RUN_USER" ]; then
+    if ! grep -q "^$BIRD_RUN_USER:" /etc/passwd; then
+	echo "Configured user '$BIRD_RUN_USER' doesn't exist."
+	exit 1
+    fi
+fi
+
+if [ -n "$BIRD_RUN_GROUP" ]; then
+    if ! grep -q "^$BIRD_RUN_GROUP:" /etc/group; then
+	echo "Configured group '$BIRD_RUN_GROUP' doesn't exist."
+	exit 1
+    fi
+fi
+
+chown "$BIRD_RUN_USER:$BIRD_RUN_GROUP" "$BIRD_RUN_DIR"
+chmod 775 "$BIRD_RUN_DIR"
+
+:
