@@ -18,7 +18,8 @@ SRC_URI = "${SOURCEFORGE_MIRROR}/net-snmp/net-snmp-${PV}.zip \
         file://agentx-crash.patch \
         file://fix-request-id-0.patch \
         file://10-listen-on-ipv4-and-ipv6.conf \
-        file://remove-build-host-includes.patch"
+        file://remove-build-host-includes.patch \
+	file://fix-libnl-include-headers-detection.patch"
 
 SRC_URI[md5sum] = "9f682bd70c717efdd9f15b686d07baee"
 SRC_URI[sha256sum] = "e8dfc79b6539b71a6ff335746ce63d2da2239062ad41872fff4354cafed07a3e"
@@ -37,6 +38,7 @@ EXTRA_OECONF = "--disable-embedded-perl \
                 --enable-shared \
                 --disable-manuals \
                 --with-defaults \
+		--with-nl=${STAGING_INCDIR}/libnl3 \
                 ${@base_conditional('SITEINFO_ENDIANNESS', 'le', '--with-endianness=little', '--with-endianness=big', d)}"
 
 PACKAGECONFIG ?= "${@bb.utils.contains("DISTRO_FEATURES", "ipv6", "ipv6", "", d)}"

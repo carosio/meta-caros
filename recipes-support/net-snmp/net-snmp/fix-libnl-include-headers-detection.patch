@@ -1,0 +1,22 @@
+Index: net-snmp-5.7.3/configure.d/config_os_libs2
+===================================================================
+--- net-snmp-5.7.3.orig/configure.d/config_os_libs2
++++ net-snmp-5.7.3/configure.d/config_os_libs2
+@@ -226,10 +226,15 @@ if test "x$with_nl" != "xno"; then
+     case $target_os in
+     linux*) # Check for libnl (linux)
+         netsnmp_save_CPPFLAGS="$CPPFLAGS"
+-        CPPFLAGS="-I/usr/include/libnl3 $CPPFLAGS"
++        if test "x$with_nl" != "xyes"; then
++           NL_INC="$with_nl"
++        else
++           NL_INC="/usr/include/libnl3"
++        fi
++        CPPFLAGS="-I$NL_INC $CPPFLAGS"
+         NETSNMP_SEARCH_LIBS(nl_connect, nl-3,
+             [AC_CHECK_HEADERS(netlink/netlink.h)
+-            EXTERNAL_MIBGROUP_INCLUDES="$EXTERNAL_MIBGROUP_INCLUDES -I/usr/include/libnl3"],
++            EXTERNAL_MIBGROUP_INCLUDES="$EXTERNAL_MIBGROUP_INCLUDES -I$NL_INC"],
+             [CPPFLAGS="$netsnmp_save_CPPFLAGS"], [], [], [LMIBLIBS])
+         if test "x$ac_cv_header_netlink_netlink_h" != xyes; then
+             NETSNMP_SEARCH_LIBS(nl_connect, nl, [
