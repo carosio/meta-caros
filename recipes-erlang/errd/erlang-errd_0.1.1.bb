@@ -3,10 +3,10 @@ SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=32b4bd26a9ae3f739e3ba06649f2905a"
 
-SRCREV="46d536e4c955d148665dc9580548314bc130778b"
-PR = "r1"
+SRCREV="04c6fb8ad2b16bd93dcb3cc3fb03b2a693746f59"
+PR = "r2"
 
-SRC_URI = "git://git@git.tpip.net/errd.git;protocol=ssh"
+SRC_URI = "git://github.com/carosio/errd.git"
 
 S = "${WORKDIR}/git"
 
