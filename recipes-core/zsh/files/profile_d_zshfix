@@ -1,0 +1,8 @@
+# fix some zsh-incompatible /etc/profile magic for sh-emulate mode;
+# be sure to not interfere with non-zsh shells
+if [[ "$ZSH_NAME" = sh ]]
+then
+	# zsh shall be used as /bin/zsh for login-shells
+	# we still need a sane default prompt (without expansion)
+	export PS1="sh@TPOSS: # "
+fi

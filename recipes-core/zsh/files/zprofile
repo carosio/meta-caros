@@ -1,0 +1,29 @@
+# zsh profile configuration
+#
+# Do not change this file!
+# Add a new file to /etc/profile.d/ instead!
+#
+PATH=/usr/local/sbin:/usr/sbin:/sbin:/usr/local/bin:/usr/bin:/bin
+VISUAL=/bin/vi
+EDITOR=$VISUAL
+[[ -z "$TERM" ]] && TERM="vt100"
+
+if [ ! -e /etc/localtime -a ! -e /etc/TZ ]
+then
+	export TZ="UTC"
+fi
+
+export PS1="%n@%m:%~ %# "
+
+export HISTSIZE=1500
+export SAVEHIST=1000
+export HISTFILE=$HOME/.history.zsh
+
+if [ -d /etc/profile.d ]
+then
+	for i in /etc/profile.d/* ; do
+		. $i
+	done
+	unset i
+fi
+umask 022
