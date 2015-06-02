@@ -6,7 +6,7 @@ LIC_FILES_CHKSUM = "file://COPYING;md5=bedf4908d7c0c9b86aeb97756a02b556"
 
 SRCREV = "8ea7368335e800603b9d87d1fb08243c63e3cad8"
 
-PR = "r0"
+PR = "r1"
 
 DEPENDS = "openssl"
 
@@ -17,7 +17,7 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}-${PV}:"
 inherit autotools systemd
 
 SRC_URI = " \
-	git://git@git.tpip.net/opencapwap.git;protocol=ssh \
+       git://github.com/travelping/openCAPWAP.git \
 	file://opencapwap-wtp.service \
 	file://config.wtp \
 	file://opencapwap-ac.service \
