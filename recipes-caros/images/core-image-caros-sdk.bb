@@ -8,5 +8,5 @@ LICENSE = "MIT"
 
 inherit core-image-caros core-image
 
-IMAGE_FEATURES += "splash ssh-server-dropbear ${CAROS_IMAGE_FEATURES} ${CAROS_IMAGE_SDK_FEATURES} dev-pkgs tools-sdk"
+IMAGE_FEATURES += "splash ssh-server-openssh ${CAROS_IMAGE_FEATURES} ${CAROS_IMAGE_SDK_FEATURES} dev-pkgs tools-sdk"
 EXTRA_IMAGE_FEATURES += "tools-debug tools-profile debug-tweaks"

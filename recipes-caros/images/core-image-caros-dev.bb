@@ -8,4 +8,4 @@ LICENSE = "MIT"
 
 inherit core-image-caros core-image
 
-IMAGE_FEATURES += "splash ssh-server-dropbear ${CAROS_IMAGE_FEATURES} dev-pkgs"
+IMAGE_FEATURES += "splash ssh-server-openssh ${CAROS_IMAGE_FEATURES} dev-pkgs"

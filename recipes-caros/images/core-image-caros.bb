@@ -4,7 +4,7 @@
 SUMMARY = "Image with CarOS components."
 LICENSE = "MIT"
 
-IMAGE_FEATURES += "splash ssh-server-dropbear ${CAROS_IMAGE_FEATURES}"
+IMAGE_FEATURES += "splash ssh-server-openssh ${CAROS_IMAGE_FEATURES}"
 
 inherit core-image-caros core-image distro_features_check extrausers
 
