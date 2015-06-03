@@ -6,7 +6,7 @@ LIC_FILES_CHKSUM = "file://src/gen_esme.erl;beginline=1;endline=28;md5=9ce15051e
 SRCREV="229ab3d72c6e73b0e849ad3d601d1e46b302f7df"
 PR = "r1"
 
-SRC_URI = "git://git@git.tpip.net/oserl.git;protocol=ssh"
+SRC_URI = "GITURL/oserl.git;protocol=ssh"
 
 S = "${WORKDIR}/git"
 
