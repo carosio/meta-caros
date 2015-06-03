@@ -1,9 +1,9 @@
 SUMMARY = "Recipe for erlang-monads"
 SECTION = "net"
 LICENSE = "CLOSED"
-PR = "r1"
+PR = "r2"
 
-SRC_URI = "git://git@git.tpip.net/monads.git;protocol=ssh"
+SRC_URI = "git://github.com/carosio/monads.git"
 SRCREV= "e5fa78e3ab312048471891d119362b5d2cdbb2b5"
 
 S = "${WORKDIR}/git"
