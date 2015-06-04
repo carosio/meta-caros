@@ -1,0 +1,5 @@
+if [ ! -e /etc/localtime -a ! -e /etc/TZ ]
+then
+	export TZ="UTC"
+fi
+

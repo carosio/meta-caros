@@ -1,0 +1,15 @@
+# zsh environ configuration
+#
+# Do not change this file!
+# Add a new file to /etc/environ.d/ instead!
+#
+PATH=/usr/local/sbin:/usr/sbin:/sbin:/usr/local/bin:/usr/bin:/bin
+
+if [ -d /etc/environ.d ]
+then
+	for i in /etc/environ.d/* ; do
+		. $i
+	done
+	unset i
+fi
+

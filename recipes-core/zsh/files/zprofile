@@ -3,15 +3,11 @@
 # Do not change this file!
 # Add a new file to /etc/profile.d/ instead!
 #
-PATH=/usr/local/sbin:/usr/sbin:/sbin:/usr/local/bin:/usr/bin:/bin
+# Also see /etc/zshenv and /etc/environ.d/ ...
+#
 VISUAL=/bin/vi
 EDITOR=$VISUAL
 [[ -z "$TERM" ]] && TERM="vt100"
-
-if [ ! -e /etc/localtime -a ! -e /etc/TZ ]
-then
-	export TZ="UTC"
-fi
 
 export PS1="%n@%m:%~ %# "
 

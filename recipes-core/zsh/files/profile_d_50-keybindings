@@ -1,0 +1,25 @@
+# be sure to not interfere with non-zsh shells
+if [[ "$ZSH_NAME" = zsh ]]
+then
+	bindkey "\e[1~" beginning-of-line
+	bindkey "\e[7~" beginning-of-line
+	bindkey "\e[OH" beginning-of-line
+	bindkey "^[OH" beginning-of-line
+	bindkey "\e[H" beginning-of-line
+
+	bindkey "\e[4~" end-of-line
+	bindkey "\e[8~" end-of-line
+	bindkey "\e[OF" end-of-line
+	bindkey "^[OF" end-of-line
+	bindkey "\e[F" end-of-line
+
+	bindkey "\e[2~" overwrite-mode
+	bindkey "\e[3~" delete-char
+	bindkey "^[[3~" delete-char
+
+	bindkey "^[OC" forward-word
+	bindkey ";5C" forward-word
+
+	bindkey "^[OD" backward-word
+	bindkey ";5D" backward-word
+fi

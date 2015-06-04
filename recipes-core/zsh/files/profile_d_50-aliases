@@ -1,0 +1,7 @@
+alias l='ls -l'
+alias ll='ls -als'
+
+if [[ "$ZSH_NAME" = zsh ]]
+then
+	alias history="history -i"
+fi

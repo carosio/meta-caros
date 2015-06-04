@@ -8,11 +8,15 @@ SECTION = "base/shell"
 LICENSE = "zsh"
 LIC_FILES_CHKSUM = "file://LICENCE;md5=b7bc853894664be455a922db9805288e"
 
-PR = "r5"
+PR = "r8"
 
 SRC_URI = "${SOURCEFORGE_MIRROR}/${BPN}/${BP}.tar.gz \
-    file://profile_d_zshfix \
+    file://environ_d_10-timezone \
+    file://profile_d_10-zshfix \
+    file://profile_d_50-aliases \
+    file://profile_d_50-keybindings \
     file://zprofile \
+    file://zshenv \
 "
 
 SRC_URI[md5sum] = "76726ff50309e628de670476e0508b3a"
@@ -42,6 +46,10 @@ ALTERNATIVE_TARGET[sh] = "${base_bindir}/${BPN}"
 ALTERNATIVE_PRIORITY = "100"
 
 CONFFILES_${PN} = "${sysconfdir}/zprofile"
+CONFFILES_${PN} = "${sysconfdir}/zshenv"
+CONFFILES_${PN} = "${sysconfdir}/environ.d/10-timezone"
+CONFFILES_${PN} = "${sysconfdir}/profile.d/50-aliases"
+CONFFILES_${PN} = "${sysconfdir}/profile.d/50-keybindings"
 
 export AUTOHEADER = "true"
 
@@ -53,9 +61,17 @@ do_configure () {
 
 do_install_append () {
     rm -fr ${D}/usr/share
-    install -d -o 0 -g 0 -m 0755 ${D}${sysconfdir}/profile.d/
-    install -o 0 -g 0 -m 0444 ${WORKDIR}/profile_d_zshfix ${D}${sysconfdir}/profile.d/zshfix
+
+    install -d -o 0 -g 0 -m 0755 ${D}${sysconfdir}
     install -o 0 -g 0 -m 0444 ${WORKDIR}/zprofile ${D}${sysconfdir}/zprofile
+    install -d -o 0 -g 0 -m 0755 ${D}${sysconfdir}/profile.d/
+    install -o 0 -g 0 -m 0444 ${WORKDIR}/profile_d_10-zshfix ${D}${sysconfdir}/profile.d/10-zshfix
+    install -o 0 -g 0 -m 0444 ${WORKDIR}/profile_d_50-keybindings ${D}${sysconfdir}/profile.d/50-keybindings.zsh
+    install -o 0 -g 0 -m 0444 ${WORKDIR}/profile_d_50-aliases ${D}${sysconfdir}/profile.d/50-aliases.zsh
+
+    install -o 0 -g 0 -m 0444 ${WORKDIR}/zshenv ${D}${sysconfdir}/zshenv
+    install -d -o 0 -g 0 -m 0755 ${D}${sysconfdir}/environ.d/
+    install -o 0 -g 0 -m 0644 ${WORKDIR}/environ_d_10-timezone ${D}${sysconfdir}/environ.d/10-timezone
 }
 
 pkg_postinst_${PN} () {
