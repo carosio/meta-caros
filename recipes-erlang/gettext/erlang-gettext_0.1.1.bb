@@ -3,10 +3,10 @@ SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=e6e621747d07ff2f060109eec33234a9"
 
-SRCREV="e3cc619a40165088c1ca274eb7cc8e304475f7bf"
-PR = "r1"
+SRCREV="56a286fb9eaf6e3d371a45e56cbbe0c05ea6900b"
+PR = "r2"
 
-SRC_URI = "git://git@git.tpip.net/gettext.git;protocol=ssh;branch=travelping"
+SRC_URI = "git://github.com/carosio/erlang-gettext.git"
 
 S = "${WORKDIR}/git"
 

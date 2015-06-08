@@ -8,7 +8,7 @@ DEPENDS = "erlang-eradius"
 RDEPENDS_${PN} = "erlang-eradius"
 
 SRCREV = "8f810fa97b988412ea0e917ae08a15ae012bfdd0"
-SRC_URI = "git://git@git.tpip.net/eradius_snmp.git;protocol=ssh"
+SRC_URI = "GITURL/eradius_snmp.git;protocol=ssh"
 
 inherit tetrapak
 

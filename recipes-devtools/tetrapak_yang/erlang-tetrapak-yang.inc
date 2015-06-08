@@ -3,9 +3,9 @@ SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://README.md;md5=4de735d102fc94db0f7bd763d7a03434"
 
-INC_PR = "r2"
+INC_PR = "r3"
 
-SRC_URI = "git://git@git.tpip.net/tetrapak_yang.git;protocol=ssh"
+SRC_URI = "git://github.com/travelping/tetrapak_yang.git"
 
 S = "${WORKDIR}/git"
 
