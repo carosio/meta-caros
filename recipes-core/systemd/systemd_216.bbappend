@@ -1,6 +1,6 @@
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
-PR := "${PR}.5"
+PR := "${PR}.6"
 
 SRC_URI += " \
 	file://0001-tp-remote-syslog.patch \
@@ -12,6 +12,7 @@ SRC_URI += " \
 
 CONFFILES_${PN} += "${sysconfdir}/systemd/timesyncd.conf"
 CONFFILES_${PN} += "${sysconfdir}/systemd/network/mgmt.network"
+CONFFILES_${PN} += "${sysconfdir}/machine-id"
 
 MGMT_IF ?= "eth0"
 MGMT_IF_vmware ?= "ven0"
