@@ -2,9 +2,9 @@ SUMMARY = "journald backend for lager"
 SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=9db35a42b923528200d82fcbb74c4dc2"
-SRCREV = "b2567bb5eea99650fcc8a2dbb0d49641b4d6fb4f"
+SRCREV = "bc118f478188b7d601e9c47c67d9f7fb07c74a61"
 
-PR = "r2"
+PR = "r1"
 
 SRC_URI = "git://github.com/travelping/lager_journald_backend.git;protocol=git"
 
