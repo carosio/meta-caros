@@ -3,7 +3,7 @@ SECTION = "net"
 LICENSE = "MPL-2.0"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=815ca599c9df247a0c7f619bab123dad"
 
-PR = "r1"
+PR = "r2"
 
 APPNAME = "unimux"
 APPVERSION = "${PV}"
@@ -72,7 +72,7 @@ CONFFILES_${PN} += "${CAROS_SYSCONFIG_PREFIX}/${APPNAME}.conf"
 
 inherit systemd
 
-SYSTEMD_AUTO_ENABLE = "enable"
+SYSTEMD_AUTO_ENABLE = "disable"
 
 SYSTEMD_SERVICE_${PN} = "caros-${APPNAME}-${APPVERSION}.service"
 
