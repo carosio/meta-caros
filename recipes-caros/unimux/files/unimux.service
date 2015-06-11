@@ -1,0 +1,14 @@
+[Unit]
+Description=CAROS UniMux
+
+[Service]
+
+Environment="HOME=/tmp"
+Environment="USER_CONFIG_FILE=/etc/unimux.conf"
+Environment="MUTABLE_DIR=/run/caros-unimux"
+ExecStart=/usr/caros-apps/unimux/@@VERSION@@/bin/rc foreground
+ExecStop=/usr/caros-apps/unimux/@@VERSION@@/bin/rc stop
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
