@@ -3,19 +3,19 @@ SECTION = "net"
 LICENSE = "MPL-2.0"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=815ca599c9df247a0c7f619bab123dad"
 
-PR = "r2"
+PR = "r3"
 
 APPNAME = "unimux"
 APPVERSION = "${PV}"
 
 REL_NAME = "${APPNAME}"
-REL_VSN = "0.1.1"
+REL_VSN = "0.1.3"
 
 SRC_URI = "git://github.com/carosio/unimux.git;protocol=git;name=unimux;destsuffix=git-${REL_NAME}"
 
 SRC_URI += "file://${APPNAME}.service"
 
-SRCREV_unimux = "8b6033589fd11ca3efca4508afbe900df935ec82"
+SRCREV_unimux = "ff77c86fba1a0966e2bd1771375f3dbe70ffd92f"
 
 S = "${WORKDIR}/git-${REL_NAME}"
 
