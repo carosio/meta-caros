@@ -1,0 +1,16 @@
+Index: glusterfs-3.7.1/configure.ac
+===================================================================
+--- glusterfs-3.7.1.orig/configure.ac
++++ glusterfs-3.7.1/configure.ac
+@@ -1132,9 +1132,9 @@ saved_LDFLAGS=$LDFLAGS
+ # Use pkg-config to get runtime search patch missing from ${PYTHON}-config
+ # Just do "true" on failure so that configure does not bail out
+ PKG_CHECK_MODULES([PYTHON], "python-$PYTHON_VERSION",,true)
+-CFLAGS="`${PYTHON}-config --cflags`"
++CFLAGS="${PYTHON_CFLAGS} `${PYTHON}-config --cflags`"
+ CPPFLAGS=$CFLAGS
+-LDFLAGS="${PYTHON_LIBS} -L`${PYTHON}-config --prefix`/lib -L`${PYTHON}-config --prefix`/$libdir `${PYTHON}-config --ldflags`"
++LDFLAGS="${PYTHON_LIBS} `${PYTHON}-config --ldflags`"
+ 
+ AC_CHECK_HEADERS([python$PYTHON_VERSION/Python.h],[have_Python_h=yes],[])
+ AC_ARG_ENABLE([glupy],

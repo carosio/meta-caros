@@ -1,0 +1,2 @@
+d root root 0755 /var/log/glusterfs none
+d root root 0755 /var/run/gluster none
