@@ -3,19 +3,19 @@ SECTION = "net"
 LICENSE = "MPL-2.0"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=815ca599c9df247a0c7f619bab123dad"
 
-PR = "r3"
+PR = "r1"
 
 APPNAME = "unimux"
 APPVERSION = "${PV}"
 
 REL_NAME = "${APPNAME}"
-REL_VSN = "0.1.3"
+REL_VSN = "0.1.4"
 
 SRC_URI = "git://github.com/carosio/unimux.git;protocol=git;name=unimux;destsuffix=git-${REL_NAME}"
 
 SRC_URI += "file://${APPNAME}.service"
 
-SRCREV_unimux = "ff77c86fba1a0966e2bd1771375f3dbe70ffd92f"
+SRCREV_unimux = "c12774e1b2b50295f771827d0b58c1a3dcf9b543"
 
 S = "${WORKDIR}/git-${REL_NAME}"
 
@@ -74,8 +74,7 @@ inherit systemd
 
 SYSTEMD_AUTO_ENABLE = "disable"
 
-SYSTEMD_SERVICE_${PN} = "caros-${APPNAME}-${APPVERSION}.service"
-
+SYSTEMD_SERVICE_${PN} = "caros-${APPNAME}.service"
 
 do_install() {
     install -m 0755 -d "${D}/${CAROS_APP_PREFIX}/${APPNAME}/${APPVERSION}/"
@@ -84,9 +83,10 @@ do_install() {
 
     install -m 0755 -d "${D}/${CAROS_SYSCONFIG_PREFIX}"
     install -m 0644 ${S}/config/${APPNAME}.conf ${D}/${CAROS_SYSCONFIG_PREFIX}/${APPNAME}.conf
+    echo "log.journal.level = info" >> ${D}/${CAROS_SYSCONFIG_PREFIX}/${APPNAME}.conf
 
     install -d ${D}${systemd_unitdir}/system/
-    install -m 0644 ${WORKDIR}/${APPNAME}.service ${D}${systemd_unitdir}/system/caros-${APPNAME}-${APPVERSION}.service
-    sed -i "s/@@VERSION@@/${APPVERSION}/" ${D}${systemd_unitdir}/system/caros-${APPNAME}-${APPVERSION}.service
+    install -m 0644 ${WORKDIR}/${APPNAME}.service ${D}${systemd_unitdir}/system/caros-${APPNAME}.service
+    sed -i "s/@@VERSION@@/${APPVERSION}/" ${D}${systemd_unitdir}/system/caros-${APPNAME}.service
 }
 
