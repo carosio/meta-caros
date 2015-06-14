@@ -8,7 +8,7 @@ SECTION = "base/shell"
 LICENSE = "zsh"
 LIC_FILES_CHKSUM = "file://LICENCE;md5=b7bc853894664be455a922db9805288e"
 
-PR = "r8"
+PR = "r9"
 
 SRC_URI = "${SOURCEFORGE_MIRROR}/${BPN}/${BP}.tar.gz \
     file://environ_d_10-timezone \
@@ -43,7 +43,7 @@ EXTRA_OECONF = " \
 ALTERNATIVE_${PN} = "sh"
 ALTERNATIVE_LINK_NAME[sh] = "${base_bindir}/sh"
 ALTERNATIVE_TARGET[sh] = "${base_bindir}/${BPN}"
-ALTERNATIVE_PRIORITY = "100"
+ALTERNATIVE_PRIORITY = "110"
 
 CONFFILES_${PN} = "${sysconfdir}/zprofile"
 CONFFILES_${PN} = "${sysconfdir}/zshenv"
