@@ -3,10 +3,12 @@ SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://src/emdb.erl;beginline=1;endline=8;md5=8e7aed6247005d59f8b275eb7143e67a"
 
-PR = "r3"
+PR = "r4"
 
-SRC_URI = "GITURL/emdb.git;protocol=ssh"
-SRCREV="18b699406fe863a4cd4997c43e940e1e7ac29aa5"
+DEPENDS += "erlang-pmod-transform"
+
+SRC_URI = "git://github.com/carosio/emdb.git;branch=travelping"
+SRCREV="ab642f3327d7fec56b4dc6607e640ad58cbcc863"
 
 S = "${WORKDIR}/git"
 
