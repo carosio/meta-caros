@@ -9,18 +9,17 @@ SECTION = "console/network"
 LICENSE = "GPLv2"
 LIC_FILES_CHKSUM = "file://COPYING-GPLV2;md5=b234ee4d69f5fce4486a80fdaf4a4263"
 
-PR = "r1"
+PR = "r2"
 
 SRC_URI = "http://download.gluster.org/pub/gluster/glusterfs/3.7/${PV}/${BPN}-${PV}.tar.gz \
 	   file://configure-forign.patch \
 	   file://python-cross.patch \
-	   file://gluster-volatiles"
+	   file://gluster-tmpfiles"
 SRC_URI[md5sum] = "0b565f92a467f5aafab38c8343f0caa0"
 SRC_URI[sha256sum] = "fc367f153cb528f96501abaae537a7bc9705aeb5c7ea4e448679b0cd65642b34"
 
 DEPENDS = "liburcu libxml2 bison-native flex-native fuse openssl python-native python readline \
 	   zlib util-linux acl attr glib-2.0"
-RDEPENDS_${PN}-common += "attr kernel-module-fuse"
 
 inherit autotools pythonnative pkgconfig systemd
 
@@ -28,8 +27,7 @@ CACHED_CONFIGUREVARS = "ac_cv_lib_lex=no \
 			ac_cv_file__etc_debian_version=no \
 			ac_cv_file__etc_redhat_release=no \
 			ac_cv_file__etc_SuSE_release=no"
-EXTRA_OECONF = "--with-mountutildir=${sbindir} \
-	        --disable-fusermount \
+EXTRA_OECONF = "--disable-fusermount \
 		--disable-glupy"
 EXTRA_OECONF += "${@base_contains('DISTRO_FEATURES', 'systemd', '--with-systemddir=${systemd_unitdir}/system', '--without-systemddir', d)}"
 
@@ -45,7 +43,8 @@ PACKAGES = "${PN}-dbg ${PN}-doc ${PN}-dev \
 SYSTEMD_PACKAGES = "${PN}-server"
 SYSTEMD_SERVICE_${PN}-server = "glusterd.service"
 
-RDEPENDS_${PN}-common = "bash"
+RDEPENDS_${PN}-common = "bash attr kernel-module-fuse "
+KERNEL_MODULE_AUTOLOAD += "fuse"
 RDEPENDS_${PN}-ganesha = "bash"
 
 PRIVATE_LIBS = "access-control.so addr.so afr.so api.so arbiter.so barrier.so \
@@ -68,20 +67,31 @@ do_install_append() {
     rm -rf ${D}/run ${D}/var/run ${D}/var/log  ${D}/var/volatile
 
     # The RPM spec file creates these directories.
-    install -d -m 0755 ${D}${sysconfdir}/default/volatiles
-    install ${WORKDIR}/gluster-volatiles ${D}${sysconfdir}/default/volatiles/99_glusterfs
+    install -d -m 0755 ${D}${sysconfdir}/tmpfiles.d
+    install ${WORKDIR}/gluster-tmpfiles ${D}${sysconfdir}/tmpfiles.d/99_glusterfs.conf
 
     rm -f ${D}${sysconfdir}/glusterfs/glusterfs-logrotate \
        	  ${D}${sysconfdir}/glusterfs/group-virt.example
 
     install -D -p -m 0644 ${S}/extras/glusterfs-logrotate ${D}${sysconfdir}/logrotate.d/glusterfs
-
-    install -d ${D}/sbin
-    ln -s /usr/sbin/mount.glusterfs ${D}/sbin
 }
 
 pkg_postinst_${PN}-common () {
     mkdir -p /var/log/glusterfs
+    mkdir -p /var/run/gluster
+
+    (
+        echo
+        echo -e "\e[1;31m-----------------------------------------"
+        echo -e "\e[1;31m| To finish the GlusterFS installation, |"
+        echo -e "\e[1;31m| manually load the fuse kernel module: |"
+        echo -e "\e[1;31m|                                       |"
+        echo -e "\e[1;31m| modprobe fuse                         |"
+        echo -e "\e[1;31m|                                       |"
+        echo -e "\e[1;31m| or reboot this machine.               |"
+        echo -e "\e[1;31m-----------------------------------------"
+        echo -e "\033[0m"
+    )
 }
 
 # Allow plug-in symlinks.
@@ -97,7 +107,7 @@ FILES_${PN}-dbg += "${libexecdir}/${PV}/*/.debug \
 FILES_${PN}-common = "${sbindir}/glusterfsd \
 		      ${libdir}/* \
 		      ${datadir}/glusterfs/scripts \
-		      ${sysconfdir}/default/volatiles/99_glusterfs"
+		      ${sysconfdir}/tmpfiles.d/99_glusterfs.conf"
 
 FILES_${PN}-client = "${sbindir}/mount.glusterfs \
 		      ${sbindir}/glusterfs \
