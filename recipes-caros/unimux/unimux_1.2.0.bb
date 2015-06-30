@@ -9,13 +9,13 @@ APPNAME = "unimux"
 APPVERSION = "${PV}"
 
 REL_NAME = "${APPNAME}"
-REL_VSN = "0.1.4"
+REL_VSN = "0.2.0"
 
 SRC_URI = "git://github.com/carosio/unimux.git;protocol=git;name=unimux;destsuffix=git-${REL_NAME}"
 
 SRC_URI += "file://${APPNAME}.service"
 
-SRCREV_unimux = "c12774e1b2b50295f771827d0b58c1a3dcf9b543"
+SRCREV_unimux = "7c34ab70c6c610b4813887275fbaa0e496e9e759"
 
 S = "${WORKDIR}/git-${REL_NAME}"
 
