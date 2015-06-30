@@ -8,13 +8,14 @@ SECTION = "base/shell"
 LICENSE = "zsh"
 LIC_FILES_CHKSUM = "file://LICENCE;md5=b7bc853894664be455a922db9805288e"
 
-PR = "r9"
+PR = "r10"
 
 SRC_URI = "${SOURCEFORGE_MIRROR}/${BPN}/${BP}.tar.gz \
     file://environ_d_10-timezone \
     file://profile_d_10-zshfix \
     file://profile_d_50-aliases \
     file://profile_d_50-keybindings \
+    file://profile_d_50-history \
     file://zprofile \
     file://zshenv \
 "
@@ -50,6 +51,7 @@ CONFFILES_${PN} = "${sysconfdir}/zshenv"
 CONFFILES_${PN} = "${sysconfdir}/environ.d/10-timezone"
 CONFFILES_${PN} = "${sysconfdir}/profile.d/50-aliases"
 CONFFILES_${PN} = "${sysconfdir}/profile.d/50-keybindings"
+CONFFILES_${PN} = "${sysconfdir}/profile.d/50-history"
 
 export AUTOHEADER = "true"
 
@@ -67,6 +69,7 @@ do_install_append () {
     install -d -o 0 -g 0 -m 0755 ${D}${sysconfdir}/profile.d/
     install -o 0 -g 0 -m 0444 ${WORKDIR}/profile_d_10-zshfix ${D}${sysconfdir}/profile.d/10-zshfix
     install -o 0 -g 0 -m 0444 ${WORKDIR}/profile_d_50-keybindings ${D}${sysconfdir}/profile.d/50-keybindings.zsh
+    install -o 0 -g 0 -m 0444 ${WORKDIR}/profile_d_50-history ${D}${sysconfdir}/profile.d/50-history.zsh
     install -o 0 -g 0 -m 0444 ${WORKDIR}/profile_d_50-aliases ${D}${sysconfdir}/profile.d/50-aliases.zsh
 
     install -o 0 -g 0 -m 0444 ${WORKDIR}/zshenv ${D}${sysconfdir}/zshenv

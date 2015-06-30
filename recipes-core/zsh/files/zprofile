@@ -11,10 +11,6 @@ EDITOR=$VISUAL
 
 export PS1="%n@%m:%~ %# "
 
-export HISTSIZE=1500
-export SAVEHIST=1000
-export HISTFILE=$HOME/.history.zsh
-
 if [ -d /etc/profile.d ]
 then
 	for i in /etc/profile.d/* ; do
