@@ -1,0 +1,8 @@
+# be sure to not interfere with non-zsh shells
+if [[ "$ZSH_NAME" = zsh ]]
+then
+	export HISTSIZE=15000
+	export SAVEHIST=10000
+	export HISTFILE=$HOME/.history.zsh
+	setopt EXTENDED_HISTORY
+fi
