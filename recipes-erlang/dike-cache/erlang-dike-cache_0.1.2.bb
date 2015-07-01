@@ -1,9 +1,9 @@
 SUMMARY = "Distributed consistent cache based on dike and paxos"
 SECTION = "net"
-LICENSE = "MIT"
+LICENSE = "MPL-2.0"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=65d26fcc2f35ea6a181ac777e42db1ea"
 
-PR = "r1"
+PR = "r2"
 
 SRC_URI = "https://github.com/travelping/dike_cache/archive/${PV}.tar.gz;downloadfilename=${PN}-${PV}.tar.gz"
 SRC_URI[md5sum] = "9baed6427339a83e30731fc82a861c39"

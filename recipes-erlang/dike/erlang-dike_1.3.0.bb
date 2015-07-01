@@ -1,6 +1,6 @@
 SUMMARY = "Dike - a framework for distributed computing and storage"
 SECTION = "devel"
-LICENSE = "MIT"
+LICENSE = "MPL-2.0"
 LIC_FILES_CHKSUM = "file://src/dike_master.erl;beginline=1;endline=8;md5=69962098c047c6d4113c55dd2f6df435"
 
 SRC_URI = "https://github.com/travelping/dike/archive/${PV}.tar.gz;downloadfilename=${PN}-${PV}.tar.gz"
