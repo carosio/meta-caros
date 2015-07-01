@@ -4,10 +4,10 @@ LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://src/dike_master.erl;beginline=1;endline=8;md5=69962098c047c6d4113c55dd2f6df435"
 
 SRC_URI = "https://github.com/travelping/dike/archive/${PV}.tar.gz;downloadfilename=${PN}-${PV}.tar.gz"
-SRC_URI[md5sum] = "df5074d4f9c10b39c8f18c760b3db472"
-SRC_URI[sha256sum] = "0a9fa9078c38edb36adba90ac417d3ce9727d53eda1d851c20674cce6a3a3078"
+SRC_URI[md5sum] = "f8fef2b4ba2135239dbc1d2ca4707608"
+SRC_URI[sha256sum] = "0306a7870dd665d82fe7e499945697cfc4ca6403a8c56822f74976990cfb7dc8"
 
-PR = "r2"
+PR = "r1"
 
 DEPENDS = "erlang-regine erlang-emdb erlang-lager"
 RDEPENDS_${PN} += "erlang-emdb"
