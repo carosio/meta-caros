@@ -1,5 +1,5 @@
 SUMMARY = "journald gateway for ZMTP based log forwarding"
-SECTION = "network"
+SECTION = "logging"
 DEPENDS += "zeromq"
 DEPENDS += "czmq"
 DEPENDS += "jansson"
