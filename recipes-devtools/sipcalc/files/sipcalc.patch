@@ -1,0 +1,47 @@
+diff --git a/configure b/configure
+index e2247a1..ebfbc36 100755
+--- a/configure
++++ b/configure
+@@ -4124,17 +4124,6 @@ fi
+ done
+ 
+ 
+-if test -d /usr/local/include;
+-then
+-  CFLAGS="${CFLAGS} -I/usr/local/include"
+-fi
+-
+-if test -d /usr/local/lib;
+-then
+-  LIBS="${LIBS} -L/usr/local/lib"
+-fi
+-
+-
+ 
+ 
+ 
+diff --git a/configure.ac b/configure.ac
+index 4cd2a2c..2c183cc 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -16,19 +16,6 @@ AC_CHECK_LIB(nsl, inet_ntoa,
+ ])
+ AC_CHECK_FUNCS(socket strstr strtol strtoul gethostbyname gethostbyname2 inet_ntop getipnodebyaddr getaddrinfo)
+ 
+-dnl - Include /usr/local/include if it exists.
+-if test -d /usr/local/include;
+-then
+-  CFLAGS="${CFLAGS} -I/usr/local/include"
+-fi
+-
+-dnl - Include /usr/local/lib if it exists.
+-if test -d /usr/local/lib;
+-then
+-  LIBS="${LIBS} -L/usr/local/lib"
+-fi
+-
+-
+ dnl Check if getopt_long is available.
+ 
+ AC_DEFUN([sii_GETOPT_LONG],
+
