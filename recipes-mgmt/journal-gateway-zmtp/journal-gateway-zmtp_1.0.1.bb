@@ -12,8 +12,8 @@ LIC_FILES_CHKSUM = "file://LICENSE.LGPL2.1;md5=4fbd65380cdd255951079008b364516c"
 inherit autotools systemd
 
 SRC_URI = "https://github.com/travelping/journal-gateway-zmtp/archive/v${PV}.tar.gz;downloadfilename=${PN}-${PV}.tar.gz"
-SRC_URI[md5sum] = "098f006342145631711bcb1a2681f962"
-SRC_URI[sha256sum] = "dc62c0f12cda06049ac8f8f1ab74d66d633b11e4aa2911141d0a477dae13a1a6"
+SRC_URI[md5sum] = "605a136ecd28eb8e0739cd1751f03083"
+SRC_URI[sha256sum] = "008729d86b1bf0fd9015ae9ff54059aef6f6a3236730e7f01a522bce10d5fc9f"
 
 S = "${WORKDIR}/${PN}-${PV}"
 
