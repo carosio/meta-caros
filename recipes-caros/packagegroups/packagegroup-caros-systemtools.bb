@@ -12,6 +12,6 @@ PACKAGE_GROUP_caros_systemtools = "${PN}"
 RDEPENDS_${PN} = "\
 perf \
 lsof \
-netstat \
+ss \
 strace \
 "
