@@ -1,0 +1,256 @@
+diff --git a/include/sub.h b/include/sub.h
+index 4fb9a86..a6ee6cf 100644
+--- a/include/sub.h
++++ b/include/sub.h
+@@ -183,14 +183,18 @@ struct dnsresp {
+ #define IFT_UNKWN 5
+ 
+ /* v4 args */
+-#define CF_INFO     0x01
+-#define CF_BITMAP   0x02
+-#define CIDR_INFO   0x04
+-#define CIDR_BITMAP 0x08
+-#define NET_INFO    0x10
+-#define V4SPLIT     0x20
+-#define V4VERBSPLIT 0x40
+-#define C_WILDCARD  0x80
++#define CF_INFO     0x001
++#define CF_BITMAP   0x002
++#define CIDR_INFO   0x004
++#define CIDR_BITMAP 0x008
++#define NET_INFO    0x010
++#define V4SPLIT     0x020
++#define V4VERBSPLIT 0x040
++#define C_WILDCARD  0x080
++#define V4MIN       0x100
++#define V4MAX       0x200
++#define V4NETMASK   0x400
++#define BITNOT      0x800
+ 
+ /* v6 args */
+ #define V6_INFO     0x01
+diff --git a/src/sub-output.c b/src/sub-output.c
+index 14ebd88..776c76b 100644
+--- a/src/sub-output.c
++++ b/src/sub-output.c
+@@ -695,6 +695,12 @@ print_help ()
+ 	printf
+ 	    ("Usage: %s [OPTIONS]... <[ADDRESS]... [INTERFACE]... | [-]>\n\n",
+ 	     NAME);
++	printf ("Extra options:\n");
++	printf ("  -m, --min\t\t\tMinimal IP address.\n");
++	printf ("  -M, --max\t\t\tMaximal IP address.\n");
++	printf ("  -N, --netmask\t\t\tNetwork mask.\n");
++	printf ("  -B, --bitmap\t\t\tEnable bitmap notation.\n");
++	printf ("\n");
+ 	printf ("Global options:\n");
+ 	printf ("  -a, --all\t\t\tAll possible information.\n");
+ 	printf ("  -d, --resolve\t\t\tEnable name resolution.\n");
+@@ -754,6 +760,12 @@ print_help ()
+ 	printf
+ 	    ("Usage: %s [OPTIONS]... <[ADDRESS]... [INTERFACE]... | [-]>\n\n",
+ 	     NAME);
++	printf ("Extra options:\n");
++	printf ("  -m\t\tMinimal IP address.\n");
++	printf ("  -M\t\tMaximal IP address.\n");
++	printf ("  -N\t\tNetwork mask.\n");
++	printf ("  -B\t\tEnable bitmap notation.\n");
++	printf ("\n");
+ 	printf ("Global options:\n");
+ 	printf ("  -a\t\tAll possible information.\n");
+ 	printf ("  -d\t\tEnable name resolution.\n");
+@@ -824,3 +836,33 @@ print_version ()
+ 	printf
+ 	    ("warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
+ }
++
++void
++print_minimal (struct if_info *ifi, char bitnot){
++	if(bitnot){
++		printf ("%s", numtobitmap (ifi->v4ad.n_naddr + 1));
++	}
++	else{
++		printf ("%s", numtoquad (ifi->v4ad.n_naddr + 1));
++	}
++}
++
++void
++print_maximal (struct if_info *ifi, char bitnot){
++	if(bitnot){
++		printf ("%s", numtobitmap (ifi->v4ad.n_broadcast - 1));
++	}
++	else{
++		printf ("%s", numtoquad (ifi->v4ad.n_broadcast - 1));
++	}
++}
++
++void
++print_netmask (struct if_info *ifi, char bitnot){
++	if(bitnot){
++		printf ("%s", numtobitmap (ifi->v4ad.n_nmask));
++	}
++	else{
++		printf ("%s", numtoquad (ifi->v4ad.n_nmask));
++	}
++}
+diff --git a/src/sub.c b/src/sub.c
+index 6ac533e..a6acb7d 100644
+--- a/src/sub.c
++++ b/src/sub.c
+@@ -54,6 +54,7 @@ static const char rcsid[] = "$Id: sub.c,v 1.39 2003/03/19 12:28:16 simius Exp $"
+ extern char *optarg;
+ extern int optind, opterr, optopt;
+ int resolve;
++char MINIMAL_OUT = 0;
+ 
+ int
+ out_cmdline (struct if_info *ifarg_cur, int v4args, struct misc_args m_argv4,
+@@ -63,23 +64,35 @@ out_cmdline (struct if_info *ifarg_cur, int v4args, struct misc_args m_argv4,
+ 
+ 	ret = 0;
+ 
+-	if (ifarg_cur->type == IFT_V4) {
+-		printf ("-[ipv4 : %s] - %d\n", ifarg_cur->cmdstr, index);
+-		ret = get_addrv4 (ifarg_cur);
+-	}
++	if(MINIMAL_OUT){
++		if (ifarg_cur->type == IFT_V4) {
++			ret = get_addrv4 (ifarg_cur);
++		}
+ 
+-	if (ifarg_cur->type == IFT_V6) {
+-		printf ("-[ipv6 : %s] - %d\n", ifarg_cur->cmdstr, index);
+-		ret = get_addrv6 (ifarg_cur);
++		if (ifarg_cur->type == IFT_V6) {
++			ret = get_addrv6 (ifarg_cur);
++		}
+ 	}
++	else{
++		if (ifarg_cur->type == IFT_V4) {
++			printf ("-[ipv4 : %s] - %d\n", ifarg_cur->cmdstr, index);
++			ret = get_addrv4 (ifarg_cur);
++		}
++
++		if (ifarg_cur->type == IFT_V6) {
++			printf ("-[ipv6 : %s] - %d\n", ifarg_cur->cmdstr, index);
++			ret = get_addrv6 (ifarg_cur);
++		}
+ 
++	}
++	
+ 	if (ifarg_cur->type == IFT_INTV4 || ifarg_cur->type == IFT_INTV6) {
+ 		printf ("-[int-ipv4 : %s] - %d\n", ifarg_cur->cmdstr, index);
+ 		if (ifarg_cur->errorstr[0] != '\0') {
+ 			printf ("\n-[ERR : %s]\n\n-\n", ifarg_cur->errorstr);
+ 			return 0;
+ 		}
+-		
++
+ 		ret = get_addrv4 (ifarg_cur);
+ 	}
+ 
+@@ -93,16 +106,20 @@ out_cmdline (struct if_info *ifarg_cur, int v4args, struct misc_args m_argv4,
+ 		printf ("\n-[ERR : Invalid address]\n\n-\n");
+ 		return 0;
+ 	}
++	
+ 	if (ret == -2) {
+ 		printf ("\n-[ERR : Invalid netmask]\n\n-\n");
+ 		return 0;
+ 	}
++	
++	if(!MINIMAL_OUT){
++		printf ("\n");
++	}
+ 
+ 	if (ifarg_cur->type == IFT_V4 || ifarg_cur->type == IFT_INTV4) {
+ 		if (!v4args)
+ 			v4args = CIDR_INFO;
+-
+-		printf ("\n");
++		
+ 		if ((v4args & CF_INFO) == CF_INFO)
+ 			print_cf_info_v4 (ifarg_cur);
+ 		if ((v4args & CIDR_INFO) == CIDR_INFO)
+@@ -117,14 +134,18 @@ out_cmdline (struct if_info *ifarg_cur, int v4args, struct misc_args m_argv4,
+ 			show_split_networks_v4 (ifarg_cur, m_argv4.splitmask, v4args, m_argv4);
+ 		if ((v4args & C_WILDCARD) == C_WILDCARD)
+ 			show_c_wildcard_info_v4 (ifarg_cur);
+-		printf ("-\n");
++		if ((v4args & V4MIN) == V4MIN)
++			print_minimal (ifarg_cur, (v4args & BITNOT) == BITNOT);
++		if ((v4args & V4MAX) == V4MAX)
++			print_maximal (ifarg_cur, (v4args & BITNOT) == BITNOT);
++		if ((v4args & V4NETMASK) == V4NETMASK)
++			print_netmask (ifarg_cur, (v4args & BITNOT) == BITNOT);
+ 	}
+ 
+ 	if (ifarg_cur->type == IFT_V6 || ifarg_cur->type == IFT_INTV6) {
+ 		if (!v6args)
+ 			v6args = V6_INFO;
+ 
+-		printf ("\n");
+ 		if ((v6args & V6_INFO) == V6_INFO)
+ 			print_v6 (ifarg_cur);
+ 		if ((v6args & V4INV6) == V4INV6)
+@@ -133,8 +154,14 @@ out_cmdline (struct if_info *ifarg_cur, int v4args, struct misc_args m_argv4,
+ 			print_rev_v6 (ifarg_cur);
+ 		if ((v6args & V6SPLIT) == V6SPLIT)
+ 			show_split_networks_v6 (ifarg_cur, m_argv6.v6splitmask, v6args, m_argv6);
++	}
++	
++	if(!MINIMAL_OUT){
+ 		printf ("-\n");
+ 	}
++	else{
++		printf("\n");
++	}
+ 
+ 	return 0;
+ }
+@@ -697,6 +724,10 @@ main (int argc, char *argv[])
+ 		{"split-verbose", no_argument, 0, 'u'},
+ 		{"resolve", no_argument, 0, 'd'},
+ 		{"wildcard", no_argument, 0, 'w'},
++		{"min", no_argument, 0, 'm'},
++		{"max", no_argument, 0, 'M'},
++		{"netmask", no_argument, 0, 'N'},
++		{"bitmap", no_argument, 0, 'B'},
+ 		{0, 0, 0, 0}
+ 	};
+ #endif
+@@ -739,10 +770,10 @@ main (int argc, char *argv[])
+ 	 */
+ #ifdef HAVE_GETOPT_LONG
+ 	while ((ch =
+-		getopt_long (argc, argv, "abcdehHiI:n:rs:S:tuvVwx4:6:", l_o,
++		getopt_long (argc, argv, "abcdBehHiI:mMn:Nrs:S:tuvVwx4:6:", l_o,
+ 			     NULL)) != -1) {
+ #else
+-	while ((ch = getopt (argc, argv, "abcdehHiI:n:rs:S:tuvVwx4:6:")) != -1) {
++	while ((ch = getopt (argc, argv, "abcdBehHiI:mMn:Nrs:S:tuvVwx4:6:")) != -1) {
+ #endif
+ 		switch (ch) {
+ 		case 'a':
+@@ -847,6 +878,21 @@ main (int argc, char *argv[])
+ 			abox_cur = new_arg (abox_cur);
+ 
+ 			break;
++		case 'B':
++			v4args = v4args | BITNOT;
++			break;
++		case 'm':
++			v4args = v4args | V4MIN;
++			MINIMAL_OUT = 1;
++			break;
++		case 'M':
++			v4args = v4args | V4MAX;
++			MINIMAL_OUT = 1;
++			break;
++		case 'N':
++			v4args = v4args | V4NETMASK;
++			MINIMAL_OUT = 1;
++			break;
+ 		default:
+ 			print_short_help ();
+ 			return 0;
