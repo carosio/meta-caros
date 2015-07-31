@@ -3,7 +3,7 @@ HOMEPAGE = "http://www.isc.org/sw/bind/"
 SECTION = "console/network"
 
 LICENSE = "ISC & BSD"
-LIC_FILES_CHKSUM = "file://COPYRIGHT;md5=a3df5f651469919a0e6cb42f84fb6ff1"
+LIC_FILES_CHKSUM = "file://COPYRIGHT;md5=0a95f52a0ab6c5f52dedc9a45e7abb3f"
 
 DEPENDS = "openssl libcap"
 
@@ -17,12 +17,11 @@ SRC_URI = "ftp://ftp.isc.org/isc/bind9/${PV}/${BPN}-${PV}.tar.gz \
            file://named.service \
            file://bind9 \
            file://init.d-add-support-for-read-only-rootfs.patch \
-           file://bind9_9_5-CVE-2014-8500.patch \
 	   file://conf-db-255.patch \
 	   "
 
-SRC_URI[md5sum] = "e676c65cad5234617ee22f48e328c24e"
-SRC_URI[sha256sum] = "d4b64c1dde442145a316679acff2df4008aa117ae52dfa3a6bc69efecc7840d1"
+SRC_URI[md5sum] = "095ae241bfe06d50c0f2469a5fff46f0"
+SRC_URI[sha256sum] = "f5f433567e5f68d61460d86f691471259a49b6d10d7422acbd88b7fdb038b518"
 
 
 PACKAGECONFIG ??= ""
