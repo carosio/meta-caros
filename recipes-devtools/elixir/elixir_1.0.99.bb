@@ -3,12 +3,12 @@ SUMMARY  = "Elixir is a dynamic, functional language designed for building scala
 DESCRIPTION = "Elixir leverages the Erlang VM, known for running low-latency, distributed and fault-tolerant systems, while also being successfully used in web development and the embedded software domain."
 LICENSE  = "GPLv2"
 
-PR = "r0.5"
+PR = "r0.6"
 
 LIC_FILES_CHKSUM = "file://LICENSE;md5=0c48e31d655fb0e9b1f60b931e652f47"
 
 SRC_URI = "git://github.com/elixir-lang/elixir;protocol=git;name=elixir;destsuffix=git-elixir"
-SRCREV_elixir = "b83cd9b514fc2b18245e07d812a7154d7f00ff70"
+SRCREV_elixir = "c7e9e4f304264c8fc47b799d672a4b0b6fadd7b9"
 
 PV_hex = "0.7.5"
 SRC_URI += " https://github.com/hexpm/hex/archive/v${PV_hex}.tar.gz;name=hex"
