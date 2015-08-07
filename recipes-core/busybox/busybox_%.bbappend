@@ -8,4 +8,5 @@ SRC_URI += "file://no_ifup.cfg \
             file://large_history.cfg \
             file://netstat.cfg \
             file://reverse_search.cfg \
-            file://unicode.cfg"
+            file://unicode.cfg \
+            file://read_buffer_size.cfg"
