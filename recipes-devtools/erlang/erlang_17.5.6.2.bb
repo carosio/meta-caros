@@ -8,8 +8,8 @@ RCONFLICTS_${PN} = "erlang16"
 SRC_URI = "https://github.com/erlang/otp/archive/OTP-${PV}.tar.gz \
            file://epmd.service \
            file://epmd.socket"
-SRC_URI[md5sum] = "0d06e7d3802d63992535116e4d37c1a4"
-SRC_URI[sha256sum] = "3fe1de7915cd603ebabe103d5d94b8f440fe57ad8e6f62bd6837b6949e08ba1a"
+SRC_URI[md5sum] = "a9f7cad6f90aac7d09ee69bcb951a35c"
+SRC_URI[sha256sum] = "bc1e7a705eb5b99ccaa947db1831e96e89ad4420395a84294832af9e6c95ce01"
 
 S = "${WORKDIR}/otp-OTP-${PV}"
 
