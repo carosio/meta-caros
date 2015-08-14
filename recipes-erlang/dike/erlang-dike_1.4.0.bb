@@ -4,8 +4,8 @@ LICENSE = "MPL-2.0"
 LIC_FILES_CHKSUM = "file://src/dike_master.erl;beginline=1;endline=8;md5=69962098c047c6d4113c55dd2f6df435"
 
 SRC_URI = "https://github.com/travelping/dike/archive/${PV}.tar.gz;downloadfilename=${PN}-${PV}.tar.gz"
-SRC_URI[md5sum] = "f8fef2b4ba2135239dbc1d2ca4707608"
-SRC_URI[sha256sum] = "0306a7870dd665d82fe7e499945697cfc4ca6403a8c56822f74976990cfb7dc8"
+SRC_URI[md5sum] = "a293184b1f976cc007381c2cf24854f2"
+SRC_URI[sha256sum] = "85d0426093e866fbadd719cf7a9a9269b3ef0e823d0f5200cdf9a6164810f6c7"
 
 PR = "r1"
 
