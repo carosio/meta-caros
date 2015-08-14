@@ -3,12 +3,12 @@ SUMMARY  = "Elixir is a dynamic, functional language designed for building scala
 DESCRIPTION = "Elixir leverages the Erlang VM, known for running low-latency, distributed and fault-tolerant systems, while also being successfully used in web development and the embedded software domain."
 LICENSE  = "GPLv2"
 
-PR = "r0.5"
+PR = "r1"
 
 LIC_FILES_CHKSUM = "file://LICENSE;md5=0c48e31d655fb0e9b1f60b931e652f47"
 
 SRC_URI = "git://github.com/elixir-lang/elixir;protocol=git;name=elixir;destsuffix=git-elixir"
-SRCREV_elixir = "b83cd9b514fc2b18245e07d812a7154d7f00ff70"
+SRCREV_elixir = "1d2f074a45a0c8945f860555c2d24df8d1110c1a"
 
 PV_hex = "0.7.5"
 SRC_URI += " https://github.com/hexpm/hex/archive/v${PV_hex}.tar.gz;name=hex"
@@ -25,18 +25,7 @@ RDEPENDS_${PN} += "erlang"
 S = "${WORKDIR}/git-elixir"
 
 do_install() {
-   install -d ${D}${bindir}
-   install -d ${D}${libdir}
-
-   install -m 755 ${S}/bin/elixir ${D}${bindir}
-   install -m 755 ${S}/bin/elixirc ${D}${bindir}
-   install -m 755 ${S}/bin/iex ${D}${bindir}
-   install -m 755 ${S}/bin/mix ${D}${bindir}
-
-   for dir in `ls ${S}/lib`; do
-       install -d ${D}${libdir}/$dir
-       cp -fr ${S}/lib/$dir/ebin ${D}${libdir}/$dir/
-   done
+   oe_runmake install PREFIX=${D}${prefix}
 
    export PATH="${D}${bindir}:$PATH"
    cd "${WORKDIR}/hex-${PV_hex}"
