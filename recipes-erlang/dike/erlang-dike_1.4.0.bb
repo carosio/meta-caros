@@ -20,5 +20,5 @@ inherit tetrapak
 TETRAPAK_OPTS += "-o build.version ${PV}"
 
 python () {
-    erlang_def_package("dike", "dike-*", "ebin priv", "rebar.config NEWS.md src include papers formalitaeten .arcconfig thesis tsung-radiusclient LICENSE ChangeLog README.md test", d)
+    erlang_def_package("dike", "dike-*", "ebin priv", "rebar.config NEWS.md src include papers formalitaeten .arcconfig thesis tsung-radiusclient LICENSE ChangeLog README.md test mix.exs mix.lock config ctest config ctest", d)
 }
