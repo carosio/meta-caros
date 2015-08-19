@@ -29,8 +29,8 @@ do_install() {
 
    export PATH="${D}${bindir}:$PATH"
    cd "${WORKDIR}/hex-${PV_hex}"
-   MIX_ENV=release mix compile
-   cp -rv _build/release/lib/hex ${D}${libdir}/hex/
+   MIX_ENV=release mix archive.build
+   unzip -d ${D}${libdir}/elixir/lib/ hex-${PV_hex}.ez
 }
 
 FILES_${PN} = "${bindir} ${libdir}"
