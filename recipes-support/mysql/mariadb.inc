@@ -134,8 +134,11 @@ pkg_postinst_${PN}-server () {
     #Install the database
     test -d /usr/bin || mkdir -p /usr/bin
     test -e /usr/bin/hostname || ln -s /bin/hostname /usr/bin/hostname
-    mkdir /var/lib/mysql
+    install -d /var/lib/mysql
     chown mysql.mysql /var/lib/mysql
+
+    touch /var/log/mysqld.err
+    chown mysql.mysql /var/log/mysqld.err
 
     mysql_install_db --basedir=${prefix} --user=mysql
 
