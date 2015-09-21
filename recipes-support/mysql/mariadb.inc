@@ -145,7 +145,7 @@ pkg_postinst_${PN}-server () {
 PACKAGES = "${PN}-dbg ${PN} \
     libmysqlclient-r libmysqlclient-r-dev libmysqlclient-r-staticdev libmysqlclient-r-dbg \
     libmysqlclient libmysqlclient-dev libmysqlclient-staticdev libmysqlclient-dbg \
-    libmysqld libmysqld-dev ${PN}-client ${PN}-server ${PN}-leftovers"
+    libmysqld libmysqld-dev ${PN}-client-perl ${PN}-client ${PN}-server-perl ${PN}-server ${PN}-leftovers"
 CONFFILES_${PN}-server += "${sysconfdir}/my.cnf ${sysconfdir}/my.cnf.d/server.cnf"
 CONFFILES_${PN}-client += "${sysconfdir}/my.cnf.d/mysql-clients.cnf"
 CONFFILES_libmysqlclient += "${sysconfdir}/my.cnf.d/client.cnf"
@@ -154,13 +154,13 @@ FILES_${PN} = " "
 RDEPENDS_${PN} = "${PN}-client ${PN}-server"
 ALLOW_EMPTY_${PN} = "1"
 
-RDEPENDS_${PN}-client = "perl perl-module-getopt-long perl-module-file-temp \
+RDEPENDS_${PN}-client-perl = "perl perl-module-getopt-long perl-module-file-temp \
     perl-module-fcntl perl-module-sys-hostname perl-module-ipc-open3 \
-    perl-module-exporter perl-module-overloading"
-RDEPENDS_${PN}-server = "perl perl-module-getopt-long perl-module-data-dumper \
+    perl-module-exporter perl-module-overloading ${PN}-client"
+RDEPENDS_${PN}-server-perl = "perl perl-module-getopt-long perl-module-data-dumper \
     perl-module-file-basename perl-module-file-path perl-module-sys-hostname \
     perl-module-file-copy perl-module-file-temp perl-module-posix \
-    ${PN}-client perl-module-overloading"
+    ${PN}-client perl-module-overloading ${PN}-server"
 RDEPENDS_${PN}-leftovers = "perl perl-module-cwd perl-module-benchmark perl-module-getopt-long \
     perl-module-posix perl-module-data-dumper perl-module-sigtrap perl-module-threads \
     perl-module-threads-shared perl-module-io-socket perl-module-sys-hostname perl-module-file-copy \
@@ -202,21 +202,23 @@ FILES_${PN}-client = "\
     ${bindir}/mysql \
     ${bindir}/mysql_client_test \
     ${bindir}/mysql_client_test_embedded \
-    ${bindir}/mysql_find_rows \
-    ${bindir}/mysql_fix_extensions \
     ${bindir}/mysql_waitpid \
-    ${bindir}/mysqlaccess \
     ${bindir}/mysqladmin \
     ${bindir}/mysqlbug \
     ${bindir}/mysqlcheck \
     ${bindir}/mysqldump \
-    ${bindir}/mysqldumpslow \
     ${bindir}/mysqlimport \
     ${bindir}/mysqlshow \
     ${bindir}/mysqlslap \
-    ${bindir}/mysqltest_embedded \
     ${libexecdir}/mysqlmanager \
     ${sysconfdir}/my.cnf.d/mysql-clients.cnf"
+
+FILES_${PN}-client-perl = "\
+    ${bindir}/mysql_find_rows \
+    ${bindir}/mysql_fix_extensions \
+    ${bindir}/mysqlaccess \
+    ${bindir}/mysqldumpslow \
+    ${bindir}/mysqltest_embedded"
 
 FILES_${PN}-server = "\
     ${bindir}/comp_err \
@@ -227,19 +229,14 @@ FILES_${PN}-server = "\
     ${bindir}/myisamchk \
     ${bindir}/myisamlog \
     ${bindir}/myisampack \
-    ${bindir}/mysql_convert_table_format \
     ${bindir}/mysql_fix_privilege_tables \
     ${bindir}/mysql_install_db \
     ${bindir}/mysql_secure_installation \
-    ${bindir}/mysql_setpermission \
     ${bindir}/mysql_tzinfo_to_sql \
     ${bindir}/mysql_upgrade \
     ${bindir}/mysql_plugin \
-    ${bindir}/mysql_zap \
     ${bindir}/mysqlbinlog \
-    ${bindir}/mysqld_multi \
     ${bindir}/mysqld_safe \
-    ${bindir}/mysqlhotcopy \
     ${bindir}/mysqltest \
     ${bindir}/ndb_delete_all \
     ${bindir}/ndb_desc \
@@ -268,6 +265,13 @@ FILES_${PN}-server = "\
     ${sysconfdir}/my.cnf \
     ${sysconfdir}/my.cnf.d/server.cnf \
     ${sysconfdir}/tmpfiles.d"
+
+FILES_${PN}-server-perl = "\
+    ${bindir}/mysql_convert_table_format \
+    ${bindir}/mysql_setpermission \
+    ${bindir}/mysql_zap \
+    ${bindir}/mysqld_multi \
+    ${bindir}/mysqlhotcopy"
 
 DESCRIPTION_${PN}-leftovers = "unpackaged and probably unneeded files for ${PN}"
 FILES_${PN}-leftovers = "/"
