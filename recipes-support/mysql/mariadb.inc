@@ -111,6 +111,15 @@ mariadb_sysroot_preprocess () {
 do_install() {
     oe_runmake 'DESTDIR=${D}' install
 
+    # remove broken perl scripts
+    rm ${D}/${bindir}/mysql_fix_extensions \
+        ${D}/${bindir}/mysqldumpslow \
+        ${D}/${bindir}/mysqltest_embedded \
+        ${D}/${bindir}/mysql_convert_table_format \
+        ${D}/${bindir}/mysql_setpermission \
+        ${D}/${bindir}/mysql_zap \
+        ${D}/${bindir}/mysqlhotcopy
+
     install -d ${D}/${sysconfdir}/init.d
     install -m 0644 ${WORKDIR}/my.cnf ${D}/${sysconfdir}/
     mv ${D}/${sysconfdir}/init.d/mysql ${D}/${sysconfdir}/init.d/mysqld
@@ -134,8 +143,8 @@ pkg_postinst_${PN}-server () {
     #Install the database
     test -d /usr/bin || mkdir -p /usr/bin
     test -e /usr/bin/hostname || ln -s /bin/hostname /usr/bin/hostname
-    install -d /var/lib/mysql
-    chown mysql.mysql /var/lib/mysql
+    mkdir -p /var/lib/mysql
+    chown -R mysql:mysql /var/lib/mysql
 
     touch /var/log/mysqld.err
     chown mysql.mysql /var/log/mysqld.err
@@ -218,10 +227,7 @@ FILES_${PN}-client = "\
 
 FILES_${PN}-client-perl = "\
     ${bindir}/mysql_find_rows \
-    ${bindir}/mysql_fix_extensions \
-    ${bindir}/mysqlaccess \
-    ${bindir}/mysqldumpslow \
-    ${bindir}/mysqltest_embedded"
+    ${bindir}/mysqlaccess"
 
 FILES_${PN}-server = "\
     ${bindir}/comp_err \
@@ -270,11 +276,7 @@ FILES_${PN}-server = "\
     ${sysconfdir}/tmpfiles.d"
 
 FILES_${PN}-server-perl = "\
-    ${bindir}/mysql_convert_table_format \
-    ${bindir}/mysql_setpermission \
-    ${bindir}/mysql_zap \
-    ${bindir}/mysqld_multi \
-    ${bindir}/mysqlhotcopy"
+    ${bindir}/mysqld_multi"
 
 DESCRIPTION_${PN}-leftovers = "unpackaged and probably unneeded files for ${PN}"
 FILES_${PN}-leftovers = "/"
