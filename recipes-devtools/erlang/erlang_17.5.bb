@@ -5,13 +5,13 @@ DEPENDS += "systemd"
 RREPLACES_${PN} = "erlang16"
 RCONFLICTS_${PN} = "erlang16"
 
-SRC_URI = "https://github.com/erlang/otp/archive/OTP-${PV}.tar.gz \
+SRC_URI = "http://www.erlang.org/download/otp_src_${PV}.tar.gz \
            file://epmd.service \
            file://epmd.socket"
-SRC_URI[md5sum] = "0d06e7d3802d63992535116e4d37c1a4"
-SRC_URI[sha256sum] = "3fe1de7915cd603ebabe103d5d94b8f440fe57ad8e6f62bd6837b6949e08ba1a"
+SRC_URI[md5sum] = "346dd0136bf1cc28cebc140e505206bb"
+SRC_URI[sha256sum] = "3c28820c981b30c50df8ac2a4a238e5813454fa3ed2ad530bc7948a282846474"
 
-S = "${WORKDIR}/otp-OTP-${PV}"
+S = "${WORKDIR}/otp_src_${PV}"
 
 PE = "1"
 PR = "${INC_PR}.2"
