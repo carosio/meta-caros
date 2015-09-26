@@ -4,7 +4,7 @@ SECTION = "console/network"
 LICENSE = "BSD-3-Clause"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=ab59a0c3a4bc3954d1ece68ea19d77a4"
 
-PR = "r1"
+PR = "r2"
 
 SRC_URI = "https://github.com/esnet/${PN}/archive/${PV}.tar.gz;downloadfilename=${PN}-${PV}.tar.gz \
            file://iperf3.service \
@@ -17,6 +17,7 @@ inherit autotools-brokensep systemd
 
 SYSTEMD_PACKAGES = "${PN}"
 SYSTEMD_SERVICE_${PN} = "iperf3.service"
+SYSTEMD_AUTO_ENABLE = "disable"
 
 S="${WORKDIR}/iperf-${PV}"
 
