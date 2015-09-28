@@ -22,6 +22,8 @@ REL_VSN ?= "${APPVERSION}"
 APP_PREFIX ?= "/opt/apps"
 SYSCONFIG_PREFIX ?= "${sysconfdir}/apps"
 
+CAROS_APPCTL = "/opt/tposs/libexec/appctl.sh"
+
 S ?= "${WORKDIR}"
 
 FILES_${PN} += "${APP_PREFIX}/${APPNAME}/${APPVERSION}"
@@ -33,18 +35,13 @@ FILES_${PN}-dbg += "${APP_PREFIX}/${APPNAME}/${APPVERSION}/erts*/bin/.debug"
 FILES_${PN}-staticdev += "${APP_PREFIX}/${APPNAME}/${APPVERSION}/erts*/lib/lib*.a"
 FILES_${PN}-staticdev += "${APP_PREFIX}/${APPNAME}/${APPVERSION}/erts*/lib/internal/lib*.a"
 
-APP_HOME ?= "/run/${APPNAME}"
-MUTABLE_DIR ?= "/run/${APPNAME}"
-USER_CONFIG_FILE ?= "${sysconfdir}/${APPNAME}.conf"
-CONFFILES_${PN} += "${SYSCONFIG_PREFIX}/${APPNAME}.conf"
-
 DEPENDS += "avahi erlang-lager-journald-backend elixir-native elixir rebar-native"
 
 inherit systemd
 
-SYSTEMD_UNIT_NAME ?= "${APPNAME}"
+SYSTEMD_UNIT_NAME ?= "${APPNAME}@${APPVERSION}:default"
 SYSTEMD_AUTO_ENABLE ?= "disable"
-SYSTEMD_SERVICE_${PN} = "${SYSTEMD_UNIT_NAME}.service"
+SYSTEMD_SERVICE_${PN} = "${SYSTEMD_UNIT_NAME}@.service"
 
 def gen_deps(d):
     import sys
@@ -143,6 +140,22 @@ do_compile() {
     cat rel/relx.config
     echo "==============="
 
+    if [ -e rel/vm.args ]
+    then
+        # if there is a costum vm.args we just remove the node name and cookie option
+        sed -i -e 's/^[ \t]*-s\?name\>/# disabled by exrm-boot: &/' rel/vm.args
+        sed -i -e '/-setcookie/s/^/## removed: /' rel/vm.args        
+        echo "generated vm.args:"
+        echo "==============="
+        cat rel/vm.args
+        echo "==============="
+    else
+        # else there is the default vm.args which just includes the node name and cookie option
+        # hence we just put in an empty vm.args which is then used by exrm as default 
+        echo "default vm.args will be overwritten by an empty vm.args and filled by appctl at boot time."
+        touch rel/vm.args
+    fi
+
     mix do deps.compile, compile, release
 }
 
@@ -171,14 +184,11 @@ do_install() {
     echo "log.console.level = false" >> ${D}/${SYSCONFIG_PREFIX}/${APPNAME}.conf
 
     install -d ${D}${systemd_unitdir}/system/
-    install -m 0644 ${MIX_CLASS_FILES}/app-template.service ${D}${systemd_unitdir}/system/${SYSTEMD_UNIT_NAME}.service
-    sed -i "s|@@DESCRIPTION@@|${DESCRIPTION}|" ${D}${systemd_unitdir}/system/${SYSTEMD_UNIT_NAME}.service
-    sed -i "s|@@VERSION@@|${APPVERSION}|" ${D}${systemd_unitdir}/system/${SYSTEMD_UNIT_NAME}.service
-    sed -i "s|@@APPNAME@@|${APPNAME}|" ${D}${systemd_unitdir}/system/${SYSTEMD_UNIT_NAME}.service
-    sed -i "s|@@APP_PREFIX@@|${APP_PREFIX}|" ${D}${systemd_unitdir}/system/${SYSTEMD_UNIT_NAME}.service
-    sed -i "s|@@MUTABLE_DIR@@|${MUTABLE_DIR}|" ${D}${systemd_unitdir}/system/${SYSTEMD_UNIT_NAME}.service
-    sed -i "s|@@USER_CONFIG_FILE@@|${USER_CONFIG_FILE}|" ${D}${systemd_unitdir}/system/${SYSTEMD_UNIT_NAME}.service
-    sed -i "s|@@APP_HOME@@|${APP_HOME}|" ${D}${systemd_unitdir}/system/${SYSTEMD_UNIT_NAME}.service
+    install -m 0644 ${MIX_CLASS_FILES}/app-template@.service ${D}${systemd_unitdir}/system/${SYSTEMD_UNIT_NAME}@.service
+    sed -i "s|@@DESCRIPTION@@|${DESCRIPTION}|" ${D}${systemd_unitdir}/system/${SYSTEMD_UNIT_NAME}@.service
+    sed -i "s|@@APPNAME@@|${APPNAME}|" ${D}${systemd_unitdir}/system/${SYSTEMD_UNIT_NAME}@.service
+    sed -i "s|@@APP_PREFIX@@|${APP_PREFIX}|" ${D}${systemd_unitdir}/system/${SYSTEMD_UNIT_NAME}@.service
+    sed -i "s|@@CAROS_APPCTL@@|${CAROS_APPCTL}|" ${D}${systemd_unitdir}/system/${SYSTEMD_UNIT_NAME}@.service
 }
 
 python do_mix_deps() {
