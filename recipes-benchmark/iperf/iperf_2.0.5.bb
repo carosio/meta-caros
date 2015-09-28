@@ -4,7 +4,7 @@ SECTION = "console/network"
 LICENSE = "NewBSD"
 LIC_FILES_CHKSUM = "file://COPYING;md5=e8478eae9f479e39bc34975193360298"
 
-PR = "1"
+PR = "2"
 
 SRC_URI = " \
 	${SOURCEFORGE_MIRROR}/iperf/iperf-${PV}.tar.gz \
@@ -27,6 +27,7 @@ inherit autotools systemd
 
 SYSTEMD_PACKAGES = "${PN}"
 SYSTEMD_SERVICE_${PN} = "iperf-tcp.service iperf-udp.service"
+SYSTEMD_AUTO_ENABLE = "disable"
 
 S="${WORKDIR}/iperf-${PV}"
 
