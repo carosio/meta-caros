@@ -10,6 +10,6 @@ PACKAGES = "${PN}"
 PACKAGE_GROUP_unify = "${PN}"
 
 RDEPENDS_${PN} = "\
-	qemu \
 	libvirt \
+	openvswitch \
 "
