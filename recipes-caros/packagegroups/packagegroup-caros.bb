@@ -12,6 +12,7 @@ PACKAGE_GROUP_caros = "${PN}"
 RDEPENDS_${PN} = "\
 packagegroup-caros-ansible-deps \
 packagegroup-caros-erlang \
+packagegroup-caros-virtualization \
 unimux \
 chello \
 iptables \
