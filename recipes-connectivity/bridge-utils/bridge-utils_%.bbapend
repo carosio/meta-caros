@@ -1,15 +1,4 @@
-DESCRIPTION = "Tools for ethernet bridging."
-HOMEPAGE = "http://bridge.sourceforge.net/"
-SECTION = "console/network"
-LICENSE = "GPL"
-DEPENDS = "sysfsutils"
-RRECOMMENDS_${PN} = "kernel-module-bridge"
-
-SRC_URI = "${SOURCEFORGE_MIRROR}/bridge/bridge-utils-${PV}.tar.gz file://ifupdown.sh"
-
-inherit autotools
-
-EXTRA_OECONF = "--with-linux-headers=${STAGING_INCDIR}"
+SRC_URI += "file://ifupdown.sh"
 
 do_install_append () {
 	mv ${D}${sbindir}/brctl ${D}${sbindir}/brctl.${PN}
