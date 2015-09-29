@@ -11,6 +11,5 @@ PACKAGE_GROUP_unify = "${PN}"
 
 RDEPENDS_${PN} = "\
 	qemu \
-	docker \
 	libvirt \
 "
