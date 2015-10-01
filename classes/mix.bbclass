@@ -162,7 +162,17 @@ do_install() {
 
     install -m 0755 -d "${D}/${APP_PREFIX}/${APPNAME}/${APPVERSION}/"
     tar xvz -C ${D}/${APP_PREFIX}/${APPNAME}/${APPVERSION} -f $TAR_DIR
+
+    # create uniform symbolic link
     ln -s ${REL_NAME} "${D}/${APP_PREFIX}/${APPNAME}/${APPVERSION}/bin/rc"
+
+    # patch the release boot file generated from
+    # exrm such that the vm.args file is merged with the
+    # options given by an ini style config file.
+    ${MIX_CLASS_FILES}/vmargs_merge_patch "${D}/${APP_PREFIX}/${APPNAME}/${APPVERSION}/releases/${APPVERSION}/${APPNAME}.sh"
+
+    # copy the actual script that executes the merge process at startup
+    cp ${MIX_CLASS_FILES}/vmargs_merge "${D}/${APP_PREFIX}/${APPNAME}/${APPVERSION}/releases/${APPVERSION}/vmargs_merge"
 
     install -m 0755 -d "${D}/${SYSCONFIG_PREFIX}"
     install -m 0644 ${S}/config/${APPNAME}.conf ${D}/${SYSCONFIG_PREFIX}/${APPNAME}.conf
