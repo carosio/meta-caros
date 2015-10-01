@@ -1,0 +1,92 @@
+From 09d801a82a46df518dd752e40bf13ac404daa2ce Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Mon, 2 Mar 2015 10:34:51 -0500
+Subject: journal-remote: fix saving of binary fields
+
+Binary fields were not processed properly, and resulting journal files
+were non-conforming, resulting in an error ("Invalid field.") when reading.
+
+https://bugs.freedesktop.org/show_bug.cgi?id=89391
+
+diff --git a/src/journal-remote/journal-remote-parse.c b/src/journal-remote/journal-remote-parse.c
+index d9dea8d..afded7e 100644
+--- a/src/journal-remote/journal-remote-parse.c
++++ b/src/journal-remote/journal-remote-parse.c
+@@ -344,22 +344,25 @@ int process_data(RemoteSource *source) {
+                    LLLLLLLL0011223344...\n
+                 */
+                 sep = memchr(line, '=', n);
+-                if (sep)
++                if (sep) {
+                         /* chomp newline */
+                         n--;
+-                else
++
++                        r = iovw_put(&source->iovw, line, n);
++                        if (r < 0)
++                                return r;
++                } else {
+                         /* replace \n with = */
+                         line[n-1] = '=';
+-                log_trace("Received: %.*s", (int) n, line);
+ 
+-                r = iovw_put(&source->iovw, line, n);
+-                if (r < 0) {
+-                        log_error("Failed to put line in iovect");
+-                        return r;
++                        source->field_len = n;
++                        source->state = STATE_DATA_START;
++
++                        /* we cannot put the field in iovec until we have all data */
+                 }
+ 
+-                if (!sep)
+-                        source->state = STATE_DATA_START;
++                log_trace("Received: %.*s (%s)", (int) n, line, sep ? "text" : "binary");
++
+                 return 0; /* continue */
+         }
+ 
+@@ -382,6 +385,7 @@ int process_data(RemoteSource *source) {
+ 
+         case STATE_DATA: {
+                 void *data;
++                char *field;
+ 
+                 assert(source->data_size > 0);
+ 
+@@ -396,11 +400,12 @@ int process_data(RemoteSource *source) {
+ 
+                 assert(data);
+ 
+-                r = iovw_put(&source->iovw, data, source->data_size);
+-                if (r < 0) {
+-                        log_error("failed to put binary buffer in iovect");
++                field = (char*) data - sizeof(uint64_t) - source->field_len;
++                memmove(field + sizeof(uint64_t), field, source->field_len);
++
++                r = iovw_put(&source->iovw, field + sizeof(uint64_t), source->field_len + source->data_size);
++                if (r < 0)
+                         return r;
+-                }
+ 
+                 source->state = STATE_DATA_FINISH;
+ 
+diff --git a/src/journal-remote/journal-remote-parse.h b/src/journal-remote/journal-remote-parse.h
+index 8499f4e..22db550 100644
+--- a/src/journal-remote/journal-remote-parse.h
++++ b/src/journal-remote/journal-remote-parse.h
+@@ -42,7 +42,9 @@ typedef struct RemoteSource {
+         size_t offset;     /* offset to the beginning of live data in the buffer */
+         size_t scanned;    /* number of bytes since the beginning of data without a newline */
+         size_t filled;     /* total number of bytes in the buffer */
+-        size_t data_size;  /* size of the binary data chunk being processed */
++
++        size_t field_len;  /* used for binary fields: the field name length */
++        size_t data_size;  /* and the size of the binary data chunk being processed */
+ 
+         struct iovec_wrapper iovw;
+ 
+-- 
+cgit v0.10.2
+
