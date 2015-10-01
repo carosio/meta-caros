@@ -166,7 +166,9 @@ do_install() {
 
     install -m 0755 -d "${D}/${SYSCONFIG_PREFIX}"
     install -m 0644 ${S}/config/${APPNAME}.conf ${D}/${SYSCONFIG_PREFIX}/${APPNAME}.conf
+    echo >> ${D}/${SYSCONFIG_PREFIX}/${APPNAME}.conf
     echo "log.journal.level = info" >> ${D}/${SYSCONFIG_PREFIX}/${APPNAME}.conf
+    echo "log.console.level = false" >> ${D}/${SYSCONFIG_PREFIX}/${APPNAME}.conf
 
     install -d ${D}${systemd_unitdir}/system/
     install -m 0644 ${MIX_CLASS_FILES}/app-template.service ${D}${systemd_unitdir}/system/${SYSTEMD_UNIT_NAME}.service
