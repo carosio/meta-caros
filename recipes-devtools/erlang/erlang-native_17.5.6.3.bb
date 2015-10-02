@@ -2,8 +2,8 @@ require erlang-native.inc
 
 SRC_URI = "https://github.com/erlang/otp/archive/OTP-${PV}.tar.gz \
            file://epmd.service"
-SRC_URI[md5sum] = "a9f7cad6f90aac7d09ee69bcb951a35c"
-SRC_URI[sha256sum] = "bc1e7a705eb5b99ccaa947db1831e96e89ad4420395a84294832af9e6c95ce01"
+SRC_URI[md5sum] = "dcabf23dea7919167206557582f7b7c0"
+SRC_URI[sha256sum] = "9c72896f8df53cc4c1c4012acb98ddd3eddc017965abc3614f17b341d913149a"
 
 S = "${WORKDIR}/otp-OTP-${PV}"
 
