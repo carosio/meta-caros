@@ -8,8 +8,8 @@ PR = "r1"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=0c48e31d655fb0e9b1f60b931e652f47"
 
 SRC_URI = "https://github.com/elixir-lang/elixir/archive/v${PV}.tar.gz;downloadfilename=elixir-${PV}.tar.gz"
-SRC_URI[md5sum] = "4781b2b3bf15d22d7b4c00f1c92bf54f"
-SRC_URI[sha256sum] = "6be4f083df230f901975df3a3bb32d3bd1e70a4d0a072aabc5972113b37ebb3b"
+SRC_URI[md5sum] = "e952220c61fae06bdc59d7d0068d9f6d"
+SRC_URI[sha256sum] = "3b7d6e4fdbcc82d19fa76f4e384f8a87535abcd00ef04528dc6b6706f32a106a"
 
 
 PV_hex = "0.8.3"
