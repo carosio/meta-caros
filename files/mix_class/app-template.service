@@ -4,8 +4,9 @@ Description=@@DESCRIPTION@@
 [Service]
 
 Environment="HOME=@@APP_HOME@@"
-Environment="USER_CONFIG_FILE=@@USER_CONFIG_FILE@@"
-Environment="MUTABLE_DIR=@@MUTABLE_DIR@@"
+Environment="RELEASE_CONFIG_FILE=@@USER_CONFIG_FILE@@"
+Environment="RELEASE_MUTABLE_DIR=@@MUTABLE_DIR@@"
+ExecStartPre=/bin/rm -fvr @@MUTABLE_DIR@@/running-config
 ExecStart=@@APP_PREFIX@@/@@APPNAME@@/@@VERSION@@/bin/rc foreground
 ExecStop=@@APP_PREFIX@@/@@APPNAME@@/@@VERSION@@/bin/rc stop
 Restart=always
