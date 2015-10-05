@@ -1,0 +1,36 @@
+diff -up dropbear-2014.63/options.h.orig dropbear-2014.63/options.h
+--- dropbear-2014.63/options.h.orig	2015-10-05 10:48:33.194227914 +0200
++++ dropbear-2014.63/options.h	2015-10-05 11:00:58.349566811 +0200
+@@ -91,12 +91,12 @@ much traffic. */
+  * Including multiple keysize variants the same cipher 
+  * (eg AES256 as well as AES128) will result in a minimal size increase.*/
+ #define DROPBEAR_AES128
+-#define DROPBEAR_3DES
++/*#define DROPBEAR_3DES*/
+ #define DROPBEAR_AES256
+ /* Compiling in Blowfish will add ~6kB to runtime heap memory usage */
+ /*#define DROPBEAR_BLOWFISH*/
+-#define DROPBEAR_TWOFISH256
+-#define DROPBEAR_TWOFISH128
++/*#define DROPBEAR_TWOFISH256*/
++/*#define DROPBEAR_TWOFISH128*/
+ 
+ /* Enable "Counter Mode" for ciphers. This is more secure than normal
+  * CBC mode against certain attacks. This adds around 1kB to binary 
+@@ -121,11 +121,11 @@ much traffic. */
+  * These hashes are also used for public key fingerprints in logs.
+  * If you disable MD5, Dropbear will fall back to SHA1 fingerprints,
+  * which are not the standard form. */
+-#define DROPBEAR_SHA1_HMAC
+-#define DROPBEAR_SHA1_96_HMAC
+-/*#define DROPBEAR_SHA2_256_HMAC*/
+-/*#define DROPBEAR_SHA2_512_HMAC*/
+-#define DROPBEAR_MD5_HMAC
++/*#define DROPBEAR_SHA1_HMAC*/
++/*#define DROPBEAR_SHA1_96_HMAC*/
++#define DROPBEAR_SHA2_256_HMAC
++#define DROPBEAR_SHA2_512_HMAC
++/*#define DROPBEAR_MD5_HMAC*/
+ 
+ /* You can also disable integrity. Don't bother disabling this if you're
+  * still using a cipher, it's relatively cheap. If you disable this it's dead
