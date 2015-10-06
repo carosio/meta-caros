@@ -1,0 +1,10 @@
+[Unit]
+Description=@@DESCRIPTION@@
+
+[Service]
+ExecStart=@@CAROS_APPCTL@@ --from-systemd=%p@%i start @@APP_PREFIX@@/@@APPNAME@@
+ExecStop=@@CAROS_APPCTL@@ --from-systemd=%p@%i stop
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
