@@ -1,0 +1,11 @@
+[Unit]
+Description=Restore iptables rules
+DefaultDependencies=false
+
+[Service]
+Type=oneshot
+RemainAfterExit=Yes
+StandardOutput=syslog
+TimeoutSec=0
+ExecStart=/sbin/iptables-persistence restore
+
