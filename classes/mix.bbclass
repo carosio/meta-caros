@@ -164,6 +164,14 @@ do_install() {
     tar xvz -C ${D}/${APP_PREFIX}/${APPNAME}/${APPVERSION} -f $TAR_DIR
     ln -s ${REL_NAME} "${D}/${APP_PREFIX}/${APPNAME}/${APPVERSION}/bin/rc"
 
+    # rename beam.smp to the actual app name and start it using a wrapper for proper process naming
+    erts_release=$(basename ${D}${APP_PREFIX}/${APPNAME}/${APPVERSION}/erts-*)
+    erts_base=${D}${APP_PREFIX}/${APPNAME}/${APPVERSION}/${erts_release}
+    mv ${erts_base}/bin/beam.smp ${erts_base}/bin/${APPNAME}
+    echo '#!/bin/sh\n' > ${erts_base}/bin/beam.smp
+    echo "exec ${APPNAME} \"\$@\"" >> ${erts_base}/bin/beam.smp
+    chmod 755 ${erts_base}/bin/beam.smp
+
     install -m 0755 -d "${D}/${SYSCONFIG_PREFIX}"
     install -m 0644 ${S}/config/${APPNAME}.conf ${D}/${SYSCONFIG_PREFIX}/${APPNAME}.conf
     echo >> ${D}/${SYSCONFIG_PREFIX}/${APPNAME}.conf
