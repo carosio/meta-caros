@@ -162,6 +162,7 @@ do_install() {
 
     install -m 0755 -d "${D}/${APP_PREFIX}/${APPNAME}/${APPVERSION}/"
     tar xvz -C ${D}/${APP_PREFIX}/${APPNAME}/${APPVERSION} -f $TAR_DIR
+    # TODO: maybe delete tar file (^^^^^^^) to reduce by 50% ipk size?
     ln -s ${REL_NAME} "${D}/${APP_PREFIX}/${APPNAME}/${APPVERSION}/bin/rc"
 
     install -m 0755 -d "${D}/${SYSCONFIG_PREFIX}"
