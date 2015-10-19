@@ -1,11 +1,13 @@
 [Unit]
 Description=Restore iptables rules
-DefaultDependencies=false
+Before=network.target
 
 [Service]
 Type=oneshot
 RemainAfterExit=Yes
 StandardOutput=syslog
 TimeoutSec=0
-ExecStart=/sbin/iptables-persistence restore
+ExecStart=/usr/sbin/xtables-persistence restore
 
+[Install]
+WantedBy=multi-user.target
