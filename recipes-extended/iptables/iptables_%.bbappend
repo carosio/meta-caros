@@ -1,8 +1,12 @@
+FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
+
+SRC_URI += "file://xtables-restore.service \
+	    file://xtables-persistence"
 
 do_install_append() {
     # Install systemd unit to restore rules on boot
-    install -d 0755 ${D}${sysconfdir}/systemd/network
-    install -d 0755 ${D}/sbin
-    install -m 0644 ${WORKDIR}/xtables-restore ${D}${sysconfdir}/systemd/network
-    install -m 0644 ${WORKDIR}/xtables-persistence ${D}/sbin
+    install -d -m 0755 ${D}${sysconfdir}/systemd/system
+    install -d -m 0755 ${D}${sbindir}
+    install -m 0755 ${WORKDIR}/xtables-restore.service ${D}${sysconfdir}/systemd/system
+    install -m 0755 ${WORKDIR}/xtables-persistence ${D}${sbindir}
 }
