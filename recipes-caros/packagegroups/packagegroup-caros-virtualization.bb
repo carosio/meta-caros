@@ -10,6 +10,7 @@ PACKAGES = "${PN}"
 PACKAGE_GROUP_caros_virtualization = "${PN}"
 
 RDEPENDS_${PN} = "\
-	libvirt \
+	libvirt-libvirtd \
+	libvirt-virsh \
 	openvswitch \
 "
