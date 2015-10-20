@@ -147,6 +147,7 @@ do_compile() {
 }
 
 do_install() {
+# TODO: rename TAR_DIR
     if [ -e rel/${REL_NAME}/releases/${REL_VSN}/${REL_NAME}.tar.gz ]
     then
         TAR_DIR="rel/${REL_NAME}/releases/${REL_VSN}/${REL_NAME}.tar.gz"
@@ -162,6 +163,7 @@ do_install() {
 
     install -m 0755 -d "${D}/${APP_PREFIX}/${APPNAME}/${APPVERSION}/"
     tar xvz -C ${D}/${APP_PREFIX}/${APPNAME}/${APPVERSION} -f $TAR_DIR
+    rm -vf ${D}/${APP_PREFIX}/${APPNAME}/${APPVERSION}/releases/${REL_VSN}/${REL_NAME}.tar.gz
     ln -s ${REL_NAME} "${D}/${APP_PREFIX}/${APPNAME}/${APPVERSION}/bin/rc"
 
     install -m 0755 -d "${D}/${SYSCONFIG_PREFIX}"
