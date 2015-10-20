@@ -6,7 +6,7 @@ LICENSE = "BSD"
 
 inherit systemd
 
-LIC_FILES_CHKSUM = "file://LICENSE;md5=9d3b27bad611f5204a84ba6a572698e1"
+LIC_FILES_CHKSUM = "file://LICENSE;md5=3845852aedfa8d6d7765f55d06cc3ebd"
 
 PR = "r1"
 
@@ -14,19 +14,21 @@ SRC_URI = "http://nginx.org/download/nginx-${PV}.tar.gz \
            file://allow-cross.patch \
            file://nginx.service"
 
-SRC_URI[md5sum] = "2b7f37f86e0af9bbb109c4dc225c6247"
-SRC_URI[sha256sum] = "337380c9e2c69dede82c709c110c036aead3ffe7087bb25185ed88e7f93a9504"
+SRC_URI[md5sum] = "2562320f1535e3e31d165e337ae94f21"
+SRC_URI[sha256sum] = "48e2787a6b245277e37cb7c5a31b1549a0bbacf288aa4731baacf9eaacdb481b"
 
 DEPENDS = "libpcre logrotate openssl"
 
-FILES_${PN} += " /usr/local/nginx "
+FILES_${PN} += " /usr/local/nginx \
+                 /run "
 
 SYSTEMD_SERVICE_${PN} = "nginx.service"
 
 do_configure() {
     export cross_compiling="yes"
     ${S}/configure \
-    --with-cc="${HOST_PREFIX}gcc -Wl,--hash-style=gnu" \
+    --with-cc='${CC}' \
+    --with-cc-opt="-Wl,--hash-style=gnu" \
     --sbin-path=${sbindir}/nginx \
     --pid-path=${localstatedir}/run/nginx.pid \
     --lock-path=${localstatedir}/lock/nginx.lock \
