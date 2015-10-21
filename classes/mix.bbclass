@@ -149,14 +149,13 @@ do_compile() {
 }
 
 do_install() {
-# TODO: rename TAR_DIR
     if [ -e rel/${REL_NAME}/releases/${REL_VSN}/${REL_NAME}.tar.gz ]
     then
-        TAR_DIR="rel/${REL_NAME}/releases/${REL_VSN}/${REL_NAME}.tar.gz"
+        RELEASE_TAR="rel/${REL_NAME}/releases/${REL_VSN}/${REL_NAME}.tar.gz"
         bbnote "tar found at rel/${REL_NAME}/releases/${REL_VSN}/${REL_NAME}.tar.gz"
     elif [ -e rel/${REL_NAME}/${REL_NAME}-${REL_VSN}.tar.gz ]
     then
-        TAR_DIR="rel/${REL_NAME}/${REL_NAME}-${REL_VSN}.tar.gz"
+        RELEASE_TAR="rel/${REL_NAME}/${REL_NAME}-${REL_VSN}.tar.gz"
         bbnote "tar found at rel/${REL_NAME}-${REL_VSN}.tar.gz"
     else
         bbfatal "${REL_NAME}: tar file not found"
@@ -164,7 +163,7 @@ do_install() {
     fi
 
     install -m 0755 -d "${D}/${APP_PREFIX}/${APPNAME}/${APPVERSION}/"
-    tar xvz -C ${D}/${APP_PREFIX}/${APPNAME}/${APPVERSION} -f $TAR_DIR
+    tar xvz -C ${D}/${APP_PREFIX}/${APPNAME}/${APPVERSION} -f $RELEASE_TAR
     rm -vf ${D}/${APP_PREFIX}/${APPNAME}/${APPVERSION}/releases/${REL_VSN}/${REL_NAME}.tar.gz
     ln -s ${REL_NAME} "${D}/${APP_PREFIX}/${APPNAME}/${APPVERSION}/bin/rc"
 
