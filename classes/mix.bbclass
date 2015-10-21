@@ -117,11 +117,13 @@ def gen_deps(d):
             bb.debug(2, "SRC_URI %s.sha256sum %s"%(key, sha256))
 
 do_compile() {
-    cp -avl ${WORKDIR}/git-deps ./deps
+    cp -navl ${WORKDIR}/git-deps ./deps
     for mixdep in ${WORKDIR}/hex-deps/*; do
         mixdepbase="`basename $mixdep`"
-        mkdir -pv deps/$mixdepbase
-        tar xz -C deps/$mixdepbase -f $mixdep/contents.tar.gz
+        if [ ! -e deps/$mixdepbase ] ; then
+            mkdir -v deps/$mixdepbase
+            tar xz -C deps/$mixdepbase -f $mixdep/contents.tar.gz
+        fi
     done
 
     export LC_ALL=en_US.UTF-8
