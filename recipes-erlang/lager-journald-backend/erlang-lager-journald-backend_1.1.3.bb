@@ -2,7 +2,7 @@ SUMMARY = "journald backend for lager"
 SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=9db35a42b923528200d82fcbb74c4dc2"
-SRCREV = "f9b602ece8dc1ae3e1b9c5cf3fdddf8f0e9805c7"
+SRCREV = "156ab4ab8789a5a4b0682d923f9182d2c283c33a"
 
 PR = "r1"
 
