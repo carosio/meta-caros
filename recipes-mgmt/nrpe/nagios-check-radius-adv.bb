@@ -17,20 +17,9 @@ SRC_URI[sha256sum] = "5bd5a1f979e2a33b545c514d6bbb7597442668aaa284fc198f01c5047b
 DEPENDS = "nagios-plugins gettext-native"
 inherit autotools-brokensep gettext
 
-# EXTRA_OECONF+="--with-nagios-user=daemon --with-nagios-group=daemon"
-
-
-do_configure () {
-	oe_runconf
-}
-
-do_compile () {
-	oe_runmake
-}
-
 do_install () {
 	install -d -m 0755 ${D}${libdir}/nagios-plugins/
-	install -m 0755 check_radius_adv ${D}${libdir}/nagios-plugins/check_radius_adv
+	install -o 0 -g 1 -m 0550 check_radius_adv ${D}${libdir}/nagios-plugins/check_radius_adv
 }
 
 FILES_${PN} = "${libdir}/nagios-plugins/*"
