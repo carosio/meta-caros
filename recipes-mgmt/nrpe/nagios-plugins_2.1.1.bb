@@ -14,7 +14,7 @@ LIC_FILES_CHKSUM = "file://nagios-plugins.spec;beginline=24;endline=24;md5=cced8
 
 SECTION = "devel"
 
-PR = "r4"
+PR = "r1"
 
 SRC_URI = "http://nagios-plugins.org/download/nagios-plugins-${PV}.tar.gz"
 
@@ -24,20 +24,10 @@ SRC_URI[sha256sum] = "c7daf95ecbf6909724258e55a319057b78dcca23b2a6cc0a640b90c90d
 DEPENDS = "nrpe gettext-native"
 inherit autotools-brokensep gettext
 
-EXTRA_OECONF+="--with-nagios-user=daemon --with-nagios-group=daemon"
+EXTRA_OECONF+="--with-nagios-group=daemon"
+EXTRA_OECONF+="--without-world-permissions"
 
 EXTRA_OECONF+="--without-perl"
 EXTRA_OECONF+="--without-mysql"
 EXTRA_OECONF+="--with-openssl=${STAGING_LIBDIR}"
-
-#do_configure () {
-#	oe_runconf
-#}
-
-#do_compile () {
-#	oe_runmake
-#}
-
-#do_install () {
-#}
 
