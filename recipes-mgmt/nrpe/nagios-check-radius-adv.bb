@@ -36,9 +36,13 @@ do_install () {
 FILES_${PN} = "${libdir}/nagios-plugins/*"
 FILES_${PN}-dbg = "${libdir}/nagios-plugins/.debug/*"
 
+# manually unpack (download-location provides a .tar.gz.gz)
+# also workaround autoconf issues and cross-compile-preventing CC=gcc
 do_unpack_extra() {
 	cd ${S}
 	tar -xvzf ../${PN}.tar.gz
+	sed --in-place -e 's/^AC_INIT(.*$//' configure.in
+	sed --in-place -e 's/^CC=.*$//' Makefile
 }
 
 addtask unpack_extra after do_unpack before do_patch
