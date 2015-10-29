@@ -14,12 +14,21 @@ LIC_FILES_CHKSUM = "file://nrpe.spec;beginline=42;endline=42;md5=cced8b49901709f
 
 SECTION = "devel"
 
-PR = "r1"
+PR = "r3"
 
 SRC_URI = "http://downloads.sourceforge.net/project/nagios/nrpe-2.x/nrpe-${PV}/nrpe-${PV}.tar.gz"
+SRC_URI += "file://nrpe@.service file://nrpe.socket"
+SRC_URI += "file://nrpe.cfg"
 
 SRC_URI[md5sum] = "3921ddc598312983f604541784b35a50"
 SRC_URI[sha256sum] = "66383b7d367de25ba031d37762d83e2b55de010c573009c6f58270b137131072"
+
+inherit systemd
+SYSTEMD_PACKAGES = "${PN}"
+SYSTEMD_SERVICE_${PN} = "nrpe.socket"
+SYSTEMD_AUTO_ENABLE ?= "disable"
+
+CONFFILES_${PN} += "${sysconfdir}/nrpe.cfg"
 
 DEPENDS = "openssl openssl-native"
 inherit autotools-brokensep
@@ -44,6 +53,14 @@ do_compile () {
 }
 
 do_install () {
-    install -d ${D}${bindir}
-    install -m 0755 ${S}/src/nrpe ${D}${bindir}
+    install -d ${D}${sbindir}
+    install -d ${D}${sysconfdir}
+    install -d ${D}${systemd_unitdir}/system
+
+    install -g 1 -c -m 0640 ${WORKDIR}/nrpe.cfg ${D}${sysconfdir}/
+    install -m 0755 ${S}/src/nrpe ${D}${sbindir}
+
+    install -c -m 0644 ${WORKDIR}/nrpe.socket ${D}${systemd_unitdir}/system
+    install -c -m 0644 ${WORKDIR}/nrpe@.service ${D}${systemd_unitdir}/system
+    install -g 1 -c -m 0640 ${WORKDIR}/nrpe.cfg ${D}${sysconfdir}/
 }

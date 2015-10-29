@@ -1,0 +1,15 @@
+[Unit]
+Description=NRPE Service (per connection)
+Requires=nrpe.socket
+
+[Service]
+ExecStart=/usr/sbin/nrpe -c /etc/nrpe.cfg -i
+Type=simple
+StandardInput=socket
+User=daemon
+Group=daemon
+KillMode=mixed
+
+[Install]
+Also=nrpe.socket
+WantedBy=multi-user.target
