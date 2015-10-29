@@ -1,0 +1,9 @@
+[Unit]
+Description=NRPE Socket
+
+[Socket]
+ListenStream=5666
+Accept=yes
+
+[Install]
+WantedBy=sockets.target
