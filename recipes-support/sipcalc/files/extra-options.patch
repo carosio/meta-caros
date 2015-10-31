@@ -1,8 +1,8 @@
-diff --git a/include/sub.h b/include/sub.h
-index 4fb9a86..a6ee6cf 100644
---- a/include/sub.h
-+++ b/include/sub.h
-@@ -183,14 +183,18 @@ struct dnsresp {
+Index: sipcalc-1.1.6/include/sub.h
+===================================================================
+--- sipcalc-1.1.6.orig/include/sub.h	2015-10-31 23:02:05.421582785 +0100
++++ sipcalc-1.1.6/include/sub.h	2015-10-31 23:51:46.090075893 +0100
+@@ -183,14 +183,21 @@
  #define IFT_UNKWN 5
  
  /* v4 args */
@@ -26,14 +26,17 @@ index 4fb9a86..a6ee6cf 100644
 +#define V4MAX       0x200
 +#define V4NETMASK   0x400
 +#define BITNOT      0x800
++#define V4NETMASKLEN 0x1000
++#define V4HOSTADDR  0x2000
++#define V4NETADDR   0x4000
  
  /* v6 args */
  #define V6_INFO     0x01
-diff --git a/src/sub-output.c b/src/sub-output.c
-index 14ebd88..776c76b 100644
---- a/src/sub-output.c
-+++ b/src/sub-output.c
-@@ -695,6 +695,12 @@ print_help ()
+Index: sipcalc-1.1.6/src/sub-output.c
+===================================================================
+--- sipcalc-1.1.6.orig/src/sub-output.c	2015-10-31 23:02:05.421582785 +0100
++++ sipcalc-1.1.6/src/sub-output.c	2015-11-01 00:22:02.501954104 +0100
+@@ -695,6 +695,15 @@
  	printf
  	    ("Usage: %s [OPTIONS]... <[ADDRESS]... [INTERFACE]... | [-]>\n\n",
  	     NAME);
@@ -41,12 +44,15 @@ index 14ebd88..776c76b 100644
 +	printf ("  -m, --min\t\t\tMinimal IP address.\n");
 +	printf ("  -M, --max\t\t\tMaximal IP address.\n");
 +	printf ("  -N, --netmask\t\t\tNetwork mask.\n");
++	printf ("  -L, --netmasklen\t\tNetwork mask length in bits.\n");
++	printf ("  -H, --hostaddr\t\tHost address.\n");
++	printf ("  -W, --netaddr\t\t\tNetwork address.\n");
 +	printf ("  -B, --bitmap\t\t\tEnable bitmap notation.\n");
 +	printf ("\n");
  	printf ("Global options:\n");
  	printf ("  -a, --all\t\t\tAll possible information.\n");
  	printf ("  -d, --resolve\t\t\tEnable name resolution.\n");
-@@ -754,6 +760,12 @@ print_help ()
+@@ -754,6 +763,15 @@
  	printf
  	    ("Usage: %s [OPTIONS]... <[ADDRESS]... [INTERFACE]... | [-]>\n\n",
  	     NAME);
@@ -54,12 +60,15 @@ index 14ebd88..776c76b 100644
 +	printf ("  -m\t\tMinimal IP address.\n");
 +	printf ("  -M\t\tMaximal IP address.\n");
 +	printf ("  -N\t\tNetwork mask.\n");
++	printf ("  -L, --netmasklen\t\tNetwork mask length in bits.\n");
++	printf ("  -H, --hostaddr\t\tHost address.\n");
++	printf ("  -W, --netaddr\t\t\tNetwork address.\n");
 +	printf ("  -B\t\tEnable bitmap notation.\n");
 +	printf ("\n");
  	printf ("Global options:\n");
  	printf ("  -a\t\tAll possible information.\n");
  	printf ("  -d\t\tEnable name resolution.\n");
-@@ -824,3 +836,33 @@ print_version ()
+@@ -824,3 +842,58 @@
  	printf
  	    ("warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
  }
@@ -85,6 +94,26 @@ index 14ebd88..776c76b 100644
 +}
 +
 +void
++print_hostaddr (struct if_info *ifi, char bitnot){
++	if(bitnot){
++		printf ("%s", numtobitmap (ifi->v4ad.n_haddr));
++	}
++	else{
++		printf ("%s", numtoquad (ifi->v4ad.n_haddr));
++	}
++}
++
++void
++print_netaddr (struct if_info *ifi, char bitnot){
++	if(bitnot){
++		printf ("%s", numtobitmap (ifi->v4ad.n_naddr));
++	}
++	else{
++		printf ("%s", numtoquad (ifi->v4ad.n_naddr));
++	}
++}
++
++void
 +print_netmask (struct if_info *ifi, char bitnot){
 +	if(bitnot){
 +		printf ("%s", numtobitmap (ifi->v4ad.n_nmask));
@@ -93,11 +122,16 @@ index 14ebd88..776c76b 100644
 +		printf ("%s", numtoquad (ifi->v4ad.n_nmask));
 +	}
 +}
-diff --git a/src/sub.c b/src/sub.c
-index 6ac533e..a6acb7d 100644
---- a/src/sub.c
-+++ b/src/sub.c
-@@ -54,6 +54,7 @@ static const char rcsid[] = "$Id: sub.c,v 1.39 2003/03/19 12:28:16 simius Exp $"
++
++void
++print_netmask_len (struct if_info *ifi){
++	printf ("%d", ifi->v4ad.n_nmaskbits);
++}
+Index: sipcalc-1.1.6/src/sub.c
+===================================================================
+--- sipcalc-1.1.6.orig/src/sub.c	2015-10-31 23:02:05.421582785 +0100
++++ sipcalc-1.1.6/src/sub.c	2015-10-31 23:54:57.956739497 +0100
+@@ -54,6 +54,7 @@
  extern char *optarg;
  extern int optind, opterr, optopt;
  int resolve;
@@ -105,7 +139,7 @@ index 6ac533e..a6acb7d 100644
  
  int
  out_cmdline (struct if_info *ifarg_cur, int v4args, struct misc_args m_argv4,
-@@ -63,23 +64,35 @@ out_cmdline (struct if_info *ifarg_cur, int v4args, struct misc_args m_argv4,
+@@ -63,23 +64,35 @@
  
  	ret = 0;
  
@@ -149,7 +183,7 @@ index 6ac533e..a6acb7d 100644
  		ret = get_addrv4 (ifarg_cur);
  	}
  
-@@ -93,16 +106,20 @@ out_cmdline (struct if_info *ifarg_cur, int v4args, struct misc_args m_argv4,
+@@ -93,16 +106,20 @@
  		printf ("\n-[ERR : Invalid address]\n\n-\n");
  		return 0;
  	}
@@ -172,7 +206,7 @@ index 6ac533e..a6acb7d 100644
  		if ((v4args & CF_INFO) == CF_INFO)
  			print_cf_info_v4 (ifarg_cur);
  		if ((v4args & CIDR_INFO) == CIDR_INFO)
-@@ -117,14 +134,18 @@ out_cmdline (struct if_info *ifarg_cur, int v4args, struct misc_args m_argv4,
+@@ -117,14 +134,24 @@
  			show_split_networks_v4 (ifarg_cur, m_argv4.splitmask, v4args, m_argv4);
  		if ((v4args & C_WILDCARD) == C_WILDCARD)
  			show_c_wildcard_info_v4 (ifarg_cur);
@@ -181,8 +215,14 @@ index 6ac533e..a6acb7d 100644
 +			print_minimal (ifarg_cur, (v4args & BITNOT) == BITNOT);
 +		if ((v4args & V4MAX) == V4MAX)
 +			print_maximal (ifarg_cur, (v4args & BITNOT) == BITNOT);
++		if ((v4args & V4HOSTADDR) == V4HOSTADDR)
++			print_hostaddr (ifarg_cur, (v4args & BITNOT) == BITNOT);
++		if ((v4args & V4NETADDR) == V4NETADDR)
++			print_netaddr (ifarg_cur, (v4args & BITNOT) == BITNOT);
 +		if ((v4args & V4NETMASK) == V4NETMASK)
 +			print_netmask (ifarg_cur, (v4args & BITNOT) == BITNOT);
++		if ((v4args & V4NETMASKLEN) == V4NETMASKLEN)
++			print_netmask_len (ifarg_cur);
  	}
  
  	if (ifarg_cur->type == IFT_V6 || ifarg_cur->type == IFT_INTV6) {
@@ -193,7 +233,7 @@ index 6ac533e..a6acb7d 100644
  		if ((v6args & V6_INFO) == V6_INFO)
  			print_v6 (ifarg_cur);
  		if ((v6args & V4INV6) == V4INV6)
-@@ -133,8 +154,14 @@ out_cmdline (struct if_info *ifarg_cur, int v4args, struct misc_args m_argv4,
+@@ -133,8 +160,14 @@
  			print_rev_v6 (ifarg_cur);
  		if ((v6args & V6SPLIT) == V6SPLIT)
  			show_split_networks_v6 (ifarg_cur, m_argv6.v6splitmask, v6args, m_argv6);
@@ -208,31 +248,42 @@ index 6ac533e..a6acb7d 100644
  
  	return 0;
  }
-@@ -697,6 +724,10 @@ main (int argc, char *argv[])
+@@ -697,6 +730,13 @@
  		{"split-verbose", no_argument, 0, 'u'},
  		{"resolve", no_argument, 0, 'd'},
  		{"wildcard", no_argument, 0, 'w'},
 +		{"min", no_argument, 0, 'm'},
 +		{"max", no_argument, 0, 'M'},
 +		{"netmask", no_argument, 0, 'N'},
++		{"netmasklen", no_argument, 0, 'L'},
++		{"hostaddr", no_argument, 0, 'H'},
++		{"netaddr", no_argument, 0, 'W'},
 +		{"bitmap", no_argument, 0, 'B'},
  		{0, 0, 0, 0}
  	};
  #endif
-@@ -739,10 +770,10 @@ main (int argc, char *argv[])
+@@ -739,10 +779,10 @@
  	 */
  #ifdef HAVE_GETOPT_LONG
  	while ((ch =
 -		getopt_long (argc, argv, "abcdehHiI:n:rs:S:tuvVwx4:6:", l_o,
-+		getopt_long (argc, argv, "abcdBehHiI:mMn:Nrs:S:tuvVwx4:6:", l_o,
++		getopt_long (argc, argv, "abcdBehHiI:mMn:NLHWrs:S:tuvVwx4:6:", l_o,
  			     NULL)) != -1) {
  #else
 -	while ((ch = getopt (argc, argv, "abcdehHiI:n:rs:S:tuvVwx4:6:")) != -1) {
-+	while ((ch = getopt (argc, argv, "abcdBehHiI:mMn:Nrs:S:tuvVwx4:6:")) != -1) {
++	while ((ch = getopt (argc, argv, "abcdBehHiI:mMn:NLHWrs:S:tuvVwx4:6:")) != -1) {
  #endif
  		switch (ch) {
  		case 'a':
-@@ -847,6 +878,21 @@ main (int argc, char *argv[])
+@@ -767,7 +807,6 @@
+ 			v6args = v6args | V4INV6;
+ 			break;
+ 		case 'h':
+-		case 'H':
+ 			print_help ();
+ 			return 0;
+ 		case 'i':
+@@ -847,6 +886,33 @@
  			abox_cur = new_arg (abox_cur);
  
  			break;
@@ -247,8 +298,20 @@ index 6ac533e..a6acb7d 100644
 +			v4args = v4args | V4MAX;
 +			MINIMAL_OUT = 1;
 +			break;
++		case 'H':
++			v4args = v4args | V4HOSTADDR;
++			MINIMAL_OUT = 1;
++			break;
++		case 'W':
++			v4args = v4args | V4NETADDR;
++			MINIMAL_OUT = 1;
++			break;
 +		case 'N':
 +			v4args = v4args | V4NETMASK;
++			MINIMAL_OUT = 1;
++			break;
++		case 'L':
++			v4args = v4args | V4NETMASKLEN;
 +			MINIMAL_OUT = 1;
 +			break;
  		default:
