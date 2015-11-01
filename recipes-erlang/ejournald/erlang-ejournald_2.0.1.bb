@@ -2,11 +2,11 @@ SUMMARY = "Erlang journal binding"
 SECTION = "devel"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://src/journald_api.erl;beginline=1;endline=19;md5=1d4630b1ec8e33c2b2016dc223817406"
-SRCREV  = "2c54d548de698eabd171fa0acd973b203135c880"
+SRCREV  = "0d60cf7798358738886d01fa6ff33882dc581cd7"
 
 PR = "r1"
 
-SRC_URI = "git://github.com/systemd/ejournald.git;protocol=git" 
+SRC_URI = "git://github.com/systemd/ejournald.git;protocol=git"
 SRC_URI += "file://0001-adapt-Makefile-to-caros-systemd.patch;apply=yes"
 
 

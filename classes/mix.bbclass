@@ -117,11 +117,13 @@ def gen_deps(d):
             bb.debug(2, "SRC_URI %s.sha256sum %s"%(key, sha256))
 
 do_compile() {
-    cp -avl ${WORKDIR}/git-deps ./deps
+    cp -navl ${WORKDIR}/git-deps ./deps
     for mixdep in ${WORKDIR}/hex-deps/*; do
         mixdepbase="`basename $mixdep`"
-        mkdir -pv deps/$mixdepbase
-        tar xz -C deps/$mixdepbase -f $mixdep/contents.tar.gz
+        if [ ! -e deps/$mixdepbase ] ; then
+            mkdir -v deps/$mixdepbase
+            tar xz -C deps/$mixdepbase -f $mixdep/contents.tar.gz
+        fi
     done
 
     export LC_ALL=en_US.UTF-8
@@ -149,11 +151,11 @@ do_compile() {
 do_install() {
     if [ -e rel/${REL_NAME}/releases/${REL_VSN}/${REL_NAME}.tar.gz ]
     then
-        TAR_DIR="rel/${REL_NAME}/releases/${REL_VSN}/${REL_NAME}.tar.gz"
+        RELEASE_TAR="rel/${REL_NAME}/releases/${REL_VSN}/${REL_NAME}.tar.gz"
         bbnote "tar found at rel/${REL_NAME}/releases/${REL_VSN}/${REL_NAME}.tar.gz"
     elif [ -e rel/${REL_NAME}/${REL_NAME}-${REL_VSN}.tar.gz ]
     then
-        TAR_DIR="rel/${REL_NAME}/${REL_NAME}-${REL_VSN}.tar.gz"
+        RELEASE_TAR="rel/${REL_NAME}/${REL_NAME}-${REL_VSN}.tar.gz"
         bbnote "tar found at rel/${REL_NAME}-${REL_VSN}.tar.gz"
     else
         bbfatal "${REL_NAME}: tar file not found"
@@ -161,7 +163,8 @@ do_install() {
     fi
 
     install -m 0755 -d "${D}/${APP_PREFIX}/${APPNAME}/${APPVERSION}/"
-    tar xvz -C ${D}/${APP_PREFIX}/${APPNAME}/${APPVERSION} -f $TAR_DIR
+    tar xvz -C ${D}/${APP_PREFIX}/${APPNAME}/${APPVERSION} -f $RELEASE_TAR
+    rm -vf ${D}/${APP_PREFIX}/${APPNAME}/${APPVERSION}/releases/${REL_VSN}/${REL_NAME}.tar.gz
     ln -s ${REL_NAME} "${D}/${APP_PREFIX}/${APPNAME}/${APPVERSION}/bin/rc"
 
     install -m 0755 -d "${D}/${SYSCONFIG_PREFIX}"
