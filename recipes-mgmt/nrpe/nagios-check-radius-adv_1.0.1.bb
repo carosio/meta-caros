@@ -1,5 +1,8 @@
 DESCRIPTION = "advanced radius monitoring plugin for NRPE/Nagios"
 
+# Right now this recipe provides only the advanced radius monitoring
+# plugin. More nagios checks will follow.
+
 HOMEPAGE = "https://www.nagios-plugins.org/"
 
 LICENSE = "GPL"
@@ -9,10 +12,11 @@ SECTION = "devel"
 
 PR = "r1"
 
-SRC_URI = "https://exchange.nagios.org/components/com_mtree/attachment.php?link_id=295&cf_id=29;downloadfilename=${PN}.tar.gz.gz"
+SRC_URI = "git://github.com/carosio/nagios-checks-caros.git;protocol=git"
 
-SRC_URI[md5sum] = "a7e5fa6c5f3aa90c7b7915420b29658d"
-SRC_URI[sha256sum] = "5bd5a1f979e2a33b545c514d6bbb7597442668aaa284fc198f01c5047b642f20"
+SRCREV  = "935ea2a5b3c70fa6ae93d4b7c6c758f9e072f346"
+
+S = "${WORKDIR}/git/check_radius_adv/"
 
 DEPENDS = "nagios-plugins gettext-native"
 inherit autotools-brokensep gettext
@@ -25,14 +29,11 @@ do_install () {
 FILES_${PN} = "${libdir}/nagios-plugins/*"
 FILES_${PN}-dbg = "${libdir}/nagios-plugins/.debug/*"
 
-# manually unpack (download-location provides a .tar.gz.gz)
-# also workaround autoconf issues and cross-compile-preventing CC=gcc
-do_unpack_extra() {
-	cd ${S}
-	tar -xvzf ../${PN}.tar.gz
+# workaround autoconf issues and cross-compile-preventing CC=gcc
+do_patch_extra() {
 	sed --in-place -e 's/^AC_INIT(.*$//' configure.in
 	sed --in-place -e 's/^CC=.*$//' Makefile
 }
 
-addtask unpack_extra after do_unpack before do_patch
+addtask patch_extra after do_unpack before do_patch
 
