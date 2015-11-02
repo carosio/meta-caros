@@ -8,8 +8,8 @@ PR = "r3"
 SRC_URI = "https://github.com/DeadZen/goldrush/archive/${PV}.tar.gz;downloadfilename=goldrush-${PV}.tar.gz \
 	   file://add-tetrapak.patch;apply=yes"
 
-SRC_URI[md5sum] = "119db963081dcadd51e9f8698b41c557"
-SRC_URI[sha256sum] = "554f36983e19fcf2ebee18b5c0ff502af4fc1b853b49041c7a9821d7043e349f"
+SRC_URI[md5sum] = "3869ba352a03ce1a5cd6c1c6f3daf26d"
+SRC_URI[sha256sum] = "4423756af9808421dc68097eda66fbdc189b0415795f3373737870007a6015f6"
 
 
 S = "${WORKDIR}/goldrush-${PV}"

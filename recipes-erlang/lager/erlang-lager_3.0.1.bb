@@ -8,8 +8,8 @@ PR = "r1"
 SRC_URI = "https://github.com/basho/lager/archive/${PV}.tar.gz;downloadfilename=lager-${PV}.tar.gz \
            file://add-tetrapak.patch;apply=yes \
            file://fix-boss_compiler.patch;apply=yes"
-SRC_URI[md5sum] = "e02f00903c13fe126823c40f04d245e6"
-SRC_URI[sha256sum] = "a659b4bb8c3e126854f38826b3418d595e2fb4b147c66a598d194677f24ca3a6"
+SRC_URI[md5sum] = "ac45e2c062e0ce3067d431352f724549"
+SRC_URI[sha256sum] = "1a1487286c013756c547b76dc8e25edfb5fcefb53834c3bf3ee5ae5140ae13e9"
 
 DEPENDS = "erlang-goldrush"
 
