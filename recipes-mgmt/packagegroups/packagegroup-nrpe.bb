@@ -7,7 +7,7 @@ PR = "r2"
 inherit packagegroup
 
 PACKAGES = "${PN}"
-PACKAGE_GROUP_caros_nrpe = "${PN}"
+PACKAGE_GROUP_nrpe = "${PN}"
 
 RDEPENDS_${PN} = "\
 nrpe \
