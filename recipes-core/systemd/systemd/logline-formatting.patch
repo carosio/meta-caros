@@ -857,7 +857,7 @@ index c249505..b8ef993 100644
 +                        const char *end;
 +                        OutputFieldType type;
 +                        char *optstr;
-+                        uint64_t vallen;
++                        uint64_t vallen = 0;
 +
 +                        end = strchr(next, '}');
 +                        if (!end)
