@@ -40,7 +40,7 @@ CONFFILES_${PN} += "${SYSCONFIG_PREFIX}/${APPNAME}.conf"
 
 DEPENDS += "avahi erlang-lager-journald-backend elixir-native elixir rebar-native"
 
-inherit systemd
+inherit caros-service
 
 SYSTEMD_UNIT_NAME ?= "${APPNAME}"
 SYSTEMD_AUTO_ENABLE ?= "disable"
