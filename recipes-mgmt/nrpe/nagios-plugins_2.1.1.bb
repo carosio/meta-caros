@@ -14,7 +14,7 @@ LIC_FILES_CHKSUM = "file://nagios-plugins.spec;beginline=24;endline=24;md5=cced8
 
 SECTION = "devel"
 
-PR = "r3"
+PR = "r4"
 
 SRC_URI = "http://nagios-plugins.org/download/nagios-plugins-${PV}.tar.gz"
 
@@ -34,10 +34,11 @@ EXTRA_OECONF+="--with-openssl=${STAGING_LIBDIR}"
 do_install () {
 	install -d -m 0755 ${D}${libdir}/nagios-plugins/
 
+	install -o 0 -g 1 -m 0550 plugins/check_disk ${D}${libdir}/nagios-plugins/check_disk
+	install -o 0 -g 1 -m 0550 plugins/check_http ${D}${libdir}/nagios-plugins/check_http
 	install -o 0 -g 1 -m 0550 plugins/check_load ${D}${libdir}/nagios-plugins/check_load
 	install -o 0 -g 1 -m 0550 plugins/check_swap ${D}${libdir}/nagios-plugins/check_swap
-	install -o 0 -g 1 -m 0550 plugins/check_http ${D}${libdir}/nagios-plugins/check_http
-	install -o 0 -g 1 -m 0550 plugins/check_disk ${D}${libdir}/nagios-plugins/check_disk
+	install -o 0 -g 1 -m 0550 plugins/check_tcp  ${D}${libdir}/nagios-plugins/check_tcp
 
 	install -o 0 -g 1 -m 4550 plugins-root/check_icmp ${D}${libdir}/nagios-plugins/check_icmp
 }
