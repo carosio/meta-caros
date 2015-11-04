@@ -12,14 +12,16 @@ LIC_FILES_CHKSUM = "file://LICENSE.LGPL2.1;md5=4fbd65380cdd255951079008b364516c"
 inherit autotools systemd
 
 SRC_URI = "https://github.com/travelping/journal-gateway-zmtp/archive/v${PV}.tar.gz;downloadfilename=${PN}-${PV}.tar.gz"
-SRC_URI[md5sum] = "e474a75e356083f6c46d51bf2e0cf110"
-SRC_URI[sha256sum] = "b14bf90863b7834ea07f7abc25c544957ae9db9eb056eb58d43094759ab2b71f"
+SRC_URI[md5sum] = "76d19b039dbf29671f17ac4479f45204"
+SRC_URI[sha256sum] = "5297987445fa88e87249b0ca59f7dcdb58ea1a8d612f50b649c5fc387077bac3"
 
 S = "${WORKDIR}/${PN}-${PV}"
 
 SYSTEMD_AUTO_ENABLE = "disable"
 SYSTEMD_SERVICE_${PN} = "${PN}-sink.service"
 SYSTEMD_SERVICE_${PN} += "${PN}-source.service"
+SYSTEMD_SERVICE_${PN} += "journal-sink-logrotate.service"
+SYSTEMD_SERVICE_${PN} += "journal-sink-logrotate.timer"
 
 do_compile() {
     echo ${S}
@@ -36,6 +38,10 @@ do_install() {
     install -d ${D}${systemd_unitdir}/system
     install -m 0644 ${S}/misc/journal-gateway-zmtp-sink.service ${D}${systemd_unitdir}/system/.
     install -m 0644 ${S}/misc/journal-gateway-zmtp-source.service ${D}${systemd_unitdir}/system/.
+    install -m 0644 ${S}/misc/rotate_logs.service ${D}${systemd_unitdir}/system/journal-sink-logrotate.service
+    sed --in-place -e "s/rotate_logs/journal-sink-logrotate/g" ${D}${systemd_unitdir}/system/journal-sink-logrotate.service
+    install -m 0644 ${S}/misc/rotate_logs.timer ${D}${systemd_unitdir}/system/journal-sink-logrotate.timer
+    sed --in-place -e "s/rotate_logs/journal-sink-logrotate/g" ${D}${systemd_unitdir}/system/journal-sink-logrotate.timer
 
     install -d ${D}${sysconfdir}
     install -m 0644 ${S}/misc/journal-gateway-zmtp-sink.conf ${D}${sysconfdir}/.
@@ -47,6 +53,8 @@ FILES_${PN} = "${bindir}/journal-gateway-zmtp-source ${bindir}/journal-gateway-z
 # systemd units
 FILES_${PN} += "${systemd_unitdir}/system/journal-gateway-zmtp-sink.service"
 FILES_${PN} += "${systemd_unitdir}/system/journal-gateway-zmtp-source.service"
+FILES_${PN} += "${systemd_unitdir}/system/journal-sink-logrotate.service"
+FILES_${PN} += "${systemd_unitdir}/system/journal-sink-logrotate.timer"
 
 # config files
 FILES_${PN} += "${sysconfdir}/journal-gateway-zmtp-sink.conf"
