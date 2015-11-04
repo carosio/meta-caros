@@ -20,8 +20,8 @@ S = "${WORKDIR}/${PN}-${PV}"
 SYSTEMD_AUTO_ENABLE = "disable"
 SYSTEMD_SERVICE_${PN} = "${PN}-sink.service"
 SYSTEMD_SERVICE_${PN} += "${PN}-source.service"
-SYSTEMD_SERVICE_${PN} += "rotate_logs.service"
-SYSTEMD_SERVICE_${PN} += "rotate_logs.timer"
+SYSTEMD_SERVICE_${PN} += "journal-sink-logrotate.service"
+SYSTEMD_SERVICE_${PN} += "journal-sink-logrotate.timer"
 
 do_compile() {
     echo ${S}
@@ -38,8 +38,10 @@ do_install() {
     install -d ${D}${systemd_unitdir}/system
     install -m 0644 ${S}/misc/journal-gateway-zmtp-sink.service ${D}${systemd_unitdir}/system/.
     install -m 0644 ${S}/misc/journal-gateway-zmtp-source.service ${D}${systemd_unitdir}/system/.
-    install -m 0644 ${S}/misc/rotate_logs.service ${D}${systemd_unitdir}/system/.
-    install -m 0644 ${S}/misc/rotate_logs.timer ${D}${systemd_unitdir}/system/.
+    install -m 0644 ${S}/misc/rotate_logs.service ${D}${systemd_unitdir}/system/journal-sink-logrotate.service
+    sed --in-place -e "s/rotate_logs/journal-sink-logrotate/g" ${D}${systemd_unitdir}/system/journal-sink-logrotate.service
+    install -m 0644 ${S}/misc/rotate_logs.timer ${D}${systemd_unitdir}/system/journal-sink-logrotate.timer
+    sed --in-place -e "s/rotate_logs/journal-sink-logrotate/g" ${D}${systemd_unitdir}/system/journal-sink-logrotate.timer
 
     install -d ${D}${sysconfdir}
     install -m 0644 ${S}/misc/journal-gateway-zmtp-sink.conf ${D}${sysconfdir}/.
@@ -51,8 +53,8 @@ FILES_${PN} = "${bindir}/journal-gateway-zmtp-source ${bindir}/journal-gateway-z
 # systemd units
 FILES_${PN} += "${systemd_unitdir}/system/journal-gateway-zmtp-sink.service"
 FILES_${PN} += "${systemd_unitdir}/system/journal-gateway-zmtp-source.service"
-FILES_${PN} += "${systemd_unitdir}/system/rotate_logs.service"
-FILES_${PN} += "${systemd_unitdir}/system/rotate_logs.timer"
+FILES_${PN} += "${systemd_unitdir}/system/journal-sink-logrotate.service"
+FILES_${PN} += "${systemd_unitdir}/system/journal-sink-logrotate.timer"
 
 # config files
 FILES_${PN} += "${sysconfdir}/journal-gateway-zmtp-sink.conf"
