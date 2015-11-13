@@ -14,4 +14,5 @@ packagegroup-caros-ansible-deps \
 packagegroup-caros-erlang \
 unimux \
 chello \
+iptables \
 "
