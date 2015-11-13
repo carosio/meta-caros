@@ -4,12 +4,13 @@ SECTION = "net"
 LICENSE = "MPL-2.0"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=815ca599c9df247a0c7f619bab123dad"
 
-PR = "r2"
+PR = "r3"
 
 S = "${WORKDIR}/${PN}"
 
 APPVERSION = "${PV}"
 DEPENDS += "golang-cross"
+DEPENDS += "zeromq"
 RDEPENDS_${PN} += "zeromq"
 
 
