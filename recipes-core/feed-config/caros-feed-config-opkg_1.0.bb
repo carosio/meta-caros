@@ -18,7 +18,7 @@ do_compile() {
 	touch $basefeedconf
 
 	for arch in $ipkgarchs; do
-	        echo "src/gz ${FEEDNAMEPREFIX}-$arch ${FEEDDOMAIN}/${FEEDURIPREFIX}/ipk/$arch" >> $basefeedconf
+	        echo "src/gz ${FEEDNAMEPREFIX}-$arch ${FEEDDOMAIN}/${FEEDURIPREFIX}/$arch" >> $basefeedconf
 	done
 }
 
