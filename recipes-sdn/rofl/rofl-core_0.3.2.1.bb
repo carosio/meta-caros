@@ -5,8 +5,8 @@ LIC_FILES_CHKSUM = "file://COPYRIGHT;md5=5d425c8f3157dbf212db2ec53d9e5132"
 
 DEPENDS = "libconfig"
 
-SRC_URI = "git://codebasin.net/rofl-core.git;branch=master-0.3"
-SRCREV="1017518700198578ac13ac554d405bca17377f11"
+SRC_URI = "git://github.com/bisdn/rofl-core.git;branch=master-0.3"
+SRCREV="ec1bd289b23f29e5ba4d1b3a549159eac87b1f32"
 
 PE = "1"
 PR = "r1"

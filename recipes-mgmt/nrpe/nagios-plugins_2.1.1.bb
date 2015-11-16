@@ -14,14 +14,14 @@ LIC_FILES_CHKSUM = "file://nagios-plugins.spec;beginline=24;endline=24;md5=cced8
 
 SECTION = "devel"
 
-PR = "r4"
+PR = "r5"
 
 SRC_URI = "http://nagios-plugins.org/download/nagios-plugins-${PV}.tar.gz"
 
 SRC_URI[md5sum] = "e199ca874df5723bfaca8c43887b1a79"
 SRC_URI[sha256sum] = "c7daf95ecbf6909724258e55a319057b78dcca23b2a6cc0a640b90c90d4feae3"
 
-DEPENDS = "nrpe gettext-native"
+DEPENDS = "gettext-native"
 inherit autotools-brokensep gettext
 
 EXTRA_OECONF+="--with-nagios-group=daemon"

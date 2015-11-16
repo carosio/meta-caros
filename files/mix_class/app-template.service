@@ -2,12 +2,10 @@
 Description=@@DESCRIPTION@@
 
 [Service]
-
-Environment="HOME=@@APP_HOME@@"
-Environment="USER_CONFIG_FILE=@@USER_CONFIG_FILE@@"
-Environment="MUTABLE_DIR=@@MUTABLE_DIR@@"
-ExecStart=@@APP_PREFIX@@/@@APPNAME@@/@@VERSION@@/bin/rc foreground
-ExecStop=@@APP_PREFIX@@/@@APPNAME@@/@@VERSION@@/bin/rc stop
+Environment="BASE_RELEASE_CONFIG_FILE=@@CONFFILE@@"
+SyslogIdentifier=@@APPNAME@@
+ExecStart=@@APP_CONTROL@@ --from-systemd=@@SYSTEMD_UNIT_NAME@@@@@APPVERSION@@ start @@APP_PREFIX@@/@@APPNAME@@
+ExecStop=@@APP_CONTROL@@ --from-systemd=@@SYSTEMD_UNIT_NAME@@@@@APPVERSION@@ stop
 Restart=always
 
 [Install]

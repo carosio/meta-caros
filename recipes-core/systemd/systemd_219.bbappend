@@ -16,6 +16,7 @@ CONFFILES_${PN} += "${sysconfdir}/machine-id"
 MGMT_IF ?= "eth0"
 MGMT_IF_vmware ?= "ven0"
 MGMT_IF_lanner-fw8758 ?= "ge0p5"
+MGMT_IF_sun7i-a20-lamobo-r1 ?= "eth0.5"
 
 
 # workarround for bug in systemd.class

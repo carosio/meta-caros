@@ -10,7 +10,7 @@ LIC_FILES_CHKSUM = "file://check_radius_adv.c;beginline=11;endline=23;md5=e324dc
 
 SECTION = "devel"
 
-PR = "r1"
+PR = "r2"
 
 SRC_URI = "git://github.com/carosio/nagios-checks-caros.git;protocol=git"
 
@@ -18,7 +18,6 @@ SRCREV  = "935ea2a5b3c70fa6ae93d4b7c6c758f9e072f346"
 
 S = "${WORKDIR}/git/check_radius_adv/"
 
-DEPENDS = "nagios-plugins gettext-native"
 inherit autotools-brokensep gettext
 
 do_install () {
