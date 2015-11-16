@@ -11,6 +11,8 @@
 # SYSCONFIG_PREFIX    (default is "${sysconfdir}/apps")
 # SYSTEMD_UNIT_NAME   (default is "${APPNAME}")
 # SYSTEMD_AUTO_ENABLE (default is "disable")
+# APP_CONTROL         (default is "/usr/caros-apps/libexec/appctl.sh")
+# CONFFILE            (default is "${SYSCONFIG_PREFIX}/${APPNAME}.conf")
 #####################################################
 
 APPNAME ?= "${PN}"
@@ -33,17 +35,18 @@ FILES_${PN}-dbg += "${APP_PREFIX}/${APPNAME}/${APPVERSION}/erts*/bin/.debug"
 FILES_${PN}-staticdev += "${APP_PREFIX}/${APPNAME}/${APPVERSION}/erts*/lib/lib*.a"
 FILES_${PN}-staticdev += "${APP_PREFIX}/${APPNAME}/${APPVERSION}/erts*/lib/internal/lib*.a"
 
-APP_HOME ?= "/run/${APPNAME}"
-MUTABLE_DIR ?= "/run/${APPNAME}"
-USER_CONFIG_FILE ?= "${sysconfdir}/${APPNAME}.conf"
-CONFFILES_${PN} += "${SYSCONFIG_PREFIX}/${APPNAME}.conf"
+CONFFILE ?= "${SYSCONFIG_PREFIX}/${APPNAME}.conf"
+CONFFILES_${PN} += "${CONFFILE}"
 
 DEPENDS += "avahi erlang-lager-journald-backend elixir-native elixir rebar-native"
 
 inherit caros-service
+RDEPENDS_${PN} += " app-mgmt "
+
 
 SYSTEMD_UNIT_NAME ?= "${APPNAME}"
 SYSTEMD_AUTO_ENABLE ?= "disable"
+APP_CONTROL ?= "/usr/caros-apps/libexec/appctl.sh"
 SYSTEMD_SERVICE_${PN} = "${SYSTEMD_UNIT_NAME}.service"
 
 def gen_deps(d):
@@ -145,6 +148,22 @@ do_compile() {
     cat rel/relx.config
     echo "==============="
 
+    if [ -e rel/vm.args ]
+    then
+        # if there is a costum vm.args we just remove the node name and cookie option
+        sed -i -e 's/^[ \t]*-s\?name\>/# disabled by packageing: &/' rel/vm.args
+        sed -i -e '/-setcookie/s/^/## removed: /' rel/vm.args
+        echo "generated vm.args:"
+        echo "==============="
+        cat rel/vm.args
+        echo "==============="
+    else
+        # else there is the default vm.args which just includes the node name and cookie option
+        # hence we just put in an empty vm.args which is then used by exrm as default
+        echo "default vm.args will be overwritten by an empty vm.args"
+        touch rel/vm.args
+    fi
+
     mix do deps.compile, compile, release
 }
 
@@ -176,20 +195,20 @@ do_install() {
     chmod 755 ${erts_base}/bin/beam.smp
 
     install -m 0755 -d "${D}/${SYSCONFIG_PREFIX}"
-    install -m 0644 ${S}/config/${APPNAME}.conf ${D}/${SYSCONFIG_PREFIX}/${APPNAME}.conf
-    echo >> ${D}/${SYSCONFIG_PREFIX}/${APPNAME}.conf
-    echo "log.journal.level = info" >> ${D}/${SYSCONFIG_PREFIX}/${APPNAME}.conf
-    echo "log.console.level = false" >> ${D}/${SYSCONFIG_PREFIX}/${APPNAME}.conf
+    install -m 0644 ${S}/config/${REL_NAME}.conf ${D}${CONFFILE}
+    echo >> ${D}${CONFFILE}
+    echo "log.journal.level = info" >> ${D}${CONFFILE}
+    echo "log.console.level = false" >> ${D}${CONFFILE}
 
     install -d ${D}${systemd_unitdir}/system/
     install -m 0644 ${MIX_CLASS_FILES}/app-template.service ${D}${systemd_unitdir}/system/${SYSTEMD_UNIT_NAME}.service
     sed -i "s|@@DESCRIPTION@@|${DESCRIPTION}|" ${D}${systemd_unitdir}/system/${SYSTEMD_UNIT_NAME}.service
-    sed -i "s|@@VERSION@@|${APPVERSION}|" ${D}${systemd_unitdir}/system/${SYSTEMD_UNIT_NAME}.service
     sed -i "s|@@APPNAME@@|${APPNAME}|" ${D}${systemd_unitdir}/system/${SYSTEMD_UNIT_NAME}.service
+    sed -i "s|@@APPVERSION@@|${APPVERSION}|" ${D}${systemd_unitdir}/system/${SYSTEMD_UNIT_NAME}.service
     sed -i "s|@@APP_PREFIX@@|${APP_PREFIX}|" ${D}${systemd_unitdir}/system/${SYSTEMD_UNIT_NAME}.service
-    sed -i "s|@@MUTABLE_DIR@@|${MUTABLE_DIR}|" ${D}${systemd_unitdir}/system/${SYSTEMD_UNIT_NAME}.service
-    sed -i "s|@@USER_CONFIG_FILE@@|${USER_CONFIG_FILE}|" ${D}${systemd_unitdir}/system/${SYSTEMD_UNIT_NAME}.service
-    sed -i "s|@@APP_HOME@@|${APP_HOME}|" ${D}${systemd_unitdir}/system/${SYSTEMD_UNIT_NAME}.service
+    sed -i "s|@@APP_CONTROL@@|${APP_CONTROL}|" ${D}${systemd_unitdir}/system/${SYSTEMD_UNIT_NAME}.service
+    sed -i "s|@@CONFFILE@@|${CONFFILE}|" ${D}${systemd_unitdir}/system/${SYSTEMD_UNIT_NAME}.service
+    sed -i "s|@@SYSTEMD_UNIT_NAME@@|${SYSTEMD_UNIT_NAME}|" ${D}${systemd_unitdir}/system/${SYSTEMD_UNIT_NAME}.service
 }
 
 python do_mix_deps() {
