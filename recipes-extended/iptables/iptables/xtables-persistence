@@ -6,9 +6,11 @@ table_families="iptables ip6tables ebtables"
 case "$1" in
 	"restore")
 		for iptaf in $table_families; do
-			if [ "$(which ${iptaf}-restore )" ]; then
+			if type ${iptaf}-restore > /dev/null
+		   	then
 				if [ -e /etc/${iptaf}-state ]; then
 					${iptaf}-restore < /etc/${iptaf}-state
+					echo "restored ${iptaf} state."
 				else
 					echo "no saved ${iptaf} state found. please run $0 save."
 				fi
@@ -17,9 +19,10 @@ case "$1" in
 	;;
 	"save")
 		for iptaf in $table_families; do
-			if [ "$(which ${iptaf}-save )" ]; then
+			if type ${iptaf}-save > /dev/null
+			then
 				${iptaf}-save > /etc/${iptaf}-state
-				echo "saved ${iptaf} state"
+				echo "saved ${iptaf} state."
 			fi
 		done
 	;;
