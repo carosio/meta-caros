@@ -200,6 +200,8 @@ do_install() {
     echo "log.journal.level = info" >> ${D}${CONFFILE}
     echo "log.console.level = false" >> ${D}${CONFFILE}
 
+    echo "${CONFFILE}" > ${D}/${APP_PREFIX}/${APPNAME}/${APPVERSION}/CONFPATH
+
     install -d ${D}${systemd_unitdir}/system/
     install -m 0644 ${MIX_CLASS_FILES}/app-template.service ${D}${systemd_unitdir}/system/${SYSTEMD_UNIT_NAME}.service
     sed -i "s|@@DESCRIPTION@@|${DESCRIPTION}|" ${D}${systemd_unitdir}/system/${SYSTEMD_UNIT_NAME}.service
