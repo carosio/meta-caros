@@ -5,11 +5,11 @@ DEPENDS += "czmq"
 DEPENDS += "jansson"
 DEPENDS += "systemd"
 LICENSE = "LGPL-2.1"
-PR = "r1"
+PR = "r2"
 
 LIC_FILES_CHKSUM = "file://LICENSE.LGPL2.1;md5=4fbd65380cdd255951079008b364516c"
 
-inherit autotools systemd
+inherit autotools caros-service
 
 SRC_URI = "https://github.com/travelping/journal-gateway-zmtp/archive/v${PV}.tar.gz;downloadfilename=${PN}-${PV}.tar.gz"
 SRC_URI[md5sum] = "e474a75e356083f6c46d51bf2e0cf110"
