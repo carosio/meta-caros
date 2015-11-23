@@ -186,6 +186,11 @@ do_install() {
     rm -vf ${D}/${APP_PREFIX}/${APPNAME}/${APPVERSION}/releases/${REL_VSN}/${REL_NAME}.tar.gz
     ln -s ${REL_NAME} "${D}/${APP_PREFIX}/${APPNAME}/${APPVERSION}/bin/rc"
 
+    # exrm boot script changes CWD to release-dir.
+    # we prevent that here, until we can upstream the fix of not doing it.
+    relsh="${D}/${APP_PREFIX}/${APPNAME}/${APPVERSION}/releases/${REL_VSN}/${REL_NAME}.sh"
+    [ -e $relsh ] && grep -q "^cd \"\$ROOTDIR\"$" $relsh && sed -i -e "s/^cd \"\$ROOTDIR\"$/# &/" $relsh
+
     # rename beam.smp to the actual app name and start it using a wrapper for proper process naming
     erts_release=$(basename ${D}${APP_PREFIX}/${APPNAME}/${APPVERSION}/erts-*)
     erts_base=${D}${APP_PREFIX}/${APPNAME}/${APPVERSION}/${erts_release}
