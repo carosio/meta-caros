@@ -4,11 +4,11 @@ DEPENDS += "curl"
 DEPENDS += "jansson"
 DEPENDS += "systemd"
 LICENSE = "LGPL-2.1"
-PR = "r1"
+PR = "r2"
 
 LIC_FILES_CHKSUM = "file://LICENSE.LGPL2.1;md5=4fbd65380cdd255951079008b364516c"
 
-inherit autotools systemd
+inherit autotools caros-service
 
 SRC_URI = "git://github.com/travelping/journal-gateway-gelf.git"
 SRCREV = "153eb65939e016afbbe333adb94fa78eade078ff"
