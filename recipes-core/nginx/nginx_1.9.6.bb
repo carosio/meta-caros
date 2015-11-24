@@ -14,8 +14,8 @@ SRC_URI = "http://nginx.org/download/nginx-${PV}.tar.gz \
            file://allow-cross.patch \
            file://nginx.service"
 
-SRC_URI[md5sum] = "2562320f1535e3e31d165e337ae94f21"
-SRC_URI[sha256sum] = "48e2787a6b245277e37cb7c5a31b1549a0bbacf288aa4731baacf9eaacdb481b"
+SRC_URI[md5sum] = "f6899825e7a8deadba4948ff84515ad6"
+SRC_URI[sha256sum] = "ed501fc6d0eff9d3bc1049cc1ba3a3ac8c602de046acb2a4c108392bbfa865ea"
 
 DEPENDS = "libpcre logrotate openssl"
 
