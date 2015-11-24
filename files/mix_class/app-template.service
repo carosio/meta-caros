@@ -6,6 +6,7 @@ Environment="BASE_RELEASE_CONFIG_FILE=@@CONFFILE@@"
 SyslogIdentifier=@@APPNAME@@
 ExecStart=@@APP_CONTROL@@ --from-systemd=@@SYSTEMD_UNIT_NAME@@@@@APPVERSION@@ start @@APP_PREFIX@@/@@APPNAME@@
 ExecStop=@@APP_CONTROL@@ --from-systemd=@@SYSTEMD_UNIT_NAME@@@@@APPVERSION@@ stop
+ExecReload=@@APP_CONTROL@@ --from-systemd=@@SYSTEMD_UNIT_NAME@@@@@APPVERSION@@ reload
 Restart=always
 
 [Install]
