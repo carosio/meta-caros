@@ -23,7 +23,7 @@ LIC_FILES_CHKSUM = "file://src/bpf.erl;beginline=4;endline=30;md5=1dbe45cb53c975
                     file://examples/icmp6.erl;beginline=7;endline=33;md5=1dbe45cb53c97577ab578d9c5211edfc \
                     file://examples/icmp.erl;beginline=4;endline=30;md5=1dbe45cb53c97577ab578d9c5211edfc"
 
-SRCREV = "${AUTOREV}"
+SRCREV = "539c6523f35cdb9dbde1911d4aa59dc77e2fd790"
 PV = "git${SRCPV}"
 PR = "r2"
 
