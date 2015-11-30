@@ -1,0 +1,13 @@
+diff --git a/src/ybed.erl b/src/ybed.erl
+index eca0271..74d1701 100644
+--- a/src/ybed.erl
++++ b/src/ybed.erl
+@@ -12,7 +12,7 @@ run() ->
+ 		 {log_wrap_size, 10000},
+ 		 {logdir, "www_logs"}
+ 		],
+-    Docroot = "html",
++    Docroot = code:lib_dir(isis, html),
+     Webport = 8080,
+     Appmods = {appmods, [
+ 			 {"/spf", spf_feed},

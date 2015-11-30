@@ -1,0 +1,34 @@
+diff --git a/configure.in b/configure.in
+index b692aed..376ea3e 100644
+--- a/configure.in
++++ b/configure.in
+@@ -234,27 +234,8 @@ case "$host_os" in
+         *linux*)
+            AC_DEFINE(LINUX)
+            AC_LANG(Erlang)
+-           AC_RUN_IFELSE(
+-               [AC_LANG_PROGRAM([],[dnl
+-                   halt(try erlang:system_info({wordsize,external}) of
+-                            8 -> 0; 4 -> 1
+-                        catch _:badarg ->
+-                            case erlang:system_info(wordsize) of
+-                                8 -> 0; 4 -> 1
+-                            end end)])],
+-	       [AC_MSG_NOTICE(found 64-bit Erlang)
+-                   case "$host_cpu" in
+-                       x86_64) CBIT= ;;
+-                       *) CBIT=-m64 ;;
+-                   esac],
+-	       [AC_MSG_NOTICE(found 32-bit Erlang)
+-                   case "$host_cpu" in
+-                       i?86) CBIT= ;;
+-                       armv6l) CBIT= ;;
+-                       *) CBIT=-m32 ;;
+-                   esac])
+-           CFLAGS="$CFLAGS $CBIT"
+-           LD_SHARED="$CC $CBIT -shared"
++           CFLAGS="$CFLAGS"
++           LD_SHARED="$CC -shared"
+            AC_SUBST(LD_SHARED)
+            FPIC=-fpic
+            AC_SUBST(FPIC)

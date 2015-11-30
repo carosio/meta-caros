@@ -1,0 +1,14 @@
+diff --git a/src/yaws_rpc.erl b/src/yaws_rpc.erl
+index 51c6935..8c26f27 100644
+--- a/src/yaws_rpc.erl
++++ b/src/yaws_rpc.erl
+@@ -322,9 +322,6 @@ get_expire(M, F) ->
+         _                        -> false
+     end.
+ 
+-callback_fun(M, F, Args, Payload, SessionValue, RpcType)
+-  when RpcType =:= soap; RpcType =:= soap_dime ->
+-    fun() -> yaws_soap_srv:handler(Args, {M,F}, Payload, SessionValue) end;
+ callback_fun(M, F, Args, Payload, SessionValue, _RpcType) ->
+     fun() -> M:F(Args#arg.state, Payload, SessionValue) end.
+ 

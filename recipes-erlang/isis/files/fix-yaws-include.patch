@@ -1,0 +1,39 @@
+From 70be73a04e461c617bdee4d795f44cf5f48f1e12 Mon Sep 17 00:00:00 2001
+From: Christian Franke <chris@opensourcerouting.org>
+Date: Wed, 15 Oct 2014 16:23:56 +0000
+Subject: [PATCH 2/3] Fixup include path
+
+---
+ src/lsp_feed.erl | 2 +-
+ src/spf_feed.erl | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/lsp_feed.erl b/src/lsp_feed.erl
+index 7ba34f4..0ff811c 100644
+--- a/src/lsp_feed.erl
++++ b/src/lsp_feed.erl
+@@ -40,7 +40,7 @@
+ %%%-------------------------------------------------------------------
+ -module(lsp_feed).
+ 
+--include ("../deps/yaws/include/yaws_api.hrl").
++-include_lib ("yaws/include/yaws_api.hrl").
+ -include ("isis_system.hrl").
+ -include ("isis_protocol.hrl").
+ 
+diff --git a/src/spf_feed.erl b/src/spf_feed.erl
+index b05ec1b..b89c99b 100644
+--- a/src/spf_feed.erl
++++ b/src/spf_feed.erl
+@@ -41,7 +41,7 @@
+ %%%-------------------------------------------------------------------
+ -module(spf_feed).
+ 
+--include ("../deps/yaws/include/yaws_api.hrl").
++-include_lib ("yaws/include/yaws_api.hrl").
+ -include ("isis_system.hrl").
+ 
+ -export([out/1, handle_message/1, terminate/2]).
+-- 
+1.9.1
+

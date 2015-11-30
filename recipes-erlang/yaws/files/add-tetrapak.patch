@@ -1,0 +1,35 @@
+diff --git a/tetrapak/build_nif.erl b/tetrapak/build_nif.erl
+new file mode 100644
+index 0000000..6aefda8
+--- /dev/null
++++ b/tetrapak/build_nif.erl
+@@ -0,0 +1,9 @@
++-task({"build:nif", "Build the YAWS NIF parts"}).
++-task({"clean:nif", "Clean the YAWS NIF parts"}).
++
++run("build:nif", _) ->
++    tetrapak:outputcmd(tetrapak:subdir("src"), "make",
++                       ["yaws_generated.erl", "yaws_configure.hrl", "mime_types.erl"]),
++    tetrapak:outputcmd(tetrapak:subdir("c_src"), "make", ["all"]);
++run("clean:nif", _) ->
++    tetrapak:outputcmd(tetrapak:subdir("c_src"), "make", ["clean"]).
+diff --git a/tetrapak/config.ini b/tetrapak/config.ini
+new file mode 100644
+index 0000000..ad42259
+--- /dev/null
++++ b/tetrapak/config.ini
+@@ -0,0 +1,14 @@
++[build]
++version = "~t.~o~~~c"
++
++[package]
++maintainer = "Christian Franke <chris@opensourcerouting.org>"
++architecture = "host"
++exclude = "^\\.gitignore|^patches|^\\.pc|^ChangeLog|^README.*|^LICENSE|^Makefile|^_build\\.cfg|^applications|^autom4te\\.cache|^config.*|^contrib|^examples|^include\\.mk.*|^install-sh|^known_dialyzer_warnings|^man|^munin|^rebar.*|^rel|^scripts|^ssl|^vsn\\.mk|^test|^two-mode-mode\\.el|^win32|^www|^yaws\\.pc.*|^yaws\\.rel\\.src|^aclocal-copy|^m4"
++
++[xref]
++ignore_undef = [
++	{xmlrpc_decode, payload, 1},
++        {xmlrpc_encode, payload, 1},
++        {xmlrpc_http, handle_xmlprc_error, 2}
++]

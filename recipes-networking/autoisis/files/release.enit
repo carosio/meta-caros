@@ -1,0 +1,15 @@
+{release, 'autoisis', [
+    {vsn, "0.8.0"},
+    {applications, [
+        kernel,
+        stdlib,
+        procket,
+        syntax_tools,
+        compiler,
+        crypto,
+        yaws,
+        goldrush,
+        lager,
+        isis
+    ]}
+]}.

@@ -1,0 +1,75 @@
+diff --git a/c_src/Makefile b/c_src/Makefile
+new file mode 100644
+index 0000000..1db71f5
+--- /dev/null
++++ b/c_src/Makefile
+@@ -0,0 +1,43 @@
++CFLAGS+=-Wall -fPIC -I. $(shell erl -noinput -eval 'io:format("-I~s -I~s/erts-~s/include", [code:lib_dir(erl_interface, include), code:root_dir(), erlang:system_info(version)]), halt(0).')
++AR?=ar
++RANLIB?=ranlib
++
++LIBANCILLARY=tmp/libancillary.a
++LIBANCILLARY_SRCS=fd_send.c fd_recv.c
++LIBANCILLARY_OBJS=$(patsubst %.c,tmp/%.o,$(LIBANCILLARY_SRCS))
++
++CMD=../priv/procket
++LIBRARY=../priv/procket.so
++
++DEPENDS=tmp/depends.mk
++
++all: $(LIBRARY) $(CMD)
++
++tmp/%.o: %.c
++	$(CC) -o $@ -c $(CFLAGS) $(TUNE_OPTS) $<
++
++$(DEPENDS): $(LIBANCILLARY_SRCS) procket.c procket_cmd.c
++	mkdir -p tmp
++	gcc -M $(CFLAGS) $^ > $@
++
++-include $(DEPENDS)
++
++$(LIBANCILLARY): $(LIBANCILLARY_OBJS)
++	$(AR) cr $@ $^
++	$(RANLIB) $@
++
++$(CMD): procket_cmd.c $(LIBANCILLARY)
++	test -d ../priv || mkdir -p ../priv
++	$(CC) $(CFLAGS) -o $@ -Ltmp procket_cmd.c -lancillary
++
++$(LIBRARY): procket.c $(LIBANCILLARY)
++	test -d ../priv || mkdir -p ../priv
++	$(CC) $(CFLAGS) -o $@ -fPIC -shared -lerl_interface -lerts -Ltmp procket.c -lancillary
++
++clean:
++	rm -f $(DEPENDS)
++	rm -f $(LIBANCILLARY)
++	rm -f $(LIBANCILLARY_OBJS)
++	rm -f $(CMD)
++
++.PHONY: all clean
+diff --git a/tetrapak/build_nif.erl b/tetrapak/build_nif.erl
+new file mode 100644
+index 0000000..8dad3fa
+--- /dev/null
++++ b/tetrapak/build_nif.erl
+@@ -0,0 +1,7 @@
++-task({"build:nif", "Build the procket NIF parts"}).
++-task({"clean:nif", "Clean the procket NIF parts"}).
++
++run("build:nif", _) ->
++    tetrapak:outputcmd(tetrapak:subdir("c_src"), "make", ["all"]);
++run("clean:nif", _) ->
++    tetrapak:outputcmd(tetrapak:subdir("c_src"), "make", ["clean"]).
+diff --git a/tetrapak/config.ini b/tetrapak/config.ini
+new file mode 100644
+index 0000000..70258b9
+--- /dev/null
++++ b/tetrapak/config.ini
+@@ -0,0 +1,7 @@
++[build]
++version = "~t.~o~~~c"
++
++[package]
++maintainer = "Christian Franke <chris@opensourcerouting.org>"
++architecture = "host"
++exclude = "^\\.gitignore|^Makefile|^README\\.md|^rebar\\.config|^examples|^patches|^\\.pc|^c_src/tmp"
