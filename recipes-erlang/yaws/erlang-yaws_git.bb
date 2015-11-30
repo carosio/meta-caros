@@ -17,7 +17,7 @@ S = "${WORKDIR}/git"
 PACKAGECONFIG ??= "${@base_contains('DISTRO_FEATURES', 'pam', 'pam', '', d)}"
 PACKAGECONFIG[pam] = ", --disable-pam, libpam"
 
-inherit autotools tetrapak
+inherit autotools-brokensep tetrapak
 
 do_cleanup() {
     rm -rf ${S}/bin
