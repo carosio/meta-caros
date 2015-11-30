@@ -1,0 +1,274 @@
+From e6e054f0bc0befa3d1e17d7acdb918213347d546 Mon Sep 17 00:00:00 2001
+From: Christian Franke <nobody@nowhere.ws>
+Date: Mon, 30 Nov 2015 13:45:21 +0100
+Subject: [PATCH] Remove hostinfo for now
+
+---
+ html/hostinfo.yaws | 210 -----------------------------------------------------
+ src/isis.app.src   |   4 +-
+ src/isis_sup.erl   |   2 -
+ src/ybed.erl       |   3 +-
+ 4 files changed, 2 insertions(+), 217 deletions(-)
+ delete mode 100644 html/hostinfo.yaws
+
+diff --git a/html/hostinfo.yaws b/html/hostinfo.yaws
+deleted file mode 100644
+index e2462d1..0000000
+--- a/html/hostinfo.yaws
++++ /dev/null
+@@ -1,210 +0,0 @@
+-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+-<html lang="en">
+-<html><head>
+-    <meta charset="utf-8">
+-    <title>
+-      <erl>
+-	out(_) ->
+-	  <<A:16, B:16, C:16>> = isis_system:system_id(),
+-	  Title = io_lib:format("~s (~4.16.0B.~4.16.0B.~4.16.0B) Host Information DB",
+-	  [isis_system:get_state(hostname), A, B, C]),
+-	  {html, lists:flatten(Title)}.
+-      </erl>
+-    </title>
+-    <script type="text/javascript" src="d3/d3.js"></script>
+-</head>
+-
+-<style>
+-body
+-{
+-}
+-div#hosts {
+-    width:95%;
+-    margin:2px 2px;
+-    background-color: rgba(255,255,255,.5)
+-    border:1px solid black;
+-/*    opacity:0.5;*/
+-    filter:alpha(opacity=60); /* For IE8 and earlier */
+-    font: 8pt Verdana;
+-}
+-
+-#hosts th {
+-    padding-bottom: 2px;
+-    cursor: pointer;
+-    background: black;
+-    color: white;
+-    font-weight: bold;
+-}
+-
+-#hosts td {
+-  padding-left: 5px;
+-}
+-
+-#hosts .host {
+-    white-space: nowrap;
+-    text-align:center; 
+-    vertical-align:middle;
+-}
+-#hosts .hostStr {
+-    white-space: nowrap;
+-    font-weight: bold;
+-    text-align:center; 
+-    vertical-align:middle;
+-}
+-</style>
+-
+-
+-<body id="body">
+-
+-<div id="div"></div>
+-<script type="text/javascript">
+-
+-var ws;
+-var hostData = new Array();
+-var hostTable, hostHead, hostBody;
+-
+-var columns = [
+-    {name: 'host', title: "Host", },
+-    {name: 'tlvs', title: "TLVs decoded",
+-     html: true,
+-     value: function(d) {
+-	 Res = Object.keys(d.tlvs).map(function(k) {
+-	     return(k.toString() + ": " + d.tlvs[k].toString() + "<br>")
+-	 });
+-	 var Result = "";
+-	 for(var i = 0; i < Res.length; i++) {
+-	     Result += Res[i];
+-	 }
+-	 return(Result);
+-     }
+-    },
+-];
+-
+-
+-function connectToHostFeed() {
+-    if ("WebSocket" in window) {
+-	// make sure yaws is listening on the URL  
+-	ws = new WebSocket("ws://" + document.location.host + "/hostinfo"); 
+-	
+-	ws.onopen = function() {
+-	    ws.send("start");
+-	};
+-	ws.onmessage = function (evt) { 
+-	    var received_msg = evt.data;
+-	    var obj = JSON.parse(received_msg);
+-
+-	    var host = obj.hostid;
+-	    if (obj.command == "add") {
+-		var i;
+-		obj.lastUpdate = Date.now();
+-		for(var i = 0; i < hostData.length; i++) {
+-		    if (hostData[i].hostid == host) {
+-			hostData[i] = obj;
+-			break;
+-		    }
+-		}
+-		if (i == hostData.length) {
+-		    hostData[i] = obj;
+-		}
+-		updateList(hostData);
+-	    } else if(obj.command == "delete") {
+-		var i;
+-		for(var i = 0; i < hostData.length; i++) {
+-		    if (hostData[i].hostid == host) {
+-			hostData.splice(i, 1);
+-			break;
+-		    }
+-		}
+-		updateList(hostData);
+-	    } else if(obj.command == "stop") {
+-	        hostData.length = 0;
+-		updateList(hostData);
+-	    }
+-	    
+-	    ws.onclose = function() {
+-		setTimeout(function() { connectToHostFeed()}, 1000);
+-	    }; 
+-	    
+-	    ws.onerror = function() {
+-		document.writeln("ERROR");
+-	    };
+-	}
+-    }
+-    return false;
+-}
+-
+-function updateList(data) {
+-
+-    var sorted = data.sort(function(a, b) { return d3.ascending(a.host, b.host); });
+-
+-    var hosts = hostBody
+-        .selectAll('tr')
+-        .data(data, function(d) {
+-	    return d.host;
+-	});
+-
+-    var enterDiv = hosts.enter()
+-	.append("tr");
+-
+-    hosts.exit()
+-	.transition()
+-	.duration(50)
+-	.style("opacity", 0)
+-	.remove();
+-
+-    var cells = hosts.selectAll('td')
+-	.data(function (row) {
+-	    return columns.map(function (column) {
+-		return {
+-		    column: column.name,
+-		    html: ('html' in column) && column.html,
+-		    value: 'value' in column ? column.value(row, column) : row[column.name]
+-		};
+-	    });
+-	});
+-    
+-    cells.enter()
+-        .append('td')
+-	.attr('class', function(d) { return d.column; })
+-    cells.filter(function (d) { return d.html } )
+-	.html(function (d) { return d.value; });
+-    cells.filter(function (d) { return !d.html } )
+-	.text(function (d) { return d.value; });
+-
+-    d3.selectAll("tr")
+-	.style("background-color", function(d, i) {
+-	    return i % 2 ? "#fff" : "#eee";
+-	});
+-
+-    // Flash updated rows
+-    hosts.filter(function (d) {
+-	return d.lastUpdate > (Date.now() - 1500);
+-    }).style('background-color', '#ff0000').transition().duration(500).style('background-color', '#ffffff');
+-
+-}
+-
+-function ready() {
+-    hostTable = d3.select('#hosts').append('table');
+-    hostHead = hostTable.append('thead');
+-    hostBody = hostTable.append('tbody');
+-
+-    var heads = hostHead.selectAll('th');
+-    heads
+-	.data(columns)
+-	.enter().append('th').text(function (d) { return 'title' in d ? d.title : d.name; });
+-}
+-
+-document.addEventListener( "DOMContentLoaded", function(){
+-    document.removeEventListener( "DOMContentLoaded", arguments.callee, false );
+-    ready();
+-}, false );
+-
+-connectToHostFeed();
+-setInterval(function() {updateList(hostData)}, 1000);
+-
+-</script>
+-
+-<body>
+-<H1> Experimental Host Information service</H1>
+-<div id="hosts"></div>
+-</body>
+diff --git a/src/isis.app.src b/src/isis.app.src
+index 65e8efb..2e92292 100644
+--- a/src/isis.app.src
++++ b/src/isis.app.src
+@@ -3,9 +3,7 @@
+   {vsn, "1"},
+   {registered, []},
+   {included_applications,
+-   [yaws, hostinfo, dnssd
+-   %% , recon
+-   ]},
++   [yaws]},
+   {applications, [
+ 		  kernel,
+ 		  stdlib,
+diff --git a/src/isis_sup.erl b/src/isis_sup.erl
+index 4fdfa98..df3874e 100644
+--- a/src/isis_sup.erl
++++ b/src/isis_sup.erl
+@@ -137,8 +137,6 @@ init([]) ->
+     Webserver = {ybed_sup, {ybed_sup, start_link, []},
+       		 permanent, 10000, supervisor, []},
+ 
+-    timer:apply_after(10000, application, start, [hostinfo]),
+-
+     {ok, {SupFlags,
+ 	  WifiMetrics ++ 
+ 	      [ISISConfig, SPFSummary, L1DB, L2DB, DBLog, ISIS, ISISRib,
+diff --git a/src/ybed.erl b/src/ybed.erl
+index 9410492..fddfcd2 100644
+--- a/src/ybed.erl
++++ b/src/ybed.erl
+@@ -17,8 +17,7 @@ run() ->
+     Webport = 8080,
+     Appmods = {appmods, [
+ 			 {"/spf", spf_feed},
+-			 {"/lspdb", lsp_feed},
+-			 {"/hostinfo", hostinfo_feed}
++			 {"/lspdb", lsp_feed}
+ 			]},
+     SconfList = [
+ 		 [{servername, "isis"},
+-- 
+2.6.1
+
