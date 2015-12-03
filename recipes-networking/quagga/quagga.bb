@@ -1,10 +1,7 @@
-SRCREV = "8bc284f4253176c4711ec2800a61acd09e685ef8"
+SRCREV = "1033d5c16f68f8ca7817841395792ccb9f2c9b63"
 PV = "0.99.22+git${SRCPV}"
-PR = "r2"
+PR = "r1"
 
 require quagga.inc
-
-SRC_URI += "file://babel-close-the-stdout-stderr-as-in-other-daemons.patch \
-"
 
 QUAGGASUBDIR = ""
