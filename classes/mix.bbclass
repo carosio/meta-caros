@@ -11,7 +11,6 @@
 # SYSCONFIG_PREFIX    (default is "${sysconfdir}/apps")
 # SYSTEMD_UNIT_NAME   (default is "${APPNAME}")
 # SYSTEMD_AUTO_ENABLE (default is "disable")
-# APP_CONTROL         (default is "/usr/caros-apps/libexec/appctl.sh")
 # CONFFILE            (default is "${SYSCONFIG_PREFIX}/${APPNAME}.conf")
 #####################################################
 
@@ -39,15 +38,6 @@ CONFFILE ?= "${SYSCONFIG_PREFIX}/${APPNAME}.conf"
 CONFFILES_${PN} += "${CONFFILE}"
 
 DEPENDS += "avahi erlang-lager-journald-backend elixir-native elixir rebar-native hex-native"
-
-inherit caros-service
-RDEPENDS_${PN} += " app-mgmt "
-
-
-SYSTEMD_UNIT_NAME ?= "${APPNAME}"
-SYSTEMD_AUTO_ENABLE ?= "disable"
-APP_CONTROL ?= "/usr/caros-apps/libexec/appctl.sh"
-SYSTEMD_SERVICE_${PN} = "${SYSTEMD_UNIT_NAME}.service"
 
 # packages based on this class are copying some files
 # together instead of "compiling" them (mainly deps)
@@ -210,17 +200,6 @@ do_install() {
     echo "log.console.level = false" >> ${D}${CONFFILE}
 
     echo "${CONFFILE}" > ${D}/${APP_PREFIX}/${APPNAME}/${APPVERSION}/CONFPATH
-
-    install -d ${D}${systemd_unitdir}/system/
-    install -m 0644 ${MIX_CLASS_FILES}/app-template.service ${D}${systemd_unitdir}/system/${SYSTEMD_UNIT_NAME}.service
-    sed -i "s|@@DESCRIPTION@@|${DESCRIPTION}|" ${D}${systemd_unitdir}/system/${SYSTEMD_UNIT_NAME}.service
-    sed -i "s|@@SUMMARY@@|${SUMMARY}|" ${D}${systemd_unitdir}/system/${SYSTEMD_UNIT_NAME}.service
-    sed -i "s|@@APPNAME@@|${APPNAME}|" ${D}${systemd_unitdir}/system/${SYSTEMD_UNIT_NAME}.service
-    sed -i "s|@@APPVERSION@@|${APPVERSION}|" ${D}${systemd_unitdir}/system/${SYSTEMD_UNIT_NAME}.service
-    sed -i "s|@@APP_PREFIX@@|${APP_PREFIX}|" ${D}${systemd_unitdir}/system/${SYSTEMD_UNIT_NAME}.service
-    sed -i "s|@@APP_CONTROL@@|${APP_CONTROL}|" ${D}${systemd_unitdir}/system/${SYSTEMD_UNIT_NAME}.service
-    sed -i "s|@@CONFFILE@@|${CONFFILE}|" ${D}${systemd_unitdir}/system/${SYSTEMD_UNIT_NAME}.service
-    sed -i "s|@@SYSTEMD_UNIT_NAME@@|${SYSTEMD_UNIT_NAME}|" ${D}${systemd_unitdir}/system/${SYSTEMD_UNIT_NAME}.service
 }
 
 python do_mix_deps() {
