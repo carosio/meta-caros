@@ -41,6 +41,5 @@ FILES_${PN} += " /usr/local/bin/procket"
 FILES_${PN}-dbg += " /usr/local/bin/.debug/procket"
 
 do_install_append() {
-    install -d -m 755 ${D}/usr/local/bin
-    install ${S}/priv/procket ${D}/usr/local/bin/procket
+    chmod 4755 ${D}/usr/lib/erlang/lib/procket-*/priv/procket
 }
