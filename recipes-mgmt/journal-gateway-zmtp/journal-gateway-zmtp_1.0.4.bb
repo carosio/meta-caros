@@ -48,13 +48,7 @@ do_install() {
     install -m 0644 ${S}/misc/journal-gateway-zmtp-source.conf ${D}${sysconfdir}/.
 }
 
-FILES_${PN} = "${bindir}/journal-gateway-zmtp-source ${bindir}/journal-gateway-zmtp-sink ${bindir}/journal-gateway-zmtp-control"
-
-# systemd units
-FILES_${PN} += "${systemd_unitdir}/system/journal-gateway-zmtp-sink.service"
-FILES_${PN} += "${systemd_unitdir}/system/journal-gateway-zmtp-source.service"
-FILES_${PN} += "${systemd_unitdir}/system/journal-sink-logrotate.service"
-FILES_${PN} += "${systemd_unitdir}/system/journal-sink-logrotate.timer"
+FILES_${PN} += "${bindir}/journal-gateway-zmtp-source ${bindir}/journal-gateway-zmtp-sink ${bindir}/journal-gateway-zmtp-control"
 
 # config files
 FILES_${PN} += "${sysconfdir}/journal-gateway-zmtp-sink.conf"
