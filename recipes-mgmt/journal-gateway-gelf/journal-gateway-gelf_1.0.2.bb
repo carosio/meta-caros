@@ -15,7 +15,6 @@ SRCREV = "153eb65939e016afbbe333adb94fa78eade078ff"
 
 S = "${WORKDIR}/git"
 
-SYSTEMD_AUTO_ENABLE = "disable"
 SYSTEMD_SERVICE_${PN} += "${PN}.service"
 
 do_compile() {
@@ -36,9 +35,6 @@ do_install() {
 }
 
 FILES_${PN} = "${bindir}/journal-gateway-gelf ${bindir}/journal-gateway-gelf-control"
-
-# systemd units
-FILES_${PN} += "${systemd_unitdir}/system/journal-gateway-gelf.service"
 
 # config files
 FILES_${PN} += "${sysconfdir}/journal-gateway-gelf.conf"
