@@ -13,5 +13,6 @@ RDEPENDS_${PN} = "\
 	iptables \
 	libvirt-libvirtd \
 	libvirt-virsh \
+	dnsmasq \
 	openvswitch \
 "
