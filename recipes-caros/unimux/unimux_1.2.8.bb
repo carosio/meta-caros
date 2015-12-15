@@ -5,7 +5,7 @@ LIC_FILES_CHKSUM = "file://LICENSE;md5=815ca599c9df247a0c7f619bab123dad"
 
 PR = "r2"
 
-inherit mix caros-service
+inherit caros-app-mix caros-service
 
 APPNAME = "${PN}"
 APPVERSION = "${PV}"
