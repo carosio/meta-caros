@@ -8,9 +8,8 @@ inherit core-image-caros core-image distro_features_check extrausers
 
 IMAGE_FEATURES += "splash ssh-server-openssh ${CAROS_IMAGE_FEATURES}"
 IMAGE_INSTALL += "util-linux-setterm"
-
 IMAGE_INSTALL += "parted btrfs-tools e2fsprogs-mke2fs e2fsprogs-resize2fs e2fsprogs-tune2fs"
-IMAGE_INSTALL += "tcpdump curl socat"
+IMAGE_INSTALL += "caros-core"
 
 # having at least 4k blocks allows conversion from ext3 to btrfs
 EXTRA_IMAGECMD_ext3 += "-b 4096"
