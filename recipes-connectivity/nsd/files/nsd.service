@@ -1,0 +1,17 @@
+[Unit]
+Description=NSD DNS Server
+After=network.target
+
+[Service]
+Type=simple
+Restart=always
+Environment=CONFFILE=/etc/nsd/nsd.conf
+ExecStartPre=/bin/sh -c '/bin/mkdir -p "$(dirname "$(/usr/sbin/nsd-checkconf -o pidfile $CONFFILE)")"'
+ExecStartPre=/bin/sh -c '/bin/chown "$(/usr/sbin/nsd-checkconf -o username $CONFFILE)" "$(dirname "$(/usr/sbin/nsd-checkconf -o pidfile $CONFFILE)")"'
+ExecStartPre=/bin/sh -c '/bin/mkdir -p "$(dirname "$(/usr/sbin/nsd-checkconf -o database $CONFFILE)")"'
+ExecStartPre=/bin/sh -c '/bin/chown "$(/usr/sbin/nsd-checkconf -o username $CONFFILE)" "$(dirname "$(/usr/sbin/nsd-checkconf -o database $CONFFILE)")"'
+ExecStart=/usr/sbin/nsd -d -c $CONFFILE
+ExecReload=/bin/sh -c '/bin/kill -HUP $(/bin/cat "$(/usr/sbin/nsd-checkconf -o pidfile $CONFFILE)")'
+
+[Install]
+WantedBy=multi-user.target
