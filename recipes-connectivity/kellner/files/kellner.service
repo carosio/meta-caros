@@ -1,0 +1,27 @@
+[Unit]
+Description=Kellner - fast ad hoc serving of packages
+After=syslog.target network.target
+
+[Service]
+Type=simple
+EnvironmentFile=/etc/default/kellner
+EnvironmentFile=-/etc/kellner.conf
+ExecStart=/usr/bin/kellner -bind=${BIND} \
+                           -cache=${CACHE} \
+                           -gzip=${GZIP} \
+                           -idmap=${IDMAP} \
+                           -log=${LOG} \
+                           -md5=${MD5} \
+                           -print-client-cert-id=${PRINT_CLIENT_CERT_ID} \
+                           -require-client-cert=${REQUIRE_CLIENT_CERT} \
+                           -root=${ROOT} \
+                           -tls-cert=${TLS_CERT} \
+                           -sha1=${SHA1} \
+                           -tls-client-ca-file=${TLS_CLIENT_CA_FILE} \
+                           -tls-key=${TLS_KEY} \
+                           -workers=${WORKERS}
+ExecReload=/bin/kill -HUP $MAINPID
+
+[Install]
+WantedBy=multi-user.target
+

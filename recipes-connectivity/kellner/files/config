@@ -1,0 +1,41 @@
+# Address to bind to.
+BIND=":8080"
+
+# Directory containing cached meta-files (eg. control).
+CACHE="cache"
+
+# Use 'gzip' to compress the package index. If false, use golang.
+GZIP=true
+
+# Directory containing the client-mappings.
+IDMAP=""
+
+# Log to given filename.
+LOG=""
+
+# Calculate md5 of scanned packages.
+MD5=true
+
+# Print client-id for given .cert and exit.
+PRINT_CLIENT_CERT_ID=""
+
+# Require a client-cert.
+REQUIRE_CLIENT_CERT=false
+
+# Directory containing the packages.
+ROOT="/var/packages"
+
+# Calculate sha1 of scanned packages.
+SHA1=false
+
+# PEM encoded ssl-cert.
+TLS_CERT=""
+
+# File with PEM encoded list of ssl-certs containing the CAs.
+TLS_CLIENT_CA_FILE=""
+
+# PEM encoded ssl-key.
+TLS_KEY=""
+
+# Number of workers.
+WORKERS=4
