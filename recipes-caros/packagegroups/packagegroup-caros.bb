@@ -20,5 +20,7 @@ wget vim tmux \
 strace pv \
 journal-gateway-gelf journal-gateway-zmtp erlang-lager-journald-backend jlog \
 nfs-utils \
+unbound nsd \
+kellner \
 influxdb \
 "
