@@ -4,5 +4,5 @@ if [[ "$ZSH_NAME" = sh ]]
 then
 	# zsh shall be used as /bin/zsh for login-shells
 	# we still need a sane default prompt (without expansion)
-	export PS1="sh@TPOSS: # "
+	export PS1="sh@CAROS: # "
 fi
