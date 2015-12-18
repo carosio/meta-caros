@@ -38,7 +38,7 @@ FILES_${PN}-staticdev += "${APP_PREFIX}/${APPNAME}/${APPVERSION}/erts*/lib/inter
 CONFFILE ?= "${SYSCONFIG_PREFIX}/${APPNAME}.conf"
 CONFFILES_${PN} += "${CONFFILE}"
 
-DEPENDS += "avahi erlang-lager-journald-backend elixir-native elixir rebar-native"
+DEPENDS += "avahi erlang-lager-journald-backend elixir-native elixir rebar-native hex-native"
 
 inherit caros-service
 RDEPENDS_${PN} += " app-mgmt "
