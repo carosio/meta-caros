@@ -12,6 +12,8 @@ S = "${WORKDIR}/git"
 
 inherit tetrapak
 
+CLEANBROKEN = "1"
+
 python () {
     erlang_def_package("pmod-transform", "pmod_transform*", "ebin", "Makefile EPLICENCE src include tests", d)
 }

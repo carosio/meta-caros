@@ -3,7 +3,6 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 PR := "${PR}.10"
 
 SRC_URI += " \
-	file://0001-tp-remote-syslog.patch \
 	file://mgmt.network.in \
 	file://timesyncd.conf \
 	file://logline-formatting.patch \
