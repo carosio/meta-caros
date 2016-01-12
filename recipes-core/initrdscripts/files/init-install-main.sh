@@ -68,7 +68,7 @@ echo "Deleting partition table on /dev/${boot_device} ..."
 dd if=/dev/zero of=/dev/${boot_device} bs=512 count=2
 
 echo "Creating new GPT label and partitions on /dev/${boot_device} ..."
-parted -s /dev/sda -- mklabel gpt \
+parted -s /dev/${boot_device} -- mklabel gpt \
        mkpart BIOS 20KiB 1MiB \
        mkpart EFI 1MiB 200MiB \
        mkpart System 200MiB 100% \
