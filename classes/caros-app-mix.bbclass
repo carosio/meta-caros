@@ -193,13 +193,16 @@ do_install() {
     echo "exec ${APPNAME} \"\$@\"" >> ${erts_base}/bin/beam.smp
     chmod 755 ${erts_base}/bin/beam.smp
 
-    install -m 0755 -d "${D}/${SYSCONFIG_PREFIX}"
-    install -m 0644 ${S}/config/${REL_NAME}.conf ${D}${CONFFILE}
-    echo >> ${D}${CONFFILE}
-    echo "log.journal.level = info" >> ${D}${CONFFILE}
-    echo "log.console.level = false" >> ${D}${CONFFILE}
+    if [ -f ${S}/config/${REL_NAME}.conf ];
+    then
+        install -m 0755 -d "${D}/${SYSCONFIG_PREFIX}"
+        install -m 0644 ${S}/config/${REL_NAME}.conf ${D}${CONFFILE}
+        echo >> ${D}${CONFFILE}
+        echo "log.journal.level = info" >> ${D}${CONFFILE}
+        echo "log.console.level = false" >> ${D}${CONFFILE}
 
-    echo "${CONFFILE}" > ${D}/${APP_PREFIX}/${APPNAME}/${APPVERSION}/CONFPATH
+        echo "${CONFFILE}" > ${D}/${APP_PREFIX}/${APPNAME}/${APPVERSION}/CONFPATH
+    fi;
 }
 
 python do_mix_deps() {
