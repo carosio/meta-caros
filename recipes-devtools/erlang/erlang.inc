@@ -12,9 +12,11 @@ RDEPENDS_erlang += "erlang-epmd"
 DEPENDS += "openssl zlib ncurses"
 export OE_LDFLAGS="-lz"
 
+RRECOMMENDS_${PN} += "${@base_contains('PACKAGECONFIG', 'sctp', 'kernel-module-sctp', '', d)}"
+
 inherit autotools-brokensep erlang systemd
 
-INC_PR="r3"
+INC_PR="r4"
 
 SYSTEMD_PACKAGES = "erlang-epmd"
 SYSTEMD_SERVICE_erlang-epmd = "epmd.service"
@@ -28,6 +30,9 @@ EXTRA_OECONF = '\
 	     --enable-shared-zlib \
 	     --enable-dynamic-ssl-lib \
 '
+
+PACKAGECONFIG ??= "sctp"
+PACKAGECONFIG[sctp] = "--enable-sctp,--disable-sctp,lksctp-tools,"
 
 CACHED_CONFIGUREVARS += '\
 	ac_cv_prog_emu_cc="$CC" \
