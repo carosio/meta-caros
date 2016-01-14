@@ -45,9 +45,11 @@ CACHED_CONFIGUREVARS += '\
 	ac_cv_header_GL_gl_h=yes \
 	ac_cv_header_OpenGL_gl_h=yes \
 	ac_cv_lib_dlpi_dlpi_open=dont_try \
+	i_cv_posix_fallocate_works=yes \
 	erl_xcomp_linux_nptl=yes \
 	erl_xcomp_getaddrinfo=yes \
 	erl_xcomp_sysroot=${STAGING_DIR_HOST} \
+	erl_xcomp_clock_gettime_cpu_time=yes \
 '
 
 EXTRA_OEMAKE = '-j1'
