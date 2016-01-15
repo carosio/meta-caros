@@ -12,8 +12,8 @@ LIC_FILES_CHKSUM = "file://LICENSE.LGPL2.1;md5=4fbd65380cdd255951079008b364516c"
 inherit autotools caros-service
 
 SRC_URI = "https://github.com/travelping/journal-gateway-zmtp/archive/v${PV}.tar.gz;downloadfilename=${PN}-${PV}.tar.gz"
-SRC_URI[md5sum] = "76d19b039dbf29671f17ac4479f45204"
-SRC_URI[sha256sum] = "5297987445fa88e87249b0ca59f7dcdb58ea1a8d612f50b649c5fc387077bac3"
+SRC_URI[md5sum] = "44e557a68bce56816ff5d7d482770257"
+SRC_URI[sha256sum] = "d1b2030a50252c19ab7fa5594b4aa7430b983f780b0b8193ea80623a08905780"
 
 S = "${WORKDIR}/${PN}-${PV}"
 
