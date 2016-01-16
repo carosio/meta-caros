@@ -49,6 +49,10 @@ SYSTEMD_AUTO_ENABLE ?= "disable"
 APP_CONTROL ?= "/usr/caros-apps/libexec/appctl.sh"
 SYSTEMD_SERVICE_${PN} = "${SYSTEMD_UNIT_NAME}.service"
 
+# packages based on this class are copying some files
+# together instead of "compiling" them (mainly deps)
+INSANE_SKIP_${PN} = "already-stripped"
+
 def gen_deps(d):
     import sys
     import re

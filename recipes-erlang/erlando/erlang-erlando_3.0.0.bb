@@ -22,6 +22,8 @@ S = "${WORKDIR}/erlando-${SRCREV}"
 
 inherit tetrapak
 
+CLEANBROKEN = "1"
+
 TETRAPAK_ERL_LIBS = "${S}"
 TETRAPAK_OPTS += "-o build.version 2.8.7~23d678c976"
 

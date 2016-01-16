@@ -15,6 +15,8 @@ TETRAPAK_OPTS += "-o build.version ${PV}"
 
 inherit tetrapak
 
+CLEANBROKEN = "1"
+
 python () {
     erlang_def_package("gen-listener-tcp", "gen_listener_tcp-*", "ebin priv", "src include NEWS.md README.md examples", d)
 }
