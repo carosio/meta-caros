@@ -7,7 +7,7 @@ It provides modern infratructure for monitoring and logging, providing both, a r
 
 CarOS is built on-top of OpenEmbedded's poky distribution.
 
-The current 15.12 release is based on poky 1.8.1+.
+The current 16.01 release is based on poky 2.0.1.
 
 The recommended way to build CarOS is using
 [Redomat](https://www.github.com/carosio/redomat "Redomat").
