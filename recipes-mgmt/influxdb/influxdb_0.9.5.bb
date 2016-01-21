@@ -16,7 +16,9 @@ UPV="${PV}-rc2"
 
 S = "${WORKDIR}/${PN}-dist-${UPV}"
 
-SRC_URI = "https://github.com/carosio/influxdb-dist/archive/v${UPV}.tar.gz;downloadfilename=${PN}-${UPV}.tar.gz"
+SRC_URI =  "https://github.com/carosio/influxdb-dist/archive/v${UPV}.tar.gz;downloadfilename=${PN}-${UPV}.tar.gz"
+SRC_URI += "file://influxdb.conf"
+SRC_URI += "file://influxdb.service"
 
 SRC_URI[md5sum] = "4d2a47010e1990e74c88e56c941d863e"
 SRC_URI[sha256sum] = "e2cf6075e4f6fecab806dc1d1a10f069824435bdadb063ef9a6bb8092eaae144"
@@ -27,9 +29,12 @@ INHIBIT_PACKAGE_DEBUG_SPLIT = "1"
 inherit caros-service
 
 
-# FILES_${PN} += ""
+# systemd units
+FILES_${PN} += "${systemd_unitdir}/system/influxdb.service"
 
-# CONFFILES_${PN} = ""
+# config files
+FILES_${PN} += "${sysconfdir}/influxdb.conf"
+CONFFILES_${PN} += "${sysconfdir}/influxdb.conf"
 
 INSANE_SKIP_${PN} = "ldflags"
 do_compile() {
@@ -46,4 +51,11 @@ do_install() {
 	install -m 0755 bin/influx         ${D}${bindir}/
 	install -m 0755 bin/influx_stress  ${D}${bindir}/
 	install -m 0755 bin/influx_inspect ${D}${bindir}/
+
+	install -d ${D}${sysconfdir}/influxdb
+	install -m 0644 ${WORKDIR}/influxdb.conf ${D}${sysconfdir}/influxdb/.
+
+	install -d ${D}${systemd_unitdir}/system
+	install -m 0644 ${WORKDIR}/influxdb.service ${D}${systemd_unitdir}/system/.
 }
+

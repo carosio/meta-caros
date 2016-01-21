@@ -1,0 +1,14 @@
+[Unit]
+Description=InfluxDB
+Documentation=https://influxdb.com/docs/
+After=network.target
+
+[Service]
+LimitNOFILE=65536
+ExecStart=/usr/bin/influxd -config /etc/influxdb/influxdb.conf
+KillMode=process
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+Alias=influxd.service
