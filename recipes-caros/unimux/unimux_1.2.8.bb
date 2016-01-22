@@ -6,7 +6,7 @@ LIC_FILES_CHKSUM = "file://LICENSE;md5=815ca599c9df247a0c7f619bab123dad"
 PR = "r2"
 
 inherit caros-app-mix caros-service
-inculde urilock-${PN}-${PV}.inc
+include urilock_${PN}_${PV}.inc
 
 APPNAME = "${PN}"
 APPVERSION = "${PV}"

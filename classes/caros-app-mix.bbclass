@@ -42,7 +42,10 @@ DEPENDS += "avahi erlang-lager-journald-backend elixir-native elixir rebar-nativ
 INSANE_SKIP_${PN} = "already-stripped"
 
 do_compile() {
-    cp -navl ${WORKDIR}/git-deps ./deps
+    if [ -d ${WORKDIR}/git-deps ]
+    then
+        cp -navl ${WORKDIR}/git-deps ./deps
+    fi
     for mixdep in ${WORKDIR}/hex-deps/*; do
         mixdepbase="`basename $mixdep`"
         if [ ! -e deps/$mixdepbase ] ; then
