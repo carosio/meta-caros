@@ -1,10 +1,11 @@
 #####################################################
 # For this class these variables must be set:
 #
-# APP_PREFIX          (default is "/opt/apps")
-# APPNAME             (default is "${PN}")
-# APPVERSION          (default is "${PV}")
-# APP_CONTROL         (default is "/usr/caros-apps/libexec/appctl.sh")
+# APP_PREFIX              (default is "/opt/apps")
+# APPNAME                 (default is "${PN}")
+# APPVERSION              (default is "${PV}")
+# APP_CONTROL             (default is "/usr/caros-apps/libexec/appctl.sh")
+# CAROS_APP_SERVICE_${PN} (default is " ")
 #####################################################
 
 inherit systemd

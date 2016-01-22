@@ -9,8 +9,6 @@
 # REL_VSN             (default is "${APPVERSION}")
 # APP_PREFIX          (default is "/opt/apps")
 # SYSCONFIG_PREFIX    (default is "${sysconfdir}/apps")
-# SYSTEMD_UNIT_NAME   (default is "${APPNAME}")
-# SYSTEMD_AUTO_ENABLE (default is "disable")
 # CONFFILE            (default is "${SYSCONFIG_PREFIX}/${APPNAME}.conf")
 #####################################################
 
