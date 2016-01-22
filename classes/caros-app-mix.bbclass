@@ -49,8 +49,12 @@ do_compile() {
     for mixdep in ${WORKDIR}/hex-deps/*; do
         mixdepbase="`basename $mixdep`"
         if [ ! -e deps/$mixdepbase ] ; then
-            mkdir -v deps/$mixdepbase
-            tar xz -C deps/$mixdepbase -f $mixdep/contents.tar.gz
+            mkdir -pv deps/$mixdepbase
+            if [ -e $mixdep/contents.tar.gz ] ; then
+                tar xz -C deps/$mixdepbase -f $mixdep/contents.tar.gz
+            else
+                cp -navl $mixdep/$mixdepbase-*/* deps/$mixdepbase
+            fi
         fi
     done
 
