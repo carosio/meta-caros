@@ -5,13 +5,12 @@ LIC_FILES_CHKSUM = "file://LICENSE;md5=5d697daa4658cdb1e2074fd1f1b4f2a4"
 
 PR = "r1"
 
-SRC_URI = "https://github.com/rickpayne/yaws/archive/yaws-${PV}.tar.gz;downloadfilename=${PN}-${PV}.tar.gz"
-SRC_URI += "file://dont-use-runtime-tests-for-autoconf.patch"
+SRC_URI = "https://github.com/klacke/yaws/archive/yaws-${PV}.tar.gz;downloadfilename=${PN}-${PV}.tar.gz"
 SRC_URI += "file://disable-soap-support.patch"
 SRC_URI += "file://add-tetrapak.patch"
 
-SRC_URI[md5sum] = "a1b3717620021554f07bfaa82fedaa33"
-SRC_URI[sha256sum] = "0507dde2c1ced6f62450b2477d2b1bfc695f1bb900a855faa0abaf3e103984c1"
+SRC_URI[md5sum] = "b706e721fe352a70c978c5c3eaed02de"
+SRC_URI[sha256sum] = "d2f5faf57b5087f3f0d8fc085a2342793db0f63007ddeb69e5c11935ef773729"
 
 S = "${WORKDIR}/yaws-yaws-${PV}"
 
@@ -23,6 +22,8 @@ inherit autotools-brokensep tetrapak
 
 TETRAPAK_OPTS += "-o build.version ${PV}"
 
+FILES_${PN}-dbg += " /usr/lib/erlang/lib/yaws-${PV}/c_src/.libs/.debug"
+
 do_cleanup() {
     rm -rf ${S}/bin
     rm -f ${S}/src/yaws_soap12_lib.erl
@@ -32,6 +33,10 @@ do_cleanup() {
 }
 addtask do_cleanup before do_compile after do_configure
 
+do_install_append() {
+    rm -f ${D}/usr/lib/erlang/lib/yaws-${PV}/*-libtool
+}
+
 python () {
-    erlang_def_package("yaws", "yaws-*", "ebin priv", "c_src include src", d)
+    erlang_def_package("yaws", "yaws-*", "ebin priv", "c_src include src ac-aux .travis.yml erlang_deps.mk aclocal.m4", d)
 }

@@ -9,7 +9,7 @@ index 0000000..6aefda8
 +
 +run("build:nif", _) ->
 +    tetrapak:outputcmd(tetrapak:subdir("src"), "make",
-+                       ["yaws_generated.erl", "yaws_configure.hrl", "mime_types.erl"]),
++                       ["yaws_generated.erl", "mime_types.erl"]),
 +    tetrapak:outputcmd(tetrapak:subdir("c_src"), "make", ["all"]);
 +run("clean:nif", _) ->
 +    tetrapak:outputcmd(tetrapak:subdir("c_src"), "make", ["clean"]).
