@@ -6,8 +6,8 @@ LIC_FILES_CHKSUM = "file://LICENSE;md5=ff253ad767462c46be284da12dda33e8"
 PR = "r1"
 
 SRC_URI = "https://github.com/rebar/rebar/archive/${PV}.tar.gz;downloadfilename=rebar-${PV}.tar.gz"
-SRC_URI[md5sum] = "4673d5c251def757b35b3af45ee50883"
-SRC_URI[sha256sum] = "d585fa4c7f59c66017d2552764bb423abeed3a3c99503be91b41fb931245ccbe"
+SRC_URI[md5sum] = "1ae17dd671c0434012c7a688d4cf60e4"
+SRC_URI[sha256sum] = "aed933d4e60c4f11e0771ccdb4434cccdb9a71cf8b1363d17aaf863988b3ff60"
 
 S = "${WORKDIR}/rebar-${PV}"
 
