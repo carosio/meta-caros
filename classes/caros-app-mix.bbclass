@@ -9,9 +9,6 @@
 # REL_VSN             (default is "${APPVERSION}")
 # APP_PREFIX          (default is "/opt/apps")
 # SYSCONFIG_PREFIX    (default is "${sysconfdir}/apps")
-# SYSTEMD_UNIT_NAME   (default is "${APPNAME}")
-# SYSTEMD_AUTO_ENABLE (default is "disable")
-# APP_CONTROL         (default is "/usr/caros-apps/libexec/appctl.sh")
 # CONFFILE            (default is "${SYSCONFIG_PREFIX}/${APPNAME}.conf")
 #####################################################
 
@@ -39,15 +36,6 @@ CONFFILE ?= "${SYSCONFIG_PREFIX}/${APPNAME}.conf"
 CONFFILES_${PN} += "${CONFFILE}"
 
 DEPENDS += "avahi erlang-lager-journald-backend elixir-native elixir rebar-native hex-native"
-
-inherit caros-service
-RDEPENDS_${PN} += " app-mgmt "
-
-
-SYSTEMD_UNIT_NAME ?= "${APPNAME}"
-SYSTEMD_AUTO_ENABLE ?= "disable"
-APP_CONTROL ?= "/usr/caros-apps/libexec/appctl.sh"
-SYSTEMD_SERVICE_${PN} = "${SYSTEMD_UNIT_NAME}.service"
 
 # packages based on this class are copying some files
 # together instead of "compiling" them (mainly deps)
@@ -203,24 +191,16 @@ do_install() {
     echo "exec ${APPNAME} \"\$@\"" >> ${erts_base}/bin/beam.smp
     chmod 755 ${erts_base}/bin/beam.smp
 
-    install -m 0755 -d "${D}/${SYSCONFIG_PREFIX}"
-    install -m 0644 ${S}/config/${REL_NAME}.conf ${D}${CONFFILE}
-    echo >> ${D}${CONFFILE}
-    echo "log.journal.level = info" >> ${D}${CONFFILE}
-    echo "log.console.level = false" >> ${D}${CONFFILE}
+    if [ -f ${S}/config/${REL_NAME}.conf ];
+    then
+        install -m 0755 -d "${D}/${SYSCONFIG_PREFIX}"
+        install -m 0644 ${S}/config/${REL_NAME}.conf ${D}${CONFFILE}
+        echo >> ${D}${CONFFILE}
+        echo "log.journal.level = info" >> ${D}${CONFFILE}
+        echo "log.console.level = false" >> ${D}${CONFFILE}
 
-    echo "${CONFFILE}" > ${D}/${APP_PREFIX}/${APPNAME}/${APPVERSION}/CONFPATH
-
-    install -d ${D}${systemd_unitdir}/system/
-    install -m 0644 ${MIX_CLASS_FILES}/app-template.service ${D}${systemd_unitdir}/system/${SYSTEMD_UNIT_NAME}.service
-    sed -i "s|@@DESCRIPTION@@|${DESCRIPTION}|" ${D}${systemd_unitdir}/system/${SYSTEMD_UNIT_NAME}.service
-    sed -i "s|@@SUMMARY@@|${SUMMARY}|" ${D}${systemd_unitdir}/system/${SYSTEMD_UNIT_NAME}.service
-    sed -i "s|@@APPNAME@@|${APPNAME}|" ${D}${systemd_unitdir}/system/${SYSTEMD_UNIT_NAME}.service
-    sed -i "s|@@APPVERSION@@|${APPVERSION}|" ${D}${systemd_unitdir}/system/${SYSTEMD_UNIT_NAME}.service
-    sed -i "s|@@APP_PREFIX@@|${APP_PREFIX}|" ${D}${systemd_unitdir}/system/${SYSTEMD_UNIT_NAME}.service
-    sed -i "s|@@APP_CONTROL@@|${APP_CONTROL}|" ${D}${systemd_unitdir}/system/${SYSTEMD_UNIT_NAME}.service
-    sed -i "s|@@CONFFILE@@|${CONFFILE}|" ${D}${systemd_unitdir}/system/${SYSTEMD_UNIT_NAME}.service
-    sed -i "s|@@SYSTEMD_UNIT_NAME@@|${SYSTEMD_UNIT_NAME}|" ${D}${systemd_unitdir}/system/${SYSTEMD_UNIT_NAME}.service
+        echo "${CONFFILE}" > ${D}/${APP_PREFIX}/${APPNAME}/${APPVERSION}/CONFPATH
+    fi;
 }
 
 python do_mix_deps() {
