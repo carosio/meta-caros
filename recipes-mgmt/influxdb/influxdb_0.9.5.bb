@@ -6,7 +6,7 @@ SECTION = "net"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://src/github.com/influxdb/influxdb/LICENSE;md5=b7e66d3c3a8effee059f8ec3b62b6a18"
 
-PR = "r1"
+PR = "r2"
 
 
 DEPENDS += "golang-cross"
