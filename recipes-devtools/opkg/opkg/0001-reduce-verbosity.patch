@@ -1,30 +1,17 @@
-From 19f40712c1c786a3530119d462d1c4350c180e9c Mon Sep 17 00:00:00 2001
 From: Tobias Hintze <thintze+git@tpip.net>
-Date: Thu, 4 Feb 2016 16:13:29 +0100
-Subject: [PATCH] reduce verbosity
+Date: Thu Feb 11 12:38:20 CET 2016
+Subject: [PATCH] reduce verbosity to DEBUG
 
----
- libopkg/pkg_hash.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
-
-diff --git a/libopkg/pkg_hash.c b/libopkg/pkg_hash.c
-index 91e413c..7e3a276 100644
---- a/libopkg/pkg_hash.c
-+++ b/libopkg/pkg_hash.c
-@@ -369,8 +369,12 @@ pkg_hash_fetch_best_installation_candidate(abstract_pkg_t *apkg,
- 	       */
- 	      if (pkg_breaks_reverse_dep(maybe) &&
- 		      !conf->force_depends) {
--		  opkg_msg(NOTICE, "Not selecting %s %s as installing it would break existing dependencies.\n",
-+		  /*
-+		   * this is actually a verbosity > NOTICE.
-+		   *
-+			  opkg_msg(NOTICE, "Not selecting %s %s as installing it would break existing dependencies.\n",
- 			   maybe->name, maybe->version);
-+		   */
- 		  continue;
- 	      }
- 
--- 
-1.9.1
-
+diff -Naurw opkg-0.3.0/libopkg/pkg_hash.c opkg-0.3.0-new/libopkg/pkg_hash.c
+--- opkg-0.3.0-orig/libopkg/pkg_hash.c	2015-05-28 19:29:19.000000000 +0200
++++ opkg-0.3.0-new/libopkg/pkg_hash.c	2016-02-11 12:37:05.409604266 +0100
+@@ -373,7 +373,8 @@
+              * force_depends is set.
+              */
+             if (pkg_breaks_reverse_dep(maybe) && !opkg_config->force_depends) {
+-                opkg_msg(NOTICE,
++                /* this is actually a verbosity > NOTICE. */
++                opkg_msg(DEBUG,
+                          "Not selecting %s %s as installing it would break "
+                          "existing dependencies.\n",
+                          maybe->name, maybe->version);
