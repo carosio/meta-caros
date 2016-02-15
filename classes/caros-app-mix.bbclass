@@ -128,17 +128,23 @@ do_compile() {
     TARGET_ERTS="${STAGING_DIR_TARGET}/usr/lib/erlang"
     mkdir -pv rel
 
-    echo "{include_erts, \"${TARGET_ERTS}\"}." > rel/relx.config
+    RELXCFG=`mktemp`
+    echo "{include_erts, \"${TARGET_ERTS}\"}." > $RELXCFG
 
-    echo "{lib_dirs, [" >> rel/relx.config
-        echo "\"${STAGING_DIR_TARGET}/usr/lib/erlang/lib/lager_journald_backend-*\"," >> rel/relx.config
-        echo "\"${STAGING_DIR_TARGET}/usr/lib/erlang/lib/ejournald-*\"" >> rel/relx.config
-    echo "]}." >> rel/relx.config
+    echo "{lib_dirs, [" >> $RELXCFG
+        echo "\"${STAGING_DIR_TARGET}/usr/lib/erlang/lib/lager_journald_backend-*\"," >> $RELXCFG
+        echo "\"${STAGING_DIR_TARGET}/usr/lib/erlang/lib/ejournald-*\"" >> $RELXCFG
+    echo "]}." >> $RELXCFG
+
+    # include pre-existing relx.config
+    [ -e rel/relx.config ] && cat rel/relx.config >> $RELXCFG
 
     echo "generated relx.config:"
     echo "==============="
-    cat rel/relx.config
+    cat $RELXCFG
     echo "==============="
+
+    mv $RELXCFG rel/relx.config
 
     if [ -e rel/vm.args ]
     then
