@@ -128,12 +128,26 @@ do_compile() {
     TARGET_ERTS="${STAGING_DIR_TARGET}/usr/lib/erlang"
     mkdir -pv rel
 
-    echo "{include_erts, \"${TARGET_ERTS}\"}." > rel/relx.config
+    # if a relx.config already exists make a backup and append it later to the generated relx.config
+    # NOTE: a simple append of the generated relx.config should suffice in theory but there seems to
+    # be a bug in the release toolchain (exrm, relx, etc.) such that a release can't be built that way.
+    if [ -e rel/relx.config ]
+    then
+        mv rel/relx.config rel/_relx.config
+    fi
 
+    # generate relx.config
+    echo "{include_erts, \"${TARGET_ERTS}\"}." > rel/relx.config
     echo "{lib_dirs, [" >> rel/relx.config
         echo "\"${STAGING_DIR_TARGET}/usr/lib/erlang/lib/lager_journald_backend-*\"," >> rel/relx.config
         echo "\"${STAGING_DIR_TARGET}/usr/lib/erlang/lib/ejournald-*\"" >> rel/relx.config
     echo "]}." >> rel/relx.config
+
+    # append backup of old relx.config to generated relx.config 
+    if [ -e rel/_relx.config ]
+    then
+        cat rel/_relx.config >> rel/relx.config
+    fi
 
     echo "generated relx.config:"
     echo "==============="
