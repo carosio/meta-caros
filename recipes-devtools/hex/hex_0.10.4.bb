@@ -4,11 +4,11 @@ LICENSE="GPLv2"
 
 PR = "r1"
 
-LIC_FILES_CHKSUM="file://README.md;md5=78f4800e20430507c93c84b6d507cbad"
+LIC_FILES_CHKSUM="file://README.md;beginline=29;md5=1675e23b7cf21ff6004f40e5abcfc75a"
 
 SRC_URI = "https://github.com/hexpm/hex/archive/v${PV}.tar.gz"
-SRC_URI[md5sum] = "ec5cfb9b2c8884b1164dc177cfebd9d4"
-SRC_URI[sha256sum] = "bf878139a05d9509bc7a7f843b3e672111023202eb010ee91138846da1d1101f"
+SRC_URI[md5sum] = "87a383c7f06689879519c8af0dcde594"
+SRC_URI[sha256sum] = "2274028279013831b90f04afbf478797ebf55f805c01624402199fbd4c12397c"
 
 DEPENDS += "elixir-native"
 
@@ -18,6 +18,6 @@ do_install() {
         unzip -d ${D}${libdir}/elixir/lib/ hex-${PV}.ez
 }
 
-FILES_${PN} += "${libdir}/elixir/lib/hex-0.8.3"
+FILES_${PN} += "${libdir}/elixir/lib/hex-0.10.4"
 
 BBCLASSEXTEND = "native"
