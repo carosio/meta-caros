@@ -1,0 +1,10 @@
+diff --git a/tetrapak/config.ini b/tetrapak/config.ini
+--- /dev/null
++++ b/tetrapak/config.ini
+@@ -0,0 +1,6 @@
++[build]
++version = "~t.~o~~~c"
++
++[package]
++maintainer = "Christian Franke <chris@opensourcerouting.org>"
++exclude = "^\\.gitignore|^\\.travis\\.yml|^Makefile|^rebar\\.config|^test/|^patches|^\\.pc"
