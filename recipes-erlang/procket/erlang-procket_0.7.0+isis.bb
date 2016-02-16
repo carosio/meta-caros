@@ -24,6 +24,7 @@ LIC_FILES_CHKSUM = "file://examples/echo.erl;beginline=4;endline=30;md5=1dbe45cb
 SRCREV = "28d18658b3e9fe41aaeab3852dd0f5e108ab4838"
 
 SRC_URI = "git://github.com/msantos/procket.git;protocol=https \
+           file://add-is-is-sockets.patch \
            file://add-tetrapak.patch"
 
 S = "${WORKDIR}/git"
