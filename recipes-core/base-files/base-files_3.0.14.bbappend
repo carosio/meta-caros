@@ -1,9 +1,10 @@
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
 SRC_URI += "file://arp-security.conf \
-           file://etc-environ.d-50-locale"
+           file://etc-environ.d-50-locale \
+           file://shells"
 
-PR := "${PR}.1"
+PR := "${PR}.2"
 
 FILES_${PN} += "50-locale"
 
