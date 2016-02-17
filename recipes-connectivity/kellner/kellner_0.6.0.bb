@@ -12,7 +12,7 @@ DEPENDS += "golang-cross"
 # See stupid.go/stupid.patch for the reason why zeromq is needed in the first place.
 DEPENDS += "zeromq"
 
-SRCREV = "a5fd825ea0cea5f3b8eb6a906b19ee46dd3bcb3d"
+SRCREV = "25780de637f948b6ba73c0a332c499baa283d103"
 SRC_URI = "git://github.com/carosio/kellner;destsuffix=${PN} \
            file://stupid.patch \
            file://kellner.service \
