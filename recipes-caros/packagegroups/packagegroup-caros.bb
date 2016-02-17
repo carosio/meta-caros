@@ -13,6 +13,7 @@ RDEPENDS_${PN} = "\
 caros-core \
 packagegroup-caros-ansible-deps \
 packagegroup-caros-erlang \
+packagegroup-caros-systemtools \
 packagegroup-caros-virtualization \
 unimux \
 chello \
