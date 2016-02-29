@@ -14,4 +14,5 @@ perf \
 lsof \
 ss \
 strace \
+smem \
 "
