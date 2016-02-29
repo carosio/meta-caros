@@ -4,10 +4,12 @@ LIC_FILES_CHKSUM = "file://${S}/LICENSE;md5=b234ee4d69f5fce4486a80fdaf4a4263"
 
 DEPENDS += "kmod-native virtual/kernel libconfig libnl wolfssl"
 
-PR = "r0.4"
+PR = "r0.7"
 
 SRC_URI = "git://github.com/travelping/smartcapwap;protocol=https"
-SRCREV = "cae859e42ff6ef1320a568b885eb179ced78bc34"
+SRCREV = "067eb8d11a0ed601c23f25692bbbe16523f7bd6f"
+
+SRC_URI += " file://0001-debug-add-verbosity-around-src-addr-compare.patch"
 
 S="${WORKDIR}/git"
 
