@@ -1,0 +1,37 @@
+From f9294a93f4431143cd5f871b8af5441585e14111 Mon Sep 17 00:00:00 2001
+From: Tobias Hintze <thintze+git@tpip.net>
+Date: Mon, 29 Feb 2016 15:11:55 +0100
+Subject: [PATCH] [debug] add verbosity around src-addr compare
+
+---
+ src/wtp/wtp_dfa.c | 14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
+
+diff --git a/src/wtp/wtp_dfa.c b/src/wtp/wtp_dfa.c
+index 7ed741f..29e138c 100644
+--- a/src/wtp/wtp_dfa.c
++++ b/src/wtp/wtp_dfa.c
+@@ -364,8 +364,18 @@ int wtp_dfa_running(void) {
+ 
+ 				/* Check source */
+ 				if (capwap_compare_ip(&g_wtp.dtls.peeraddr, &fromaddr)) {
+-					capwap_logging_debug("WTP compare failed, drop packet");
+-					continue;		/* Unknown source */
++					char straddr1[INET6_ADDRSTRLEN];
++					char straddr2[INET6_ADDRSTRLEN];
++					capwap_logging_debug("WTP compare failed (%s:%d / %s:%d), drop packet",
++
++						capwap_address_to_string(&g_wtp.dtls.peeraddr, straddr1, INET6_ADDRSTRLEN),
++						(int)CAPWAP_GET_NETWORK_PORT(&g_wtp.dtls.peeraddr),
++
++						capwap_address_to_string(&fromaddr, straddr2, INET6_ADDRSTRLEN),
++						(int)CAPWAP_GET_NETWORK_PORT(&fromaddr));
++					if (!getenv("WTP_IGNORE_SRCADDR_MISMATCH")) {
++						continue;		/* Unknown source */
++					}
+ 				}
+ 
+ 				/* Check of packet */
+-- 
+1.9.1
+
