@@ -8,7 +8,7 @@ LIC_FILES_CHKSUM = "file://COPYING;md5=4fbd65380cdd255951079008b364516c"
 PR = "r0.0"
 
 SRC_URI = "git://git.netfilter.org/libmnl;branch=master"
-SRCREV="${AUTOREV}"
+SRCREV="1891e0e2cefced50e7bfdacd50942cefe5bf73ba"
 
 S = "${WORKDIR}/git"
 
