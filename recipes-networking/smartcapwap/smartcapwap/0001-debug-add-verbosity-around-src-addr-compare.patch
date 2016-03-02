@@ -1,7 +1,7 @@
-From f9294a93f4431143cd5f871b8af5441585e14111 Mon Sep 17 00:00:00 2001
+From 99bfa9e362cd8df7289e163386c3deed2b3dfe08 Mon Sep 17 00:00:00 2001
 From: Tobias Hintze <thintze+git@tpip.net>
 Date: Mon, 29 Feb 2016 15:11:55 +0100
-Subject: [PATCH] [debug] add verbosity around src-addr compare
+Subject: [PATCH 1/2] [debug] add verbosity around src-addr compare
 
 ---
  src/wtp/wtp_dfa.c | 14 ++++++++++++--
