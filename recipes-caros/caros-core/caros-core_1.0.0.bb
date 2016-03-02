@@ -15,4 +15,5 @@ RDEPENDS_${PN} = " \
     tcpdump \
     zsh \
     packagegroup-core-ssh-openssh \
+    smem-smemcap \
 "
