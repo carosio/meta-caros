@@ -1,37 +1,33 @@
-From 99bfa9e362cd8df7289e163386c3deed2b3dfe08 Mon Sep 17 00:00:00 2001
+From f18d35b7ff732bed01e4d5b7e12aa16d50b44ae7 Mon Sep 17 00:00:00 2001
 From: Tobias Hintze <thintze+git@tpip.net>
 Date: Mon, 29 Feb 2016 15:11:55 +0100
 Subject: [PATCH 1/2] [debug] add verbosity around src-addr compare
 
 ---
- src/wtp/wtp_dfa.c | 14 ++++++++++++--
- 1 file changed, 12 insertions(+), 2 deletions(-)
+ src/wtp/wtp_dfa.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
 diff --git a/src/wtp/wtp_dfa.c b/src/wtp/wtp_dfa.c
-index 7ed741f..29e138c 100644
+index 549f6bd..2c3ece7 100644
 --- a/src/wtp/wtp_dfa.c
 +++ b/src/wtp/wtp_dfa.c
-@@ -364,8 +364,18 @@ int wtp_dfa_running(void) {
- 
+@@ -365,7 +365,15 @@ int wtp_dfa_running(void) {
  				/* Check source */
- 				if (capwap_compare_ip(&g_wtp.dtls.peeraddr, &fromaddr)) {
--					capwap_logging_debug("WTP compare failed, drop packet");
--					continue;		/* Unknown source */
+ 				if (g_wtp.state != CAPWAP_DISCOVERY_STATE &&
+ 				    capwap_compare_ip(&g_wtp.dtls.peeraddr, &fromaddr)) {
+-					capwap_logging_debug("CAPWAP packet from unknown WTP when not in DISCOVERY, drop packet");
 +					char straddr1[INET6_ADDRSTRLEN];
 +					char straddr2[INET6_ADDRSTRLEN];
-+					capwap_logging_debug("WTP compare failed (%s:%d / %s:%d), drop packet",
-+
++					capwap_logging_debug("CAPWAP packet from unknown WTP "
++						"(%s:%d / %s:%d) when not in DISCOVERY, drop packet",
 +						capwap_address_to_string(&g_wtp.dtls.peeraddr, straddr1, INET6_ADDRSTRLEN),
 +						(int)CAPWAP_GET_NETWORK_PORT(&g_wtp.dtls.peeraddr),
 +
 +						capwap_address_to_string(&fromaddr, straddr2, INET6_ADDRSTRLEN),
 +						(int)CAPWAP_GET_NETWORK_PORT(&fromaddr));
-+					if (!getenv("WTP_IGNORE_SRCADDR_MISMATCH")) {
-+						continue;		/* Unknown source */
-+					}
+ 					continue;		/* Unknown source */
  				}
  
- 				/* Check of packet */
 -- 
 1.9.1
 

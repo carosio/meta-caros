@@ -4,10 +4,10 @@ LIC_FILES_CHKSUM = "file://${S}/LICENSE;md5=b234ee4d69f5fce4486a80fdaf4a4263"
 
 DEPENDS += "kmod-native virtual/kernel libconfig libnl wolfssl"
 
-PR = "r0.8"
+PR = "r0.9"
 
 SRC_URI = "git://github.com/travelping/smartcapwap;protocol=https"
-SRCREV = "067eb8d11a0ed601c23f25692bbbe16523f7bd6f"
+SRCREV = "8dc30ae3c438f06cfb504e6d41d415eae97410ed"
 
 SRC_URI += " file://0001-debug-add-verbosity-around-src-addr-compare.patch"
 SRC_URI += " file://0002-verbosity-discovery-local-address-retrieval.patch"
