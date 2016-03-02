@@ -1,4 +1,11 @@
-require erlang-yang.inc
-SRCREV = "10530e3678ff84f899f1fb8a6a889ec4e3980f29"
+DESCRIPTION = "Recipe for erlang-yang"
+SECTION = "net"
+LICENSE = "CLOSED"
+PR = "r1"
 
-PR = "${INC_PR}.0"
+SRC_URI = "git://github.com/travelping/yang.git"
+SRCREV = "922128924e7e62115ea7b36d8064b524e27e6615"
+
+S = "${WORKDIR}/git"
+
+inherit rebar
