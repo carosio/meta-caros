@@ -1,3 +1,5 @@
+FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}-${PV}:"
+
 KBRANCH ?= "standard/base"
 
 require recipes-kernel/linux/linux-yocto.inc
@@ -24,6 +26,7 @@ SRCREV_meta ?= "ad9d3f01300ba350563e17db00b2518302e172f6"
 
 SRC_URI = "git://git.yoctoproject.org/linux-yocto-4.4.git;name=machine;branch=${KBRANCH}; \
            git://git.yoctoproject.org/yocto-kernel-cache;type=kmeta;name=meta;branch=yocto-4.4;destsuffix=${KMETA}"
+SRC_URI += "file://caros-patches.scc"
 
 LINUX_VERSION ?= "4.4"
 LINUX_VERSION_EXTENSION = "-caros-${LINUX_KERNEL_TYPE}"
