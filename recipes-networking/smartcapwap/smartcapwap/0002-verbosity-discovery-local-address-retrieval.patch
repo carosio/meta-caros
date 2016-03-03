@@ -1,0 +1,90 @@
+From f882e11fdec28ad6c99d96a75a94a2957780811a Mon Sep 17 00:00:00 2001
+From: Tobias Hintze <thintze+git@tpip.net>
+Date: Wed, 2 Mar 2016 11:15:04 +0100
+Subject: [PATCH 2/2] [verbosity] discovery / local address retrieval
+
+---
+ src/common/capwap_network.c | 13 ++++++++++++-
+ src/wtp/wtp_dfa_idle.c      |  4 ++++
+ 2 files changed, 16 insertions(+), 1 deletion(-)
+
+diff --git a/src/common/capwap_network.c b/src/common/capwap_network.c
+index 2b30a3c..522274d 100644
+--- a/src/common/capwap_network.c
++++ b/src/common/capwap_network.c
+@@ -869,17 +869,24 @@ int capwap_network_get_localaddress(union sockaddr_capwap* localaddr, union sock
+ 	ASSERT(localaddr != NULL);
+ 	ASSERT(peeraddr != NULL);
+ 
++	char strpeer[INET6_ADDRSTRLEN]; /* debug output */
++	capwap_address_to_string(peeraddr, strpeer, INET6_ADDRSTRLEN);
++
+ 	/* */
+ 	memset(localaddr, 0, sizeof(union sockaddr_capwap));
+ 
+ 	/* Check output interface */
+ 	if (iface && !*iface) {
+ 		iface = NULL;
++		capwap_logging_debug("get laddr for %s; no iface configured.", strpeer);
++	} else {
++		capwap_logging_debug("get laddr for %s; iface=%s.", strpeer, iface);
+ 	}
+ 
+ 	/* Check Loopback address */
+ 	if (peeraddr->ss.ss_family == AF_INET) {
+ 		if (peeraddr->sin.sin_addr.s_addr == htonl(INADDR_LOOPBACK)) {
++			capwap_logging_debug("get laddr for %s; AF_INET loopback.", strpeer);
+ 			if (iface && ((capwap_get_interface_flags(iface) & IFF_LOOPBACK) != IFF_LOOPBACK)) {
+ 				return -1;
+ 			}
+@@ -891,27 +898,31 @@ int capwap_network_get_localaddress(union sockaddr_capwap* localaddr, union sock
+ 		}
+ 	} else if (peeraddr->ss.ss_family == AF_INET6) {
+ 		if (!memcmp(&peeraddr->sin6.sin6_addr, &in6addr_loopback, sizeof(struct in6_addr))) {
++			capwap_logging_debug("get laddr for %s; AF_INET6 loopback.", strpeer);
+ 			if (iface && ((capwap_get_interface_flags(iface) & IFF_LOOPBACK) != IFF_LOOPBACK)) {
+ 				return -1;
+ 			}
+-
+ 			localaddr->ss.ss_family = AF_INET6;
+ 			memcpy(&localaddr->sin6.sin6_addr, &in6addr_loopback, sizeof(struct in6_addr));
+ 			return 0;
+ 		}
+ 	} else {
++		capwap_logging_debug("get laddr for %s; family neither AF_INET nor AF_INET6", strpeer);
+ 		return -1;
+ 	}
+ 
+ 	/* Get address */
+ 	result = capwap_get_routeaddress(localaddr, peeraddr, iface, RT_TABLE_MAIN);
+ 	if (result == CAPWAP_ROUTE_NOT_FOUND) {
++		capwap_logging_debug("get laddr for %s; routing table: CAPWAP_ROUTE_NOT_FOUND", strpeer);
+ 		return -1;
+ 	} else if (result == CAPWAP_ROUTE_VIA_ADDRESS) {
++		capwap_logging_debug("get laddr for %s; routing table: CAPWAP_ROUTE_VIA_ADDRESS", strpeer);
+ 		union sockaddr_capwap tempaddr;
+ 
+ 		result = capwap_get_routeaddress(&tempaddr, localaddr, iface, RT_TABLE_MAIN);
+ 		if (result != CAPWAP_ROUTE_LOCAL_ADDRESS) {
++			capwap_logging_debug("get laddr for %s; routing table: CAPWAP_ROUTE_VIA_ADDRESS w/o success for laddr", strpeer);
+ 			return -1;
+ 		}
+ 
+diff --git a/src/wtp/wtp_dfa_idle.c b/src/wtp/wtp_dfa_idle.c
+index 10ec27b..3d21d65 100644
+--- a/src/wtp/wtp_dfa_idle.c
++++ b/src/wtp/wtp_dfa_idle.c
+@@ -17,6 +17,10 @@ static int wtp_join_prefered_ac()
+ 		/* Found in configuration file the AC address */
+ 		peeraddr = capwap_array_get_item_pointer(g_wtp.acpreferedarray,
+ 							 g_wtp.acpreferedselected);
++		char strpeer[INET6_ADDRSTRLEN]; /* debug */
++		capwap_address_to_string(peeraddr, strpeer, INET6_ADDRSTRLEN);
++		capwap_logging_debug("found AC address %s:%d in configuration",
++			strpeer, (int)CAPWAP_GET_NETWORK_PORT(peeraddr));
+ 
+ 		/* Next AC */
+ 		g_wtp.acpreferedselected++;
+-- 
+1.9.1
+
