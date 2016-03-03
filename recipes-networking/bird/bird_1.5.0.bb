@@ -18,15 +18,13 @@ RDEPENDS_${PN} += "iproute2"
 #
 # SRC_URI = "ftp://bird.network.cz/pub/bird/${PN}-${PV}.tar.gz"
 
-SRC_URI = "https://gitlab.labs.nic.cz/labs/${PN}/repository/archive.tar.bz2?ref=v${PV};downloadfilename=${PN}-${PV}.tar.bz2 \
-	   file://bird.service \
-	   file://prepare-environment \
-	   file://envvars"
+SRC_URI = "ftp://bird.network.cz/pub/bird/bird-${PV}.tar.gz"
+SRC_URI += " file://bird.service"
+SRC_URI += " file://prepare-environment"
+SRC_URI += " file://envvars"
 
-SRC_URI[md5sum] = "aece3296e587388940777cc170b47a50"
-SRC_URI[sha256sum] = "d3346729177e37f35391f5fe93dc87410fefb977a7dba4f58520e1e0fe5d07a5"
-
-S = "${WORKDIR}/bird.git"
+SRC_URI[md5sum] = "330bde6372afa106abfe5a9737e471c1"
+SRC_URI[sha256sum] = "79d5c4254e25f5890626830ca42aae03735716bdf152ddd8368473d2b3c17b5d"
 
 inherit autotools systemd useradd
 
