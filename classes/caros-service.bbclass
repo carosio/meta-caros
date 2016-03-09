@@ -29,7 +29,7 @@ SYSTEMD_SERVICE_${PN}_append = " ${CAROS_APP_SERVICE_${PN}}"
 python carossrv_populate_packages() {
     pkg = d.getVar('PN', True)
 
-    sysctl = "systemctl() {\n[ \"$1\" = disable -o \"$1\" = enable ] && /bin/systemctl daemon-reload \n}\n"
+    sysctl = "systemctl() {\n[ \"$1\" = disable -o \"$1\" = enable ] && /bin/systemctl daemon-reload \n true \n}\n"
 
     postinst = d.getVar('pkg_postinst_%s' % pkg, True)
     if not postinst:
