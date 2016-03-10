@@ -46,6 +46,8 @@ python carossrv_populate_packages() {
 
 do_install_append() {
     if [ '${CAROS_APP_SERVICE_${PN}}' != " " ]; then
+        SYSTEMD_UNIT_NAME="${CAROS_APP_SERVICE_${PN}}"
+        SYSTEMD_UNIT_NAME="${SYSTEMD_UNIT_NAME%.service}"
         install -d ${D}${systemd_unitdir}/system/;
         install -m 0644 ${APP_CONTROL_FILES}/app-template.service ${D}${systemd_unitdir}/system/${CAROS_APP_SERVICE_${PN}};
         sed -i "s|@@DESCRIPTION@@|${DESCRIPTION}|" ${D}${systemd_unitdir}/system/${CAROS_APP_SERVICE_${PN}};
