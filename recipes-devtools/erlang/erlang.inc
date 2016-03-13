@@ -16,7 +16,7 @@ RRECOMMENDS_${PN} += "${@base_contains('PACKAGECONFIG', 'sctp', 'kernel-module-s
 
 inherit autotools-brokensep erlang systemd
 
-INC_PR="r4"
+INC_PR="r5"
 
 SYSTEMD_PACKAGES = "erlang-epmd"
 SYSTEMD_SERVICE_erlang-epmd = "epmd.service"
@@ -51,8 +51,6 @@ CACHED_CONFIGUREVARS += '\
 	erl_xcomp_sysroot=${STAGING_DIR_HOST} \
 	erl_xcomp_clock_gettime_cpu_time=yes \
 '
-
-EXTRA_OEMAKE = '-j1'
 
 do_configure() {
     oe_runconf
