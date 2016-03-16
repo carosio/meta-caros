@@ -4,14 +4,14 @@ DEPENDS += "curl"
 DEPENDS += "jansson"
 DEPENDS += "systemd"
 LICENSE = "LGPL-2.1"
-PR = "r2"
+PR = "r1"
 
 LIC_FILES_CHKSUM = "file://LICENSE.LGPL2.1;md5=4fbd65380cdd255951079008b364516c"
 
 inherit autotools caros-service
 
 SRC_URI = "git://github.com/travelping/journal-gateway-gelf.git"
-SRCREV = "153eb65939e016afbbe333adb94fa78eade078ff"
+SRCREV = "fa9f18d0dbb73dc31fe9d129850bfed45cdc718e"
 
 S = "${WORKDIR}/git"
 
@@ -34,7 +34,7 @@ do_install() {
     install -m 0644 ${S}/misc/journal-gateway-gelf.conf ${D}${sysconfdir}/.
 }
 
-FILES_${PN} = "${bindir}/journal-gateway-gelf ${bindir}/journal-gateway-gelf-control"
+FILES_${PN} = "${bindir}/journal-gateway-gelf"
 
 # config files
 FILES_${PN} += "${sysconfdir}/journal-gateway-gelf.conf"
