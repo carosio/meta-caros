@@ -8,9 +8,9 @@ SECTION = "base/shell"
 LICENSE = "zsh"
 LIC_FILES_CHKSUM = "file://LICENCE;md5=b7bc853894664be455a922db9805288e"
 
-PR = "r10"
+PR = "r1"
 
-SRC_URI = "${SOURCEFORGE_MIRROR}/${BPN}/${BP}.tar.gz \
+SRC_URI = "http://www.zsh.org/pub/${BP}.tar.gz \
     file://environ_d_10-timezone \
     file://profile_d_10-zshfix \
     file://profile_d_50-aliases \
@@ -20,8 +20,8 @@ SRC_URI = "${SOURCEFORGE_MIRROR}/${BPN}/${BP}.tar.gz \
     file://zshenv \
 "
 
-SRC_URI[md5sum] = "76726ff50309e628de670476e0508b3a"
-SRC_URI[sha256sum] = "43f0a4c179ef79bb8c9153575685f7f45f28a3615c8cf96345f503d5b9e7b919"
+SRC_URI[md5sum] = "e79e3edfc133e2091456ca0be6f2ecb5"
+SRC_URI[sha256sum] = "fa924c534c6633c219dcffdcd7da9399dabfb63347f88ce6ddcd5bb441215937"
 
 DEPENDS = "ncurses bison-native libcap libpcre gdbm groff-native"
 
