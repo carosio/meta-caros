@@ -27,6 +27,7 @@ SRCREV_meta ?= "e0cf18471a271cd057538e9d33fa01a7669ff76f"
 SRC_URI = "git://git.yoctoproject.org/linux-yocto-4.4.git;name=machine;branch=${KBRANCH}; \
            git://git.yoctoproject.org/yocto-kernel-cache;type=kmeta;name=meta;branch=yocto-4.4;destsuffix=${KMETA}"
 SRC_URI += "file://caros-patches.scc"
+SRC_URI += "file://caros-features.scc"
 
 LINUX_VERSION ?= "4.4.3"
 LINUX_VERSION_EXTENSION = "-caros-${LINUX_KERNEL_TYPE}"
