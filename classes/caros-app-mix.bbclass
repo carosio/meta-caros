@@ -139,6 +139,12 @@ do_install() {
         install -m 0755 -d "${D}/${SYSCONFIG_PREFIX}"
         install -m 0644 ${S}/config/${REL_NAME}.conf ${D}${CONFFILE}
         echo >> ${D}${CONFFILE}
+        echo "" >> ${D}${CONFFILE}
+        echo "" >> ${D}${CONFFILE}
+        echo "" >> ${D}${CONFFILE}
+        echo "###########################################################################" >> ${D}${CONFFILE}
+        echo "## Logging - SECTION" >> ${D}${CONFFILE}
+        echo "" >> ${D}${CONFFILE}
         echo "# Choose the logging level for the journal backend." >> ${D}${CONFFILE}
         echo "# Allowed values: emerg, alert, crit, error, warning, notive, info, debug, false" >> ${D}${CONFFILE}
         echo "log.journal.level = info" >> ${D}${CONFFILE}
