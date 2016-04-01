@@ -1,6 +1,6 @@
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
-PR := "${PR}.10"
+PR := "${PR}.11"
 
 SRC_URI += " \
 	file://0001-tp-remote-syslog.patch \
@@ -14,12 +14,14 @@ CONFFILES_${PN} += "${sysconfdir}/systemd/network/mgmt.network"
 CONFFILES_${PN} += "${sysconfdir}/machine-id"
 
 MGMT_IF ?= "eth0"
-MGMT_IF_vmware ?= "ven0"
+MGMT_IF_lanner-fw7568 ?= "ge0p5"
 MGMT_IF_lanner-fw8758 ?= "ge0p5"
+MGMT_IF_lanner-nca1010 ?= "eth2"
 MGMT_IF_sun7i-a20-lamobo-r1 ?= "eth0.5"
+MGMT_IF_vmware ?= "ven0"
 
 
-# workarround for bug in systemd.class
+# workaround for bug in systemd.class
 #
 # when a package has only ONE SYSTEMD_PACKAGES, the class will add all units that
 # are mentioned in Conflicts to the package. For systemd itself, this will add
