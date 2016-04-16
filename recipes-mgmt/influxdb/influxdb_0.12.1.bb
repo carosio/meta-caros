@@ -4,15 +4,15 @@ with *no external dependencies**. It's useful for recording metrics, \
 events, and performing analytics."
 SECTION = "net"
 LICENSE = "MIT"
-LIC_FILES_CHKSUM = "file://src/github.com/influxdb/influxdb/LICENSE;md5=b7e66d3c3a8effee059f8ec3b62b6a18"
+LIC_FILES_CHKSUM = "file://src/github.com/influxdb/influxdb/LICENSE;md5=ba8146ad9cc2a128209983265136e06a"
 
-PR = "r2"
+PR = "r1"
 
 
 DEPENDS += "golang-cross"
 
 # upstream version
-UPV="${PV}-rc2"
+UPV="${PV}"
 
 S = "${WORKDIR}/${PN}-dist-${UPV}"
 
@@ -20,14 +20,13 @@ SRC_URI =  "https://github.com/carosio/influxdb-dist/archive/v${UPV}.tar.gz;down
 SRC_URI += "file://influxdb.conf"
 SRC_URI += "file://influxdb.service"
 
-SRC_URI[md5sum] = "4d2a47010e1990e74c88e56c941d863e"
-SRC_URI[sha256sum] = "e2cf6075e4f6fecab806dc1d1a10f069824435bdadb063ef9a6bb8092eaae144"
+SRC_URI[md5sum] = "43a7f93acc8aff7dd8788c93d830dd1d"
+SRC_URI[sha256sum] = "6edcdcf2557bc2af31bad1a419630bbb75bdd7fe4c44f203a9011c0d6a691f31"
 
 
 INHIBIT_PACKAGE_DEBUG_SPLIT = "1"
 
 inherit caros-service
-
 
 # systemd units
 FILES_${PN} += "${systemd_unitdir}/system/influxdb.service"
