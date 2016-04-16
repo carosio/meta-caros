@@ -4,10 +4,12 @@ SECTION = "net"
 LICENSE = "MPL-2.0"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=815ca599c9df247a0c7f619bab123dad"
 
+PR = "r1"
+
 S = "${WORKDIR}/${PN}"
 
 APPVERSION = "${PV}"
-DEPENDS += "golang-cross"
+DEPENDS += "go-cross"
 # This removes the QA warning about the missing build-dep.
 # See stupid.go/stupid.patch for the reason why zeromq is needed in the first place.
 DEPENDS += "zeromq"
@@ -31,6 +33,10 @@ CONFFILES_${PN} = "${sysconfdir}/kellner.conf"
 INSANE_SKIP_${PN} = "ldflags"
 
 INHIBIT_PACKAGE_DEBUG_SPLIT = "1"
+
+# FIXME: should to be fixed in go recipe or a class:
+export CGO_LDFLAGS="--sysroot=${STAGING_DIR_TARGET}"
+export CGO_CFLAGS="--sysroot=${STAGING_DIR_TARGET}"
 
 do_install() {
 	install -d ${D}${bindir}

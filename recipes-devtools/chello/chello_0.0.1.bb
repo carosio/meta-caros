@@ -4,14 +4,18 @@ SECTION = "net"
 LICENSE = "MPL-2.0"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=815ca599c9df247a0c7f619bab123dad"
 
-PR = "r3"
+PR = "r5"
 
 S = "${WORKDIR}/${PN}"
 
 APPVERSION = "${PV}"
-DEPENDS += "golang-cross"
+DEPENDS += "go-cross"
 DEPENDS += "zeromq"
 RDEPENDS_${PN} += "zeromq"
+
+# FIXME: should to be fixed in go recipe or a class:
+export CGO_LDFLAGS="--sysroot=${STAGING_DIR_TARGET}"
+export CGO_CFLAGS="--sysroot=${STAGING_DIR_TARGET}"
 
 
 SRC_URI = "git://github.com/carosio/chello;destsuffix=${PN}"

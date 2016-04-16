@@ -6,10 +6,10 @@ SECTION = "net"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://src/github.com/influxdb/influxdb/LICENSE;md5=ba8146ad9cc2a128209983265136e06a"
 
-PR = "r1"
+PR = "r2"
 
 
-DEPENDS += "golang-cross"
+DEPENDS += "go-cross"
 
 # upstream version
 UPV="${PV}"
@@ -27,6 +27,10 @@ SRC_URI[sha256sum] = "6edcdcf2557bc2af31bad1a419630bbb75bdd7fe4c44f203a9011c0d6a
 INHIBIT_PACKAGE_DEBUG_SPLIT = "1"
 
 inherit caros-service
+
+# FIXME: should to be fixed in go recipe or a class:
+export CGO_LDFLAGS="--sysroot=${STAGING_DIR_TARGET}"
+export CGO_CFLAGS="--sysroot=${STAGING_DIR_TARGET}"
 
 # systemd units
 FILES_${PN} += "${systemd_unitdir}/system/influxdb.service"
