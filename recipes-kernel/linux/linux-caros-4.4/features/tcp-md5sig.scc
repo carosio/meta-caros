@@ -1,0 +1,4 @@
+define KFEATURE_DESCRIPTION "TCP: MD5 Signature Option support (RFC2385)"
+define KFEATURE_COMPATIBILITY all
+
+kconf non-hardware tcp-md5sig.cfg
