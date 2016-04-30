@@ -1,0 +1,32 @@
+From ab4caf8bacce109773bba6f0c41585008962020d Mon Sep 17 00:00:00 2001
+From: Christian Franke <nobody@nowhere.ws>
+Date: Mon, 30 Nov 2015 13:41:17 +0100
+Subject: [PATCH] Add tetrapak
+
+---
+ tetrapak/config.ini | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+ create mode 100644 tetrapak/config.ini
+
+diff --git a/tetrapak/config.ini b/tetrapak/config.ini
+new file mode 100644
+index 0000000..d5136ed
+--- /dev/null
++++ b/tetrapak/config.ini
+@@ -0,0 +1,13 @@
++[build]
++version = "~t.~o~~~c"
++erlc_options = [
++                bin_opt_info,
++                debug_info,
++                fail_on_warning,
++                {parse_transform, eenum},
++                {parse_transform, lager_transform}
++               ]
++
++[package]
++maintainer = "Christian Franke <chris@opensourcerouting.org>"
++exclude = "^LICENSE|^NOTICE|^\\.gitignore|^hostinfo|^Makefile|^README\\.md|^rebar\\.config|^relx\\.config|^rel|^Doc|^patches|^\\.pc"
+-- 
+2.6.1
+

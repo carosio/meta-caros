@@ -1,0 +1,14 @@
+[Unit]
+Description=AutoISIS
+After=multi-user.target
+Requires=epmd.service zebra.service
+
+[Service]
+Environment="HOME=/home/root"
+Type=simple
+ExecStart=/usr/bin/enit startfg autoisis --syslog
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+
