@@ -1,7 +1,7 @@
 
 #####################################################
-# For this class these variables must be set:
-#
+# For this class these variables can be set in the
+# inheriting recipe:
 #
 # APPNAME             (default is "${PN}")
 # APPVERSION          (default is "${PV}")
