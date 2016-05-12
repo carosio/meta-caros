@@ -9,6 +9,8 @@ SECTION = "libs"
 LICENSE = "GPLv2"
 LIC_FILES_CHKSUM = "file://COPYING;md5=b234ee4d69f5fce4486a80fdaf4a4263"
 
+PR="r1"
+
 PROVIDES += "cyassl"
 RPROVIDES_${PN} = "cyassl"
 
@@ -21,7 +23,6 @@ EXTRA_OECONF = "--enable-dtls \
 	        --enable-ipv6 \
 		--enable-aesgcm \
 		--enable-aesccm \
-		--enable-aesni \
 		--enable-poly1305 \
 		--enable-ecc \
 		--enable-ecc25519 \
