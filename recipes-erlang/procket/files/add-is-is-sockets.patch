@@ -1,0 +1,114 @@
+From 91f086f8b2f92366f659381155f007c8595d754e Mon Sep 17 00:00:00 2001
+From: Rick Payne <rickp@rossfell.co.uk>
+Date: Tue, 16 Feb 2016 18:55:17 +0100
+Subject: [PATCH] Add support for IS-IS sockets
+
+---
+ c_src/procket.h     |  1 +
+ c_src/procket_cmd.c | 25 +++++++++++++++++++++++--
+ src/procket.erl     |  8 ++++++--
+ 3 files changed, 30 insertions(+), 4 deletions(-)
+
+diff --git a/c_src/procket.h b/c_src/procket.h
+index ec7c9b7..9283b40 100644
+--- a/c_src/procket.h
++++ b/c_src/procket.h
+@@ -88,4 +88,5 @@ typedef struct {
+     int type;               /* socket type: SOCK_STREAM */
+     int protocol;           /* socket protocol: IPPROTO_TCP */
+     int backlog;            /* Listen backlog */
++    int isis;               /* Add ISIS MAC addresses to interface */
+ } PROCKET_STATE;
+diff --git a/c_src/procket_cmd.c b/c_src/procket_cmd.c
+index 9078043..c001efb 100644
+--- a/c_src/procket_cmd.c
++++ b/c_src/procket_cmd.c
+@@ -58,7 +58,6 @@ main(int argc, char *argv[])
+     PROCKET_STATE *ps = NULL;
+     int ch = 0;
+ 
+-
+     ps = calloc(1, sizeof(PROCKET_STATE));
+ 
+     if (ps == NULL)
+@@ -72,7 +71,7 @@ main(int argc, char *argv[])
+ 
+     ps->fdtype = PROCKET_FD_SOCKET;
+ 
+-    while ( (ch = getopt(argc, argv, "b:d:F:hI:p:P:T:u:v")) != -1) {
++    while ( (ch = getopt(argc, argv, "b:d:F:hI:p:P:T:u:vz")) != -1) {
+         switch (ch) {
+             case 'b':   /* listen backlog */
+                 ps->backlog = atoi(optarg);
+@@ -127,6 +126,9 @@ main(int argc, char *argv[])
+             case 'v':
+                 ps->verbose++;
+                 break;
++            case 'z':
++                ps->isis = 1;
++                break;
+             case 'h':
+             default:
+                 usage(ps);
+@@ -301,6 +303,25 @@ procket_create_socket(PROCKET_STATE *ps)
+         (void)snprintf(ifr.ifr_name, IFNAMSIZ, "%s", ps->ifname);
+         if (setsockopt(ps->s, SOL_SOCKET, SO_BINDTODEVICE, &ifr, sizeof(ifr)) < 0)
+             return -1;
++
++        if(ps->isis) {
++          char mcast_mac[] = {0x01, 0x80, 0xc2, 0x00, 0x00, 0x14};
++
++          // Get IfIndex
++          if (ioctl(ps->s, SIOCGIFINDEX, &ifr) < 0)
++            return -1;
++
++          memcpy(&ifr.ifr_ifru.ifru_addr.sa_data[0], mcast_mac, 6);
++          ifr.ifr_hwaddr.sa_family = AF_UNSPEC;
++          if (ioctl(ps->s, SIOCADDMULTI, &ifr) < 0)
++            return -1;
++
++          memcpy(&ifr.ifr_ifru.ifru_addr.sa_data[0], mcast_mac, 6);
++          ifr.ifr_ifru.ifru_addr.sa_data[5] = 0x15;
++          ifr.ifr_hwaddr.sa_family = AF_UNSPEC;
++          if (ioctl(ps->s, SIOCADDMULTI, &ifr) < 0)
++            return -1;
++        }
+     }
+ #endif
+ 
+diff --git a/src/procket.erl b/src/procket.erl
+index 3fe3382..ffe0e10 100644
+--- a/src/procket.erl
++++ b/src/procket.erl
+@@ -70,7 +70,8 @@
+         unix_path_max/0,
+         sockaddr_common/2,
+         ntohl/1,
+-        ntohs/1
++        ntohs/1,
++        family/1
+     ]).
+ % for debugging
+ -export([
+@@ -435,6 +436,9 @@ optarg({dev, Dev}) when is_list(Dev) ->
+             erlang:error(badarg, [{dev, Dev}])
+     end;
+ 
++optarg({isis}) ->
++    switch("z", "");
++
+ % Ignore any other arguments
+ optarg(_Arg) ->
+     "".
+@@ -446,7 +450,7 @@ is_interface(Name) when is_list(Name) ->
+     % An interface name is expected to consist of a reasonable
+     % subset of all characters, use a whitelist and extend it if needed
+     Name == [C || C <- Name, (((C bor 32) >= $a) and ((C bor 32) =< $z))
+-        or ((C >= $0) and (C =< $9)) or (C == $.)].
++        or ((C >= $0) and (C =< $9)) or (C == $.) or (C == $-)].
+ 
+ is_device(Name) when is_list(Name) ->
+     Name == [C || C <- Name, ((C >= $a) and (C =< $z))
+-- 
+2.7.0
+
