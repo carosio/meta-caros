@@ -8,11 +8,15 @@ SECTION = "console/tools"
 SRC_URI = "git://github.com/sirikata/json-spirit.git"
 SRCREV = "4f1a1023b5d14ec98887ead132d881b8a7acfd3c"
 PV = "git${SRCPV}"
-PR = "r1"
+PR = "r2"
 
 DEPENDS = "boost"
 
 S = "${WORKDIR}/git"
+
+FILES_${PN} = "${libdir} \
+               ${includedir}"
+FILES_${PN}-dev = ""
 
 OECMAKE_SOURCEPATH = "${S}/build"
 
