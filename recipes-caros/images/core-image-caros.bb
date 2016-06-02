@@ -20,4 +20,4 @@ EXTRA_IMAGECMD_ext3 += "-b 4096"
 # dollar ($) signs need backspace encoding
 #
 EXTRA_USERS_PARAMS = "usermod -p '\$6\$pHNG7CcLpB/\$Ema9IqIVLbBX.RbaYeVULVXPsq67amN5QEgjLF9zKWHtx2UhAgopVI.TcgP8WJw58G1LczqWlPIe.39/c2CNL.' root; \
-                        useradd -m -s /bin/bash caros; usermod -p '\$6\$pHNG7CcLpB/\$Ema9IqIVLbBX.RbaYeVULVXPsq67amN5QEgjLF9zKWHtx2UhAgopVI.TcgP8WJw58G1LczqWlPIe.39/c2CNL.' caros"
+                        useradd -m -s /bin/zsh caros; usermod -p '\$6\$pHNG7CcLpB/\$Ema9IqIVLbBX.RbaYeVULVXPsq67amN5QEgjLF9zKWHtx2UhAgopVI.TcgP8WJw58G1LczqWlPIe.39/c2CNL.' caros"
