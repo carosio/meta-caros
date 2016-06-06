@@ -6,6 +6,6 @@ exec tail -n +3 $0
 set timeout=10
 menuentry "__DISTRO_NAME__" {
     set root=(hd0,3)
-    linux /@/boot/bzImage root=__ROOTFS__ rw rootflags=subvol=@ __CONSOLE__ __VIDEO_MODE__ __VGA_MODE__
+    linux /@/boot/bzImage root=__ROOTFS__ rw rootflags=subvol=@ __CONSOLE__ __VIDEO_MODE__ __VGA_MODE__ panic=30
 }
 
