@@ -10,9 +10,10 @@ PACKAGES = "${PN}"
 PACKAGE_GROUP_caros_systemtools = "${PN}"
 
 RDEPENDS_${PN} = "\
-perf \
 lsof \
+perf \
+smem \
 ss \
 strace \
-smem \
+sudo \
 "
