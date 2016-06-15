@@ -3,7 +3,7 @@ SUMMARY="snmp-agent for the bird routing daemon"
 LICENSE = "GPLv3"
 LIC_FILES_CHKSUM = "file://COPYING.GPLv3;md5=d32239bcb673463ab874e80d47fae504"
 
-PR = "r1"
+PR = "r2"
 
 SRC_URI = "git://github.com/carosio/bird-snmp-agent.git"
 SRCREV = "95606e3ccf0894f41642226fd96febd466a0a233"
@@ -12,6 +12,8 @@ SRC_URI += "file://bird-snmp-agent.sh"
 SRC_URI += "file://bird-snmp-agent.service"
 
 S = "${WORKDIR}/git"
+
+RDEPENDS_${PN} = "python-subprocess python-ctypes python-shell"
 
 inherit caros-service
 SYSTEMD_SERVICE_${PN} += "${PN}.service"
