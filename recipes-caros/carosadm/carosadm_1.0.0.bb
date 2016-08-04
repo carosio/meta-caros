@@ -3,9 +3,7 @@ SECTION = "core"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://${COREBASE}/meta/COPYING.MIT;md5=3da9cfbcb788c80a0384361b4de20420"
 
-PR = "r2"
-
-SRC_URI += "file://sudo_d_carosadm"
+PR = "r3"
 
 S = "${WORKDIR}"
 
@@ -38,7 +36,8 @@ FILES_${PN} = "/home/${ADMUSERNAME} ${sysconfdir}"
 
 do_install () {
 	install -m 0755 -d ${D}${sysconfdir}/sudoers.d
-	install -m 0640 -g config  ${WORKDIR}/sudo_d_carosadm ${D}${sysconfdir}/sudoers.d/adm
+	echo "${ADMUSERNAME} ALL=(ALL) NOPASSWD: ALL" > ${WORKDIR}/sudo_d_carosadm
+	install -m 0640 -g config  ${WORKDIR}/sudo_d_carosadm ${D}${sysconfdir}/sudoers.d/carosadm
 
 	install -m 0755 -o ${ADMUSERNAME} -d ${D}/home/${ADMUSERNAME}
 }
