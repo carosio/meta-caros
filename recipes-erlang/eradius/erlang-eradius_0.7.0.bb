@@ -5,7 +5,7 @@ LIC_FILES_CHKSUM = "file://MIT_LICENSE;md5=7a8830d51731fc79efbb8166db8d2859"
 
 S = "${WORKDIR}/git"
 
-SRCREV="f3aebb10ba57843ddc987d7e5ac97544a2419921"
+SRCREV="5c061b29da2ead57a70edaa347ee21a1a48ebac0"
 
 PR = "r1"
 
@@ -17,5 +17,5 @@ inherit tetrapak
 DEPENDS = "erlang-lager"
 
 python () {
-    erlang_def_package("eradius", "eradius-*", "ebin priv", ".travis.yml .pc src include mibs test NEWS.md README_eradius_journal.adoc README.md MIT_LICENSE MAINTAINERS", d)
+    erlang_def_package("eradius", "eradius-*", "ebin priv", ".travis.yml .pc src include mibs test NEWS.md README_eradius_journal.adoc README.md MIT_LICENSE MAINTAINERS cover.spec", d)
 }
