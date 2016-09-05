@@ -14,7 +14,7 @@ SRC_URI += "file://tetrapak-exclude-rebar.patch"
 
 inherit tetrapak
 
-DEPENDS = "erlang-lager"
+DEPENDS = "erlang-lager erlang-exometer-core"
 
 python () {
     erlang_def_package("eradius", "eradius-*", "ebin priv", ".travis.yml .pc src include mibs test NEWS.md README_eradius_journal.adoc README.md MIT_LICENSE MAINTAINERS cover.spec", d)
