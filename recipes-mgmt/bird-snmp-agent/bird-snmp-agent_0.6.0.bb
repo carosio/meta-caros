@@ -37,14 +37,21 @@ do_install() {
 
 	install -m 0755 ${WORKDIR}/bird-snmp-agent-bgp.sh ${D}${sbindir}/bird-snmp-agent-bgp
 	install -m 0755 ${WORKDIR}/bird-snmp-agent-ospf.sh ${D}${sbindir}/bird-snmp-agent-ospf
-	sed --in-place -e "s,@LIBEXEC@,${libexecdir}," ${D}${sbindir}/bird-snmp-agent-{bgp,ospf}
+	sed --in-place -e "s,@LIBEXEC@,${libexecdir}," \
+		${D}${sbindir}/bird-snmp-agent-bgp \
+		${D}${sbindir}/bird-snmp-agent-ospf
 
 	# service files
 	install -m 0644 ${WORKDIR}/bird-snmp-agent.service ${D}${systemd_unitdir}/system/
 	install -m 0644 ${WORKDIR}/bird-snmp-agent-bgp.service ${D}${systemd_unitdir}/system/
 	install -m 0644 ${WORKDIR}/bird-snmp-agent-ospf.service ${D}${systemd_unitdir}/system/
 
-	sed --in-place -e "s,@SBINDIR@,${sbindir}," ${D}${systemd_unitdir}/system/bird-snmp-agent-{bgp,ospf}.service
-	sed --in-place -e "s,@LIBEXEC@,${libexecdir}," ${D}${systemd_unitdir}/system/bird-snmp-agent-{bgp,ospf}.service
+	sed --in-place -e "s,@SBINDIR@,${sbindir}," \
+		${D}${systemd_unitdir}/system/bird-snmp-agent-bgp.service \
+		${D}${systemd_unitdir}/system/bird-snmp-agent-ospf.service
+
+	sed --in-place -e "s,@LIBEXEC@,${libexecdir}," \
+		${D}${systemd_unitdir}/system/bird-snmp-agent-bgp.service \
+		${D}${systemd_unitdir}/system/bird-snmp-agent-ospf.service
 }
 
