@@ -3,7 +3,7 @@ SUMMARY="snmp-agent for the bird routing daemon"
 LICENSE = "GPLv3"
 LIC_FILES_CHKSUM = "file://COPYING.GPLv3;md5=d32239bcb673463ab874e80d47fae504"
 
-PR = "r3"
+PR = "r1"
 
 SRC_URI = "git://github.com/carosio/bird-snmp-agent.git"
 SRCREV = "8d69ee8c1558c2c7eaefafde64409c0560e2bb5d"
