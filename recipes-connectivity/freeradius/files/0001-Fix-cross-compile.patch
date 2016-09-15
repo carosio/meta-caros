@@ -1,0 +1,2669 @@
+diff -Naurw freeradius-server-3.0.11-orig/Makefile freeradius-server-3.0.11/Makefile
+--- freeradius-server-3.0.11-orig/Makefile	2016-01-25 19:27:03.000000000 +0100
++++ freeradius-server-3.0.11/Makefile	2016-09-19 13:47:12.541952296 +0200
+@@ -53,7 +53,6 @@
+ 	@touch $@
+ 
+ test: ${BUILD_DIR}/bin/radiusd ${BUILD_DIR}/bin/radclient tests.unit tests.xlat tests.keywords tests.auth tests.modules $(BUILD_DIR)/tests/radiusd-c | build.raddb
+-	@$(MAKE) -C src/tests tests
+ 
+ #  Tests specifically for Travis.  We do a LOT more than just
+ #  the above tests
+@@ -229,13 +228,6 @@
+ TAGS:
+ 	etags `find src -type f -name '*.[ch]' -print` > $@
+ 
+-#
+-#  Make test certificates.
+-#
+-.PHONY: certs
+-certs:
+-	@$(MAKE) -C raddb/certs
+-
+ ######################################################################
+ #
+ #  Make a release.
+diff -Naurw freeradius-server-3.0.11-orig/acinclude.m4 freeradius-server-3.0.11/acinclude.m4
+--- freeradius-server-3.0.11-orig/acinclude.m4	2016-01-25 19:27:03.000000000 +0100
++++ freeradius-server-3.0.11/acinclude.m4	2016-09-19 13:47:12.542952283 +0200
+@@ -178,7 +178,7 @@
+   FR_LOCATE_DIR(smart_lib_dir,[lib$1${libltdl_cv_shlibext}])
+   FR_LOCATE_DIR(smart_lib_dir,[lib$1.a])
+ 
+-  for try in $smart_lib_dir /usr/local/lib /opt/lib; do
++  for try in $smart_lib_dir /opt/lib; do
+     AC_MSG_CHECKING([for $2 in -l$1 in $try])
+     LIBS="-l$1 $old_LIBS"
+     CPPFLAGS="-L$try -Wl,-rpath,$try $old_CPPFLAGS"
+@@ -218,7 +218,7 @@
+ old_CPPFLAGS="$CPPFLAGS"
+ smart_include=
+ dnl #  The default directories we search in (in addition to the compilers search path)
+-smart_include_dir="/usr/local/include /opt/include"
++smart_include_dir="/opt/include"
+ 
+ dnl #  Our local versions
+ _smart_try_dir=
+@@ -242,12 +242,12 @@
+ if test "x$_smart_try_dir" != "x"; then
+   for try in $_smart_try_dir; do
+     AC_MSG_CHECKING([for $1 in $try])
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     AC_TRY_COMPILE([$2
+ 		    #include <$1>],
+ 		   [int a = 1;],
+ 		   [
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     AC_MSG_RESULT(yes)
+ 		     break
+ 		   ],
+@@ -270,7 +270,7 @@
+ 		    #include <$1>],
+ 		   [int a = 1;],
+ 		   [
+-		     smart_include="-isystem ${_prefix}/"
++		     smart_include=""
+ 		     AC_MSG_RESULT(yes)
+ 		     break
+ 		   ],
+@@ -313,12 +313,12 @@
+ 
+   for try in $_smart_include_dir; do
+     AC_MSG_CHECKING([for $1 in $try])
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     AC_TRY_COMPILE([$2
+ 		    #include <$1>],
+ 		   [int a = 1;],
+ 		   [
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     AC_MSG_RESULT(yes)
+ 		     break
+ 		   ],
+diff -Naurw freeradius-server-3.0.11-orig/aclocal.m4 freeradius-server-3.0.11/aclocal.m4
+--- freeradius-server-3.0.11-orig/aclocal.m4	2016-01-25 19:27:03.000000000 +0100
++++ freeradius-server-3.0.11/aclocal.m4	2016-09-19 13:47:12.544952256 +0200
+@@ -2765,7 +2765,7 @@
+   shlibpath_overrides_runpath=yes
+   hardcode_into_libs=yes
+   if test "$with_gnu_ld" = yes; then
+-    sys_lib_search_path_spec='/usr/local/lib /usr/gnu/lib /usr/ccs/lib /usr/lib /lib'
++    sys_lib_search_path_spec='/usr/gnu/lib /usr/ccs/lib /usr/lib /lib'
+   else
+     sys_lib_search_path_spec='/usr/ccs/lib /usr/lib'
+     case $host_os in
+diff -Naurw freeradius-server-3.0.11-orig/configure freeradius-server-3.0.11/configure
+--- freeradius-server-3.0.11-orig/configure	2016-01-25 19:27:03.000000000 +0100
++++ freeradius-server-3.0.11/configure	2016-09-19 13:48:19.563059668 +0200
+@@ -7367,7 +7367,7 @@
+ ac_safe=`echo "talloc.h" | sed 'y%./+-%__pm%'`
+ old_CPPFLAGS="$CPPFLAGS"
+ smart_include=
+-smart_include_dir="/usr/local/include /opt/include"
++smart_include_dir="/opt/include"
+ 
+ _smart_try_dir=
+ _smart_include_dir=
+@@ -7386,7 +7386,7 @@
+   for try in $_smart_try_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for talloc.h in $try" >&5
+ $as_echo_n "checking for talloc.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -7401,7 +7401,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -7437,7 +7437,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem ${_prefix}/"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -7548,7 +7548,7 @@
+   for try in $_smart_include_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for talloc.h in $try" >&5
+ $as_echo_n "checking for talloc.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -7563,7 +7563,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -8438,7 +8438,7 @@
+ ac_safe=`echo "openssl/ssl.h" | sed 'y%./+-%__pm%'`
+ old_CPPFLAGS="$CPPFLAGS"
+ smart_include=
+-smart_include_dir="/usr/local/include /opt/include"
++smart_include_dir="/opt/include"
+ 
+ _smart_try_dir=
+ _smart_include_dir=
+@@ -8457,7 +8457,7 @@
+   for try in $_smart_try_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for openssl/ssl.h in $try" >&5
+ $as_echo_n "checking for openssl/ssl.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -8472,7 +8472,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -8508,7 +8508,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem ${_prefix}/"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -8619,7 +8619,7 @@
+   for try in $_smart_include_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for openssl/ssl.h in $try" >&5
+ $as_echo_n "checking for openssl/ssl.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -8634,7 +8634,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -8810,7 +8810,7 @@
+ ac_safe=`echo "pcap.h" | sed 'y%./+-%__pm%'`
+ old_CPPFLAGS="$CPPFLAGS"
+ smart_include=
+-smart_include_dir="/usr/local/include /opt/include"
++smart_include_dir="/opt/include"
+ 
+ _smart_try_dir=
+ _smart_include_dir=
+@@ -8829,7 +8829,7 @@
+   for try in $_smart_try_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for pcap.h in $try" >&5
+ $as_echo_n "checking for pcap.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -8844,7 +8844,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -8880,7 +8880,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem ${_prefix}/"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -8991,7 +8991,7 @@
+   for try in $_smart_include_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for pcap.h in $try" >&5
+ $as_echo_n "checking for pcap.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -9006,7 +9006,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -9053,7 +9053,7 @@
+ ac_safe=`echo "collectd/client.h" | sed 'y%./+-%__pm%'`
+ old_CPPFLAGS="$CPPFLAGS"
+ smart_include=
+-smart_include_dir="/usr/local/include /opt/include"
++smart_include_dir="/opt/include"
+ 
+ _smart_try_dir=
+ _smart_include_dir=
+@@ -9072,7 +9072,7 @@
+   for try in $_smart_try_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for collectd/client.h in $try" >&5
+ $as_echo_n "checking for collectd/client.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -9087,7 +9087,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -9123,7 +9123,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem ${_prefix}/"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -9234,7 +9234,7 @@
+   for try in $_smart_include_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for collectd/client.h in $try" >&5
+ $as_echo_n "checking for collectd/client.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -9249,7 +9249,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -9296,7 +9296,7 @@
+ ac_safe=`echo "sys/capability.h" | sed 'y%./+-%__pm%'`
+ old_CPPFLAGS="$CPPFLAGS"
+ smart_include=
+-smart_include_dir="/usr/local/include /opt/include"
++smart_include_dir="/opt/include"
+ 
+ _smart_try_dir=
+ _smart_include_dir=
+@@ -9315,7 +9315,7 @@
+   for try in $_smart_try_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for sys/capability.h in $try" >&5
+ $as_echo_n "checking for sys/capability.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -9330,7 +9330,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -9366,7 +9366,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem ${_prefix}/"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -9477,7 +9477,7 @@
+   for try in $_smart_include_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for sys/capability.h in $try" >&5
+ $as_echo_n "checking for sys/capability.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -9492,7 +9492,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -10962,7 +10962,7 @@
+ ac_safe=`echo "execinfo.h" | sed 'y%./+-%__pm%'`
+ old_CPPFLAGS="$CPPFLAGS"
+ smart_include=
+-smart_include_dir="/usr/local/include /opt/include"
++smart_include_dir="/opt/include"
+ 
+ _smart_try_dir=
+ _smart_include_dir=
+@@ -10981,7 +10981,7 @@
+   for try in $_smart_try_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for execinfo.h in $try" >&5
+ $as_echo_n "checking for execinfo.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -10996,7 +10996,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -11032,7 +11032,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem ${_prefix}/"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -11143,7 +11143,7 @@
+   for try in $_smart_include_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for execinfo.h in $try" >&5
+ $as_echo_n "checking for execinfo.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -11158,7 +11158,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -11475,7 +11475,7 @@
+ ac_safe=`echo "pcre.h" | sed 'y%./+-%__pm%'`
+ old_CPPFLAGS="$CPPFLAGS"
+ smart_include=
+-smart_include_dir="/usr/local/include /opt/include"
++smart_include_dir="/opt/include"
+ 
+ _smart_try_dir=
+ _smart_include_dir=
+@@ -11494,7 +11494,7 @@
+   for try in $_smart_try_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for pcre.h in $try" >&5
+ $as_echo_n "checking for pcre.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -11509,7 +11509,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -11545,7 +11545,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem ${_prefix}/"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -11656,7 +11656,7 @@
+   for try in $_smart_include_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for pcre.h in $try" >&5
+ $as_echo_n "checking for pcre.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -11671,7 +11671,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -11891,7 +11891,7 @@
+ ac_safe=`echo "regex.h" | sed 'y%./+-%__pm%'`
+ old_CPPFLAGS="$CPPFLAGS"
+ smart_include=
+-smart_include_dir="/usr/local/include /opt/include"
++smart_include_dir="/opt/include"
+ 
+ _smart_try_dir=
+ _smart_include_dir=
+@@ -11910,7 +11910,7 @@
+   for try in $_smart_try_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for regex.h in $try" >&5
+ $as_echo_n "checking for regex.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -11925,7 +11925,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -11961,7 +11961,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem ${_prefix}/"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -12072,7 +12072,7 @@
+   for try in $_smart_include_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for regex.h in $try" >&5
+ $as_echo_n "checking for regex.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -12087,7 +12087,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+diff -Naurw freeradius-server-3.0.11-orig/configure.ac freeradius-server-3.0.11/configure.ac
+--- freeradius-server-3.0.11-orig/configure.ac	2016-01-25 19:27:03.000000000 +0100
++++ freeradius-server-3.0.11/configure.ac	2016-09-19 13:47:12.548952203 +0200
+@@ -899,7 +899,7 @@
+   esac])
+ 
+ smart_try_dir="$collectdclient_lib_dir"
+-FR_SMART_CHECK_LIB(collectdclient, lcc_connect)
++dnl FR_SMART_CHECK_LIB(collectdclient, lcc_connect)
+ if test "x$ac_cv_lib_collectdclient_lcc_connect" != "xyes"; then
+   AC_MSG_WARN([collectdclient library not found. Use --with-collectdclient-lib-dir=<path>.])
+ else
+@@ -1134,47 +1134,6 @@
+         AC_MSG_FAILURE([OpenSSL version too old])
+       ]
+     )
+-
+-    dnl #
+-    dnl #  CPPFLAGS are passed to the compiler first, so we use
+-    dnl #  them to ensure things like --sysroot don't override the
+-    dnl #  library location we discovered previously.
+-    dnl #
+-    old_CPPFLAGS="$CPPFLAGS"
+-    CPPFLAGS="$OPENSSL_CPPFLAGS $CPPFLAGS"
+-
+-    dnl #
+-    dnl #  Now check that the header versions match the library
+-    dnl #
+-    AC_MSG_CHECKING([OpenSSL library and header version consistency])
+-    AC_RUN_IFELSE(
+-      [AC_LANG_PROGRAM(
+-        [[
+-          #include <stdio.h>
+-          #include <openssl/opensslv.h>
+-          #include <openssl/crypto.h>
+-        ]],
+-        [[
+-          printf("library: %lx header: %lx... ", (unsigned long) SSLeay(), (unsigned long) OPENSSL_VERSION_NUMBER);
+-          if (SSLeay() == OPENSSL_VERSION_NUMBER) {
+-            return 0;
+-          } else {
+-            return 1;
+-          }
+-        ]]
+-      )],
+-      [
+-        AC_MSG_RESULT(yes)
+-      ],
+-      [
+-        AC_MSG_RESULT(no)
+-        AC_MSG_FAILURE([OpenSSL library version does not match header version])
+-      ],
+-      [
+-        AC_MSG_RESULT([cross-compiling (assuming yes)])
+-      ]
+-    )
+-    CPPFLAGS="$old_CPPFLAGS"
+   fi
+ 
+   LIBS="$OLD_LIBS"
+@@ -1725,7 +1684,7 @@
+ FR_SMART_CHECK_INCLUDE(execinfo.h)
+ if test "x$ac_cv_header_execinfo_h" = "xyes"; then
+   smart_try_dir=$execinfo_lib_dir
+-  FR_SMART_CHECK_LIB(execinfo, backtrace_symbols)
++  dnl FR_SMART_CHECK_LIB(execinfo, backtrace_symbols)
+   if test "x$ac_cv_lib_execinfo_backtrace_symbols" != "xyes"; then
+     dnl # Might be provided as part of libc
+     AC_MSG_CHECKING([if execinfo provided as part of libc])
+diff -Naurw freeradius-server-3.0.11-orig/install-sh freeradius-server-3.0.11/install-sh
+--- freeradius-server-3.0.11-orig/install-sh	2016-01-25 19:27:03.000000000 +0100
++++ freeradius-server-3.0.11/install-sh	2016-09-19 13:47:12.550952176 +0200
+@@ -39,7 +39,7 @@
+ chgrpprog="${CHGRPPROG-chgrp}"
+ stripprog="${STRIPPROG-strip}"
+ rmprog="${RMPROG-rm}"
+-mkdirprog="${MKDIRPROG-mkdir}"
++mkdirprog="${MKDIRPROG-mkdir -p}"
+ 
+ transformbasename=""
+ transform_arg=""
+@@ -120,7 +120,7 @@
+ 		instcmd=:
+ 		chmodcmd=""
+ 	else
+-		instcmd=mkdir
++		instcmd="mkdir -p"
+ 	fi
+ else
+ 
+diff -Naurw freeradius-server-3.0.11-orig/raddb/all.mk freeradius-server-3.0.11/raddb/all.mk
+--- freeradius-server-3.0.11-orig/raddb/all.mk	2016-01-25 19:27:03.000000000 +0100
++++ freeradius-server-3.0.11/raddb/all.mk	2016-09-19 13:47:12.550952176 +0200
+@@ -23,7 +23,7 @@
+ 
+ LEGACY_LINKS :=		$(addprefix $(R)$(raddbdir)/,users huntgroups hints)
+ 
+-RADDB_DIRS :=		certs mods-available mods-enabled policy.d \
++RADDB_DIRS :=		mods-available mods-enabled policy.d \
+ 			sites-available sites-enabled \
+ 			$(patsubst raddb/%,%,$(shell find raddb/mods-config -type d -print))
+ 
+@@ -115,7 +115,6 @@
+ ifeq ("$(PACKAGE)","")
+ $(LOCAL_CERT_PRODUCTS):
+ 	@echo BOOTSTRAP raddb/certs/
+-	@$(MAKE) -C $(R)$(raddbdir)/certs/
+ 
+ # Bootstrap is special
+ $(R)$(raddbdir)/certs/bootstrap: | raddb/certs/bootstrap $(LOCAL_CERT_PRODUCTS)
+diff -Naurw freeradius-server-3.0.11-orig/scripts/libtool.mk freeradius-server-3.0.11/scripts/libtool.mk
+--- freeradius-server-3.0.11-orig/scripts/libtool.mk	2016-01-25 19:27:03.000000000 +0100
++++ freeradius-server-3.0.11/scripts/libtool.mk	2016-09-19 15:33:13.069202248 +0200
+@@ -44,7 +44,7 @@
+     ${JLIBTOOL}: ${top_makedir}/jlibtool.c
+ 	$(Q)mkdir -p $(dir $@)
+ 	$(Q)echo CC jlibtool.c
+-	$(Q)${CC} $< -o $@
++	$(Q)gcc $< -o $@
+ 
+     clean: jlibtool_clean
+ 
+@@ -71,7 +71,7 @@
+ OBJ_EXT = lo
+ COMPILE.c = ${LIBTOOL} --silent --mode=compile ${CC}
+ COMPILE.cxx = ${LIBTOOL} --mode=compile ${CXX}
+-LINK.c = ${LIBTOOL} --silent --mode=link ${CC}
++LINK.c = ${LIBTOOL} --mode=link ${CC}
+ LINK.cxx = ${LIBTOOL} --mode=link ${CXX}
+ PROGRAM_INSTALL = ${LIBTOOL} --silent --mode=install ${INSTALL}
+ 
+diff -Naurw freeradius-server-3.0.11-orig/src/lib/sha1.c freeradius-server-3.0.11/src/lib/sha1.c
+--- freeradius-server-3.0.11-orig/src/lib/sha1.c	2016-01-25 19:27:03.000000000 +0100
++++ freeradius-server-3.0.11/src/lib/sha1.c	2016-09-19 13:47:12.550952176 +0200
+@@ -12,7 +12,7 @@
+ 
+ #include "../include/sha1.h"
+ 
+-#ifndef WITH_OPENSSL_SHA1
++//#ifndef WITH_OPENSSL_SHA1
+ #  define rol(value, bits) (((value) << (bits)) | ((value) >> (32 - (bits))))
+ 
+ /* blk0() and blk() perform the initial expand. */
+@@ -182,4 +182,4 @@
+ 	fr_sha1_transform(context->state, context->buffer);
+ #  endif
+ }
+-#endif
++//#endif
+diff -Naurw freeradius-server-3.0.11-orig/src/main/radiusd.mk freeradius-server-3.0.11/src/main/radiusd.mk
+--- freeradius-server-3.0.11-orig/src/main/radiusd.mk	2016-01-25 19:27:03.000000000 +0100
++++ freeradius-server-3.0.11/src/main/radiusd.mk	2016-09-19 13:47:12.551952163 +0200
+@@ -13,6 +13,7 @@
+ TGT_INSTALLDIR  := ${sbindir}
+ TGT_LDLIBS	:= $(LIBS) $(OPENSSL_LIBS) $(LCRYPT)
+ TGT_PREREQS	:= libfreeradius-server.a libfreeradius-radius.a
++TGT_PREREQS	+= libfreeradius-eap.a
+ 
+ # Libraries can't depend on libraries (oops), so make the binary
+ # depend on the EAP code...
+diff -Naurw freeradius-server-3.0.11-orig/src/main/version.c freeradius-server-3.0.11/src/main/version.c
+--- freeradius-server-3.0.11-orig/src/main/version.c	2016-01-25 19:27:03.000000000 +0100
++++ freeradius-server-3.0.11/src/main/version.c	2016-09-19 13:47:12.551952163 +0200
+@@ -565,6 +565,7 @@
+ #ifdef BUILT_WITH_CPPFLAGS
+ 		DEBUG2("  cppflags : " BUILT_WITH_CPPFLAGS);
+ #endif
++#if 0
+ #ifdef BUILT_WITH_CFLAGS
+ 		DEBUG2("  cflags   : " BUILT_WITH_CFLAGS);
+ #endif
+@@ -574,6 +575,7 @@
+ #ifdef BUILT_WITH_LIBS
+ 		DEBUG2("  libs     : " BUILT_WITH_LIBS);
+ #endif
++#endif
+ 		DEBUG2("  ");
+ 	}
+ 	INFO("Copyright (C) 1999-2016 The FreeRADIUS server project and contributors");
+diff -Naurw freeradius-server-3.0.11-orig/src/modules/rlm_cache/drivers/rlm_cache_memcached/configure freeradius-server-3.0.11/src/modules/rlm_cache/drivers/rlm_cache_memcached/configure
+--- freeradius-server-3.0.11-orig/src/modules/rlm_cache/drivers/rlm_cache_memcached/configure	2016-01-25 19:27:03.000000000 +0100
++++ freeradius-server-3.0.11/src/modules/rlm_cache/drivers/rlm_cache_memcached/configure	2016-09-19 13:48:41.426766663 +0200
+@@ -2908,7 +2908,7 @@
+   for try in $_smart_try_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for libmemcached/memcached.h in $try" >&5
+ $as_echo_n "checking for libmemcached/memcached.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -2923,7 +2923,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -2959,7 +2959,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem ${_prefix}/"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -3070,7 +3070,7 @@
+   for try in $_smart_include_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for libmemcached/memcached.h in $try" >&5
+ $as_echo_n "checking for libmemcached/memcached.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -3085,7 +3085,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+diff -Naurw freeradius-server-3.0.11-orig/src/modules/rlm_couchbase/configure freeradius-server-3.0.11/src/modules/rlm_couchbase/configure
+--- freeradius-server-3.0.11-orig/src/modules/rlm_couchbase/configure	2016-01-25 19:27:03.000000000 +0100
++++ freeradius-server-3.0.11/src/modules/rlm_couchbase/configure	2016-09-19 13:48:31.311902217 +0200
+@@ -2917,7 +2917,7 @@
+   for try in $_smart_try_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for json/json.h in $try" >&5
+ $as_echo_n "checking for json/json.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -2932,7 +2932,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -2968,7 +2968,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem ${_prefix}/"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -3079,7 +3079,7 @@
+   for try in $_smart_include_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for json/json.h in $try" >&5
+ $as_echo_n "checking for json/json.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -3094,7 +3094,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -3144,7 +3144,7 @@
+   for try in $_smart_try_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for json-c/json.h in $try" >&5
+ $as_echo_n "checking for json-c/json.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -3159,7 +3159,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -3195,7 +3195,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem ${_prefix}/"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -3306,7 +3306,7 @@
+   for try in $_smart_include_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for json-c/json.h in $try" >&5
+ $as_echo_n "checking for json-c/json.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -3321,7 +3321,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -3825,7 +3825,7 @@
+   for try in $_smart_try_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for libcouchbase/couchbase.h in $try" >&5
+ $as_echo_n "checking for libcouchbase/couchbase.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -3840,7 +3840,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -3876,7 +3876,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem ${_prefix}/"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -3987,7 +3987,7 @@
+   for try in $_smart_include_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for libcouchbase/couchbase.h in $try" >&5
+ $as_echo_n "checking for libcouchbase/couchbase.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -4002,7 +4002,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+diff -Naurw freeradius-server-3.0.11-orig/src/modules/rlm_counter/configure freeradius-server-3.0.11/src/modules/rlm_counter/configure
+--- freeradius-server-3.0.11-orig/src/modules/rlm_counter/configure	2016-01-25 19:27:03.000000000 +0100
++++ freeradius-server-3.0.11/src/modules/rlm_counter/configure	2016-09-19 13:48:31.323902056 +0200
+@@ -2839,7 +2839,7 @@
+   for try in $_smart_try_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for gdbm.h in $try" >&5
+ $as_echo_n "checking for gdbm.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -2854,7 +2854,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -2890,7 +2890,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem ${_prefix}/"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -3001,7 +3001,7 @@
+   for try in $_smart_include_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for gdbm.h in $try" >&5
+ $as_echo_n "checking for gdbm.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -3016,7 +3016,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+diff -Naurw freeradius-server-3.0.11-orig/src/modules/rlm_eap/all.mk freeradius-server-3.0.11/src/modules/rlm_eap/all.mk
+--- freeradius-server-3.0.11-orig/src/modules/rlm_eap/all.mk	2016-01-25 19:27:03.000000000 +0100
++++ freeradius-server-3.0.11/src/modules/rlm_eap/all.mk	2016-09-19 13:47:12.555952109 +0200
+@@ -1 +1 @@
+-SUBMAKEFILES := libeap/all.mk rlm_eap.mk types/all.mk radeapclient.mk
++SUBMAKEFILES := libeap/all.mk rlm_eap.mk types/all.mk
+diff -Naurw freeradius-server-3.0.11-orig/src/modules/rlm_eap/libeap/all.mk freeradius-server-3.0.11/src/modules/rlm_eap/libeap/all.mk
+--- freeradius-server-3.0.11-orig/src/modules/rlm_eap/libeap/all.mk	2016-01-25 19:27:03.000000000 +0100
++++ freeradius-server-3.0.11/src/modules/rlm_eap/libeap/all.mk	2016-09-19 13:47:12.555952109 +0200
+@@ -8,3 +8,5 @@
+ SRC_CFLAGS	:= -DEAPLIB
+ 
+ SRC_INCDIRS	:= . ..
++
++TGT_PREREQS += libfreeradius-radius.a
+diff -Naurw freeradius-server-3.0.11-orig/src/modules/rlm_eap/types/rlm_eap_ikev2/configure freeradius-server-3.0.11/src/modules/rlm_eap/types/rlm_eap_ikev2/configure
+--- freeradius-server-3.0.11-orig/src/modules/rlm_eap/types/rlm_eap_ikev2/configure	2016-01-25 19:27:03.000000000 +0100
++++ freeradius-server-3.0.11/src/modules/rlm_eap/types/rlm_eap_ikev2/configure	2016-09-19 13:48:41.439766489 +0200
+@@ -2667,7 +2667,7 @@
+   for try in $_smart_try_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for EAPIKEv2/connector.h in $try" >&5
+ $as_echo_n "checking for EAPIKEv2/connector.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -2682,7 +2682,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -2718,7 +2718,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem ${_prefix}/"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -2829,7 +2829,7 @@
+   for try in $_smart_include_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for EAPIKEv2/connector.h in $try" >&5
+ $as_echo_n "checking for EAPIKEv2/connector.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -2844,7 +2844,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+diff -Naurw freeradius-server-3.0.11-orig/src/modules/rlm_eap/types/rlm_eap_pwd/configure freeradius-server-3.0.11/src/modules/rlm_eap/types/rlm_eap_pwd/configure
+--- freeradius-server-3.0.11-orig/src/modules/rlm_eap/types/rlm_eap_pwd/configure	2016-01-25 19:27:03.000000000 +0100
++++ freeradius-server-3.0.11/src/modules/rlm_eap/types/rlm_eap_pwd/configure	2016-09-19 13:48:41.451766329 +0200
+@@ -2707,7 +2707,7 @@
+   for try in $_smart_try_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for openssl/ec.h in $try" >&5
+ $as_echo_n "checking for openssl/ec.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -2722,7 +2722,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -2758,7 +2758,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem ${_prefix}/"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -2869,7 +2869,7 @@
+   for try in $_smart_include_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for openssl/ec.h in $try" >&5
+ $as_echo_n "checking for openssl/ec.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -2884,7 +2884,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+diff -Naurw freeradius-server-3.0.11-orig/src/modules/rlm_eap/types/rlm_eap_tnc/configure freeradius-server-3.0.11/src/modules/rlm_eap/types/rlm_eap_tnc/configure
+--- freeradius-server-3.0.11-orig/src/modules/rlm_eap/types/rlm_eap_tnc/configure	2016-01-25 19:27:03.000000000 +0100
++++ freeradius-server-3.0.11/src/modules/rlm_eap/types/rlm_eap_tnc/configure	2016-09-19 13:48:41.469766087 +0200
+@@ -2654,7 +2654,7 @@
+   for try in $_smart_try_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for naaeap/naaeap.h in $try" >&5
+ $as_echo_n "checking for naaeap/naaeap.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -2669,7 +2669,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -2705,7 +2705,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem ${_prefix}/"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -2816,7 +2816,7 @@
+   for try in $_smart_include_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for naaeap/naaeap.h in $try" >&5
+ $as_echo_n "checking for naaeap/naaeap.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -2831,7 +2831,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+diff -Naurw freeradius-server-3.0.11-orig/src/modules/rlm_example/configure freeradius-server-3.0.11/src/modules/rlm_example/configure
+--- freeradius-server-3.0.11-orig/src/modules/rlm_example/configure	2016-01-25 19:27:03.000000000 +0100
++++ freeradius-server-3.0.11/src/modules/rlm_example/configure	2016-09-19 13:48:31.342901802 +0200
+@@ -2946,7 +2946,7 @@
+   for try in $_smart_try_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for stdio.h in $try" >&5
+ $as_echo_n "checking for stdio.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -2961,7 +2961,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -2997,7 +2997,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem ${_prefix}/"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -3108,7 +3108,7 @@
+   for try in $_smart_include_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for stdio.h in $try" >&5
+ $as_echo_n "checking for stdio.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -3123,7 +3123,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+diff -Naurw freeradius-server-3.0.11-orig/src/modules/rlm_idn/configure freeradius-server-3.0.11/src/modules/rlm_idn/configure
+--- freeradius-server-3.0.11-orig/src/modules/rlm_idn/configure	2016-01-25 19:27:03.000000000 +0100
++++ freeradius-server-3.0.11/src/modules/rlm_idn/configure	2016-09-19 13:48:31.352901668 +0200
+@@ -2947,7 +2947,7 @@
+   for try in $_smart_try_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for idna.h in $try" >&5
+ $as_echo_n "checking for idna.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -2962,7 +2962,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -2998,7 +2998,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem ${_prefix}/"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -3109,7 +3109,7 @@
+   for try in $_smart_include_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for idna.h in $try" >&5
+ $as_echo_n "checking for idna.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -3124,7 +3124,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+diff -Naurw freeradius-server-3.0.11-orig/src/modules/rlm_ippool/configure freeradius-server-3.0.11/src/modules/rlm_ippool/configure
+--- freeradius-server-3.0.11-orig/src/modules/rlm_ippool/configure	2016-01-25 19:27:03.000000000 +0100
++++ freeradius-server-3.0.11/src/modules/rlm_ippool/configure	2016-09-19 13:48:31.363901520 +0200
+@@ -2841,7 +2841,7 @@
+   for try in $_smart_try_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for gdbm.h in $try" >&5
+ $as_echo_n "checking for gdbm.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -2856,7 +2856,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -2892,7 +2892,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem ${_prefix}/"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -3003,7 +3003,7 @@
+   for try in $_smart_include_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for gdbm.h in $try" >&5
+ $as_echo_n "checking for gdbm.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -3018,7 +3018,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+diff -Naurw freeradius-server-3.0.11-orig/src/modules/rlm_krb5/configure freeradius-server-3.0.11/src/modules/rlm_krb5/configure
+--- freeradius-server-3.0.11-orig/src/modules/rlm_krb5/configure	2016-01-25 19:27:03.000000000 +0100
++++ freeradius-server-3.0.11/src/modules/rlm_krb5/configure	2016-09-19 13:48:31.375901359 +0200
+@@ -2989,7 +2989,7 @@
+   for try in $_smart_try_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for krb5.h in $try" >&5
+ $as_echo_n "checking for krb5.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -3004,7 +3004,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -3040,7 +3040,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem ${_prefix}/"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -3151,7 +3151,7 @@
+   for try in $_smart_include_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for krb5.h in $try" >&5
+ $as_echo_n "checking for krb5.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -3166,7 +3166,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -4359,7 +4359,7 @@
+   for try in $_smart_try_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for com_err.h in $try" >&5
+ $as_echo_n "checking for com_err.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -4374,7 +4374,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -4410,7 +4410,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem ${_prefix}/"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -4521,7 +4521,7 @@
+   for try in $_smart_include_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for com_err.h in $try" >&5
+ $as_echo_n "checking for com_err.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -4536,7 +4536,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -4586,7 +4586,7 @@
+   for try in $_smart_try_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for et/com_err.h in $try" >&5
+ $as_echo_n "checking for et/com_err.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -4601,7 +4601,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -4637,7 +4637,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem ${_prefix}/"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -4748,7 +4748,7 @@
+   for try in $_smart_include_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for et/com_err.h in $try" >&5
+ $as_echo_n "checking for et/com_err.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -4763,7 +4763,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+diff -Naurw freeradius-server-3.0.11-orig/src/modules/rlm_ldap/configure freeradius-server-3.0.11/src/modules/rlm_ldap/configure
+--- freeradius-server-3.0.11-orig/src/modules/rlm_ldap/configure	2016-01-25 19:27:03.000000000 +0100
++++ freeradius-server-3.0.11/src/modules/rlm_ldap/configure	2016-09-19 13:48:31.384901239 +0200
+@@ -2891,7 +2891,7 @@
+   for try in $_smart_try_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for ldap.h in $try" >&5
+ $as_echo_n "checking for ldap.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -2906,7 +2906,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -2942,7 +2942,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem ${_prefix}/"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -3053,7 +3053,7 @@
+   for try in $_smart_include_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for ldap.h in $try" >&5
+ $as_echo_n "checking for ldap.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -3068,7 +3068,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -3177,7 +3177,7 @@
+   for try in $_smart_try_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for sasl/sasl.h in $try" >&5
+ $as_echo_n "checking for sasl/sasl.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -3192,7 +3192,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -3228,7 +3228,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem ${_prefix}/"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -3339,7 +3339,7 @@
+   for try in $_smart_include_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for sasl/sasl.h in $try" >&5
+ $as_echo_n "checking for sasl/sasl.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -3354,7 +3354,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+diff -Naurw freeradius-server-3.0.11-orig/src/modules/rlm_mschap/configure freeradius-server-3.0.11/src/modules/rlm_mschap/configure
+--- freeradius-server-3.0.11-orig/src/modules/rlm_mschap/configure	2016-01-25 19:27:03.000000000 +0100
++++ freeradius-server-3.0.11/src/modules/rlm_mschap/configure	2016-09-19 13:48:31.394901105 +0200
+@@ -2818,7 +2818,7 @@
+ ac_safe=`echo "membership.h" | sed 'y%./+-%__pm%'`
+ old_CPPFLAGS="$CPPFLAGS"
+ smart_include=
+-smart_include_dir="/usr/local/include /opt/include"
++smart_include_dir=""
+ 
+ _smart_try_dir=
+ _smart_include_dir=
+@@ -2837,7 +2837,7 @@
+   for try in $_smart_try_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for membership.h in $try" >&5
+ $as_echo_n "checking for membership.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS="$old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -2852,7 +2852,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -2888,7 +2888,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem ${_prefix}/"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -2999,7 +2999,7 @@
+   for try in $_smart_include_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for membership.h in $try" >&5
+ $as_echo_n "checking for membership.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS="$old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -3014,7 +3014,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -3053,7 +3053,7 @@
+ ac_safe=`echo "wbclient.h" | sed 'y%./+-%__pm%'`
+ old_CPPFLAGS="$CPPFLAGS"
+ smart_include=
+-smart_include_dir="/usr/local/include /opt/include"
++smart_include_dir=""
+ 
+ _smart_try_dir=
+ _smart_include_dir=
+@@ -3072,7 +3072,7 @@
+   for try in $_smart_try_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for wbclient.h in $try" >&5
+ $as_echo_n "checking for wbclient.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS="$old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ #include <stdint.h>
+@@ -3088,7 +3088,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -3125,7 +3125,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem ${_prefix}/"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -3237,7 +3237,7 @@
+   for try in $_smart_include_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for wbclient.h in $try" >&5
+ $as_echo_n "checking for wbclient.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS="$old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ #include <stdint.h>
+@@ -3253,7 +3253,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -3420,7 +3420,7 @@
+ eval "smart_lib_dir=\"\$smart_lib_dir $DIRS\""
+ 
+ 
+-  for try in $smart_lib_dir /usr/local/lib /opt/lib; do
++  for try in $smart_lib_dir ; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for wbcCtxAuthenticateUserEx in -lwbclient in $try" >&5
+ $as_echo_n "checking for wbcCtxAuthenticateUserEx in -lwbclient in $try... " >&6; }
+     LIBS="-lwbclient $old_LIBS"
+diff -Naurw freeradius-server-3.0.11-orig/src/modules/rlm_mschap/configure.ac freeradius-server-3.0.11/src/modules/rlm_mschap/configure.ac
+--- freeradius-server-3.0.11-orig/src/modules/rlm_mschap/configure.ac	2016-01-25 19:27:03.000000000 +0100
++++ freeradius-server-3.0.11/src/modules/rlm_mschap/configure.ac	2016-09-19 13:47:12.565951976 +0200
+@@ -65,7 +65,7 @@
+     dnl ############################################################
+ 
+     mschap_sources=
+-    FR_SMART_CHECK_INCLUDE(membership.h)
++    dnl FR_SMART_CHECK_INCLUDE(membership.h)
+     if test "x$ac_cv_header_membership_h" = "xyes"; then
+         AC_DEFINE([HAVE_MEMBERSHIP_H],[1],[Build with Apple Open Directory support])
+         mschap_sources="$mschap_sources opendir.c"
+@@ -73,8 +73,8 @@
+     fi
+ 
+     smart_try_dir="$winbind_include_dir /usr/include/samba-4.0"
+-    FR_SMART_CHECK_INCLUDE(wbclient.h, [#include <stdint.h>
+-					#include <stdbool.h>])
++ dnl FR_SMART_CHECK_INCLUDE(wbclient.h, [#include <stdint.h>
++ dnl 				#include <stdbool.h>])
+     if test "x$ac_cv_header_wbclient_h" != "xyes"; then
+         AC_MSG_WARN([wbclient.h not found. Use --with-winbind-include-dir=<path>.])
+         AC_MSG_WARN([silently building without support for direct authentication via winbind. requires: libwbclient])
+diff -Naurw freeradius-server-3.0.11-orig/src/modules/rlm_opendirectory/configure freeradius-server-3.0.11/src/modules/rlm_opendirectory/configure
+--- freeradius-server-3.0.11-orig/src/modules/rlm_opendirectory/configure	2016-01-25 19:27:03.000000000 +0100
++++ freeradius-server-3.0.11/src/modules/rlm_opendirectory/configure	2016-09-19 13:48:31.403900984 +0200
+@@ -2771,7 +2771,7 @@
+   for try in $_smart_try_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for membership.h in $try" >&5
+ $as_echo_n "checking for membership.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -2786,7 +2786,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -2822,7 +2822,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem ${_prefix}/"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -2933,7 +2933,7 @@
+   for try in $_smart_include_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for membership.h in $try" >&5
+ $as_echo_n "checking for membership.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -2948,7 +2948,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+diff -Naurw freeradius-server-3.0.11-orig/src/modules/rlm_perl/configure freeradius-server-3.0.11/src/modules/rlm_perl/configure
+--- freeradius-server-3.0.11-orig/src/modules/rlm_perl/configure	2016-01-25 19:27:03.000000000 +0100
++++ freeradius-server-3.0.11/src/modules/rlm_perl/configure	2016-09-19 13:48:31.420900756 +0200
+@@ -2987,7 +2987,7 @@
+   for try in $_smart_try_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for EXTERN.h in $try" >&5
+ $as_echo_n "checking for EXTERN.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -3002,7 +3002,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -3038,7 +3038,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem ${_prefix}/"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -3149,7 +3149,7 @@
+   for try in $_smart_include_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for EXTERN.h in $try" >&5
+ $as_echo_n "checking for EXTERN.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -3164,7 +3164,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -3218,7 +3218,7 @@
+   for try in $_smart_try_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for perl.h in $try" >&5
+ $as_echo_n "checking for perl.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ #include <EXTERN.h>
+@@ -3233,7 +3233,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -3269,7 +3269,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem ${_prefix}/"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -3380,7 +3380,7 @@
+   for try in $_smart_include_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for perl.h in $try" >&5
+ $as_echo_n "checking for perl.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ #include <EXTERN.h>
+@@ -3395,7 +3395,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+diff -Naurw freeradius-server-3.0.11-orig/src/modules/rlm_python/configure freeradius-server-3.0.11/src/modules/rlm_python/configure
+--- freeradius-server-3.0.11-orig/src/modules/rlm_python/configure	2016-01-25 19:27:03.000000000 +0100
++++ freeradius-server-3.0.11/src/modules/rlm_python/configure	2016-09-19 13:48:31.427900663 +0200
+@@ -2883,7 +2883,7 @@
+   for try in $_smart_try_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for Python.h in $try" >&5
+ $as_echo_n "checking for Python.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -2898,7 +2898,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -2934,7 +2934,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem ${_prefix}/"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -3045,7 +3045,7 @@
+   for try in $_smart_include_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for Python.h in $try" >&5
+ $as_echo_n "checking for Python.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -3060,7 +3060,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+diff -Naurw freeradius-server-3.0.11-orig/src/modules/rlm_realm/configure freeradius-server-3.0.11/src/modules/rlm_realm/configure
+--- freeradius-server-3.0.11-orig/src/modules/rlm_realm/configure	2016-01-25 19:27:03.000000000 +0100
++++ freeradius-server-3.0.11/src/modules/rlm_realm/configure	2016-09-19 13:48:31.442900462 +0200
+@@ -2943,7 +2943,7 @@
+   for try in $_smart_try_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for trust_router/tr_dh.h in $try" >&5
+ $as_echo_n "checking for trust_router/tr_dh.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -2958,7 +2958,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -2994,7 +2994,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem ${_prefix}/"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -3105,7 +3105,7 @@
+   for try in $_smart_include_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for trust_router/tr_dh.h in $try" >&5
+ $as_echo_n "checking for trust_router/tr_dh.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -3120,7 +3120,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+diff -Naurw freeradius-server-3.0.11-orig/src/modules/rlm_redis/configure freeradius-server-3.0.11/src/modules/rlm_redis/configure
+--- freeradius-server-3.0.11-orig/src/modules/rlm_redis/configure	2016-01-25 19:27:03.000000000 +0100
++++ freeradius-server-3.0.11/src/modules/rlm_redis/configure	2016-09-19 13:48:31.449900368 +0200
+@@ -2662,7 +2662,7 @@
+   for try in $_smart_try_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for hiredis/hiredis.h in $try" >&5
+ $as_echo_n "checking for hiredis/hiredis.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -2677,7 +2677,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -2713,7 +2713,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem ${_prefix}/"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -2824,7 +2824,7 @@
+   for try in $_smart_include_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for hiredis/hiredis.h in $try" >&5
+ $as_echo_n "checking for hiredis/hiredis.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -2839,7 +2839,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+diff -Naurw freeradius-server-3.0.11-orig/src/modules/rlm_rediswho/configure freeradius-server-3.0.11/src/modules/rlm_rediswho/configure
+--- freeradius-server-3.0.11-orig/src/modules/rlm_rediswho/configure	2016-01-25 19:27:03.000000000 +0100
++++ freeradius-server-3.0.11/src/modules/rlm_rediswho/configure	2016-09-19 13:48:31.455900287 +0200
+@@ -2662,7 +2662,7 @@
+   for try in $_smart_try_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for hiredis/hiredis.h in $try" >&5
+ $as_echo_n "checking for hiredis/hiredis.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -2677,7 +2677,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -2713,7 +2713,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem ${_prefix}/"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -2824,7 +2824,7 @@
+   for try in $_smart_include_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for hiredis/hiredis.h in $try" >&5
+ $as_echo_n "checking for hiredis/hiredis.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -2839,7 +2839,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+diff -Naurw freeradius-server-3.0.11-orig/src/modules/rlm_rest/configure freeradius-server-3.0.11/src/modules/rlm_rest/configure
+--- freeradius-server-3.0.11-orig/src/modules/rlm_rest/configure	2016-01-25 19:27:03.000000000 +0100
++++ freeradius-server-3.0.11/src/modules/rlm_rest/configure	2016-09-19 13:48:31.463900180 +0200
+@@ -3359,7 +3359,7 @@
+   for try in $_smart_try_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for json/json.h in $try" >&5
+ $as_echo_n "checking for json/json.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -3374,7 +3374,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -3410,7 +3410,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem ${_prefix}/"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -3521,7 +3521,7 @@
+   for try in $_smart_include_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for json/json.h in $try" >&5
+ $as_echo_n "checking for json/json.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -3536,7 +3536,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -3586,7 +3586,7 @@
+   for try in $_smart_try_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for json-c/json.h in $try" >&5
+ $as_echo_n "checking for json-c/json.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -3601,7 +3601,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -3637,7 +3637,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem ${_prefix}/"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -3748,7 +3748,7 @@
+   for try in $_smart_include_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for json-c/json.h in $try" >&5
+ $as_echo_n "checking for json-c/json.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -3763,7 +3763,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+diff -Naurw freeradius-server-3.0.11-orig/src/modules/rlm_securid/configure freeradius-server-3.0.11/src/modules/rlm_securid/configure
+--- freeradius-server-3.0.11-orig/src/modules/rlm_securid/configure	2016-01-25 19:27:03.000000000 +0100
++++ freeradius-server-3.0.11/src/modules/rlm_securid/configure	2016-09-19 13:48:31.477899993 +0200
+@@ -2661,7 +2661,7 @@
+   for try in $_smart_try_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for acexport.h in $try" >&5
+ $as_echo_n "checking for acexport.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -2676,7 +2676,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -2712,7 +2712,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem ${_prefix}/"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -2823,7 +2823,7 @@
+   for try in $_smart_include_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for acexport.h in $try" >&5
+ $as_echo_n "checking for acexport.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -2838,7 +2838,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+diff -Naurw freeradius-server-3.0.11-orig/src/modules/rlm_sql/drivers/rlm_sql_db2/configure freeradius-server-3.0.11/src/modules/rlm_sql/drivers/rlm_sql_db2/configure
+--- freeradius-server-3.0.11-orig/src/modules/rlm_sql/drivers/rlm_sql_db2/configure	2016-01-25 19:27:03.000000000 +0100
++++ freeradius-server-3.0.11/src/modules/rlm_sql/drivers/rlm_sql_db2/configure	2016-09-19 13:48:41.479765954 +0200
+@@ -2837,7 +2837,7 @@
+   for try in $_smart_try_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for sqlcli.h in $try" >&5
+ $as_echo_n "checking for sqlcli.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -2852,7 +2852,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -2888,7 +2888,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem ${_prefix}/"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -2999,7 +2999,7 @@
+   for try in $_smart_include_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for sqlcli.h in $try" >&5
+ $as_echo_n "checking for sqlcli.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -3014,7 +3014,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+diff -Naurw freeradius-server-3.0.11-orig/src/modules/rlm_sql/drivers/rlm_sql_firebird/configure freeradius-server-3.0.11/src/modules/rlm_sql/drivers/rlm_sql_firebird/configure
+--- freeradius-server-3.0.11-orig/src/modules/rlm_sql/drivers/rlm_sql_firebird/configure	2016-01-25 19:27:03.000000000 +0100
++++ freeradius-server-3.0.11/src/modules/rlm_sql/drivers/rlm_sql_firebird/configure	2016-09-19 13:48:41.489765819 +0200
+@@ -2836,7 +2836,7 @@
+   for try in $_smart_try_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for ibase.h in $try" >&5
+ $as_echo_n "checking for ibase.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -2851,7 +2851,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -2887,7 +2887,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem ${_prefix}/"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -2998,7 +2998,7 @@
+   for try in $_smart_include_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for ibase.h in $try" >&5
+ $as_echo_n "checking for ibase.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -3013,7 +3013,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+diff -Naurw freeradius-server-3.0.11-orig/src/modules/rlm_sql/drivers/rlm_sql_freetds/configure freeradius-server-3.0.11/src/modules/rlm_sql/drivers/rlm_sql_freetds/configure
+--- freeradius-server-3.0.11-orig/src/modules/rlm_sql/drivers/rlm_sql_freetds/configure	2016-01-25 19:27:03.000000000 +0100
++++ freeradius-server-3.0.11/src/modules/rlm_sql/drivers/rlm_sql_freetds/configure	2016-09-19 13:48:41.498765699 +0200
+@@ -2660,7 +2660,7 @@
+   for try in $_smart_try_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for ctpublic.h in $try" >&5
+ $as_echo_n "checking for ctpublic.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -2675,7 +2675,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -2711,7 +2711,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem ${_prefix}/"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -2822,7 +2822,7 @@
+   for try in $_smart_include_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for ctpublic.h in $try" >&5
+ $as_echo_n "checking for ctpublic.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -2837,7 +2837,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+diff -Naurw freeradius-server-3.0.11-orig/src/modules/rlm_sql/drivers/rlm_sql_iodbc/configure freeradius-server-3.0.11/src/modules/rlm_sql/drivers/rlm_sql_iodbc/configure
+--- freeradius-server-3.0.11-orig/src/modules/rlm_sql/drivers/rlm_sql_iodbc/configure	2016-01-25 19:27:03.000000000 +0100
++++ freeradius-server-3.0.11/src/modules/rlm_sql/drivers/rlm_sql_iodbc/configure	2016-09-19 13:48:41.507765578 +0200
+@@ -2837,7 +2837,7 @@
+   for try in $_smart_try_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for isql.h in $try" >&5
+ $as_echo_n "checking for isql.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -2852,7 +2852,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -2888,7 +2888,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem ${_prefix}/"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -2999,7 +2999,7 @@
+   for try in $_smart_include_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for isql.h in $try" >&5
+ $as_echo_n "checking for isql.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -3014,7 +3014,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+diff -Naurw freeradius-server-3.0.11-orig/src/modules/rlm_sql/drivers/rlm_sql_mysql/configure freeradius-server-3.0.11/src/modules/rlm_sql/drivers/rlm_sql_mysql/configure
+--- freeradius-server-3.0.11-orig/src/modules/rlm_sql/drivers/rlm_sql_mysql/configure	2016-01-25 19:27:03.000000000 +0100
++++ freeradius-server-3.0.11/src/modules/rlm_sql/drivers/rlm_sql_mysql/configure	2016-09-19 13:48:41.516765458 +0200
+@@ -3242,7 +3242,7 @@
+   for try in $_smart_try_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for mysql/mysql.h in $try" >&5
+ $as_echo_n "checking for mysql/mysql.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -3257,7 +3257,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -3293,7 +3293,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem ${_prefix}/"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -3404,7 +3404,7 @@
+   for try in $_smart_include_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for mysql/mysql.h in $try" >&5
+ $as_echo_n "checking for mysql/mysql.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -3419,7 +3419,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+diff -Naurw freeradius-server-3.0.11-orig/src/modules/rlm_sql/drivers/rlm_sql_oracle/configure freeradius-server-3.0.11/src/modules/rlm_sql/drivers/rlm_sql_oracle/configure
+--- freeradius-server-3.0.11-orig/src/modules/rlm_sql/drivers/rlm_sql_oracle/configure	2016-01-25 19:27:03.000000000 +0100
++++ freeradius-server-3.0.11/src/modules/rlm_sql/drivers/rlm_sql_oracle/configure	2016-09-19 13:48:41.524765350 +0200
+@@ -2665,7 +2665,7 @@
+   for try in $_smart_try_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for oci.h in $try" >&5
+ $as_echo_n "checking for oci.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -2680,7 +2680,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -2716,7 +2716,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem ${_prefix}/"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -2827,7 +2827,7 @@
+   for try in $_smart_include_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for oci.h in $try" >&5
+ $as_echo_n "checking for oci.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -2842,7 +2842,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+diff -Naurw freeradius-server-3.0.11-orig/src/modules/rlm_sql/drivers/rlm_sql_postgresql/configure freeradius-server-3.0.11/src/modules/rlm_sql/drivers/rlm_sql_postgresql/configure
+--- freeradius-server-3.0.11-orig/src/modules/rlm_sql/drivers/rlm_sql_postgresql/configure	2016-01-25 19:27:03.000000000 +0100
++++ freeradius-server-3.0.11/src/modules/rlm_sql/drivers/rlm_sql_postgresql/configure	2016-09-19 13:48:41.533765230 +0200
+@@ -2707,7 +2707,7 @@
+   for try in $_smart_try_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for libpq-fe.h in $try" >&5
+ $as_echo_n "checking for libpq-fe.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -2722,7 +2722,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -2758,7 +2758,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem ${_prefix}/"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -2869,7 +2869,7 @@
+   for try in $_smart_include_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for libpq-fe.h in $try" >&5
+ $as_echo_n "checking for libpq-fe.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -2884,7 +2884,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+diff -Naurw freeradius-server-3.0.11-orig/src/modules/rlm_sql/drivers/rlm_sql_sqlite/configure freeradius-server-3.0.11/src/modules/rlm_sql/drivers/rlm_sql_sqlite/configure
+--- freeradius-server-3.0.11-orig/src/modules/rlm_sql/drivers/rlm_sql_sqlite/configure	2016-01-25 19:27:03.000000000 +0100
++++ freeradius-server-3.0.11/src/modules/rlm_sql/drivers/rlm_sql_sqlite/configure	2016-09-19 13:48:41.541765123 +0200
+@@ -2986,7 +2986,7 @@
+   for try in $_smart_try_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for sqlite3.h in $try" >&5
+ $as_echo_n "checking for sqlite3.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -3001,7 +3001,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -3037,7 +3037,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem ${_prefix}/"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -3148,7 +3148,7 @@
+   for try in $_smart_include_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for sqlite3.h in $try" >&5
+ $as_echo_n "checking for sqlite3.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -3163,7 +3163,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+diff -Naurw freeradius-server-3.0.11-orig/src/modules/rlm_sql/drivers/rlm_sql_unixodbc/configure freeradius-server-3.0.11/src/modules/rlm_sql/drivers/rlm_sql_unixodbc/configure
+--- freeradius-server-3.0.11-orig/src/modules/rlm_sql/drivers/rlm_sql_unixodbc/configure	2016-01-25 19:27:03.000000000 +0100
++++ freeradius-server-3.0.11/src/modules/rlm_sql/drivers/rlm_sql_unixodbc/configure	2016-09-19 13:48:41.548765029 +0200
+@@ -2837,7 +2837,7 @@
+   for try in $_smart_try_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for sql.h in $try" >&5
+ $as_echo_n "checking for sql.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -2852,7 +2852,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -2888,7 +2888,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem ${_prefix}/"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -2999,7 +2999,7 @@
+   for try in $_smart_include_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for sql.h in $try" >&5
+ $as_echo_n "checking for sql.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -3014,7 +3014,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+diff -Naurw freeradius-server-3.0.11-orig/src/modules/rlm_unbound/configure freeradius-server-3.0.11/src/modules/rlm_unbound/configure
+--- freeradius-server-3.0.11-orig/src/modules/rlm_unbound/configure	2016-01-25 19:27:03.000000000 +0100
++++ freeradius-server-3.0.11/src/modules/rlm_unbound/configure	2016-09-19 13:48:31.509899564 +0200
+@@ -2814,7 +2814,7 @@
+   for try in $_smart_try_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for unbound.h in $try" >&5
+ $as_echo_n "checking for unbound.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -2829,7 +2829,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -2865,7 +2865,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem ${_prefix}/"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -2976,7 +2976,7 @@
+   for try in $_smart_include_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for unbound.h in $try" >&5
+ $as_echo_n "checking for unbound.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -2991,7 +2991,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+diff -Naurw freeradius-server-3.0.11-orig/src/modules/rlm_yubikey/configure freeradius-server-3.0.11/src/modules/rlm_yubikey/configure
+--- freeradius-server-3.0.11-orig/src/modules/rlm_yubikey/configure	2016-01-25 19:27:03.000000000 +0100
++++ freeradius-server-3.0.11/src/modules/rlm_yubikey/configure	2016-09-19 13:48:31.522899389 +0200
+@@ -2718,7 +2718,7 @@
+   for try in $_smart_try_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for yubikey.h in $try" >&5
+ $as_echo_n "checking for yubikey.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -2733,7 +2733,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -2769,7 +2769,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem ${_prefix}/"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -2880,7 +2880,7 @@
+   for try in $_smart_include_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for yubikey.h in $try" >&5
+ $as_echo_n "checking for yubikey.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -2895,7 +2895,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -3144,7 +3144,7 @@
+   for try in $_smart_try_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for ykclient.h in $try" >&5
+ $as_echo_n "checking for ykclient.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -3159,7 +3159,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -3195,7 +3195,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem ${_prefix}/"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
+@@ -3306,7 +3306,7 @@
+   for try in $_smart_include_dir; do
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for ykclient.h in $try" >&5
+ $as_echo_n "checking for ykclient.h in $try... " >&6; }
+-    CPPFLAGS="-isystem $try $old_CPPFLAGS"
++    CPPFLAGS=" $old_CPPFLAGS"
+     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -3321,7 +3321,7 @@
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+ 
+-		     smart_include="-isystem $try"
++		     smart_include=""
+ 		     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+ $as_echo "yes" >&6; }
+ 		     break
