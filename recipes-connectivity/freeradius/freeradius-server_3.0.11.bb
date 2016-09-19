@@ -2,7 +2,7 @@ SUMMARY = "FreeRADIUS Server"
 HOMEPAGE = "http://wiki.freeradius.org"
 LICENSE = "GPLv2"
 
-PR = "r1"
+PR = "r3"
 
 LIC_FILES_CHKSUM = "file://COPYRIGHT;md5=8271badacbbc8d1e3c62027d15cd176d"
 
@@ -44,19 +44,35 @@ do_configure_append() {
             echo "Configuring in $F..."
             (cd $F && grep "^AC_CONFIG_HEADER" configure.ac > /dev/null || exit 0; autoheader -I$parentdir)
             (cd $F && autoconf -I$parentdir)
-            # (cd $F && ./configure ${CONFIGUREOPTS} ${EXTRA_OECONF} )
+            (cd $F && ./configure ${CONFIGUREOPTS} ${EXTRA_OECONF} )
     done
+
 }
 
 do_install_append() {
 	install -d ${D}/${datadir}
 	install -d ${D}/${datadir}/freeradius
 	cp ${B}/share/dict* ${D}${datadir}/freeradius
+
+	install -d ${D}/${sysconfdir}
+	install -d ${D}/${sysconfdir}/freeradius
+	cp -a ${B}/raddb/* ${D}${sysconfdir}/freeradius
+	rm ${D}${sysconfdir}/freeradius/*.conf.in
+	rm ${D}${sysconfdir}/freeradius/all.mk
 }
 
 FILES_${PN} += "${datadir}"
 FILES_${PN} += "${libdir}/freeradius"
+FILES_${PN} += "${sysconfdir}/freeradius"
 FILES_${PN}-staticdev += "${libdir}/freeradius/*.a"
 FILES_${PN}-dbg += "${libdir}/freeradius/.debug"
+
+CONFFILES_${PN} += "${sysconfdir}/freeradius/dictionary"
+CONFFILES_${PN} += "${sysconfdir}/freeradius/sites-available/*"
+CONFFILES_${PN} += "${sysconfdir}/freeradius/policy.d/*"
+CONFFILES_${PN} += "${sysconfdir}/freeradius/mods-available/*"
+CONFFILES_${PN} += "${sysconfdir}/freeradius/mods-config/*"
+CONFFILES_${PN} += "${sysconfdir}/freeradius/*.conf"
+CONFFILES_${PN} += "${sysconfdir}/freeradius/certs/*.cnf"
 
 inherit autotools-brokensep systemd
