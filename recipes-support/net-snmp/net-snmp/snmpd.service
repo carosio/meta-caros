@@ -5,7 +5,8 @@ After=syslog.target network.target
 [Service]
 Environment=OPTIONS="-LS0-6d" SNMP_NETNS=1
 EnvironmentFile=-/etc/default/snmpd
-ExecStart=/usr/sbin/snmpd $OPTIONS -f
+EnvironmentFile=-/etc/snmp/env-snmpd
+ExecStart=/usr/sbin/snmpd $OPTIONS -f $SNMPD_LISTENING_ADDRESSES
 ExecReload=/bin/kill -HUP $MAINPID
 
 [Install]
