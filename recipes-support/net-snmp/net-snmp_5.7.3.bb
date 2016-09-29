@@ -19,6 +19,7 @@ SRC_URI = "${SOURCEFORGE_MIRROR}/net-snmp/net-snmp-${PV}.zip \
         file://fix-request-id-0.patch \
         file://remove-build-host-includes.patch \
         file://environmentfile \
+        file://environmentfile_trapd \
 	file://fix-libnl-include-headers-detection.patch"
 
 SRC_URI[md5sum] = "9f682bd70c717efdd9f15b686d07baee"
@@ -71,6 +72,7 @@ do_install_append() {
     install -m 0644 ${WORKDIR}/snmpd.service ${D}${systemd_unitdir}/system
     install -m 0644 ${WORKDIR}/snmptrapd.service ${D}${systemd_unitdir}/system
     install -m 0644 ${WORKDIR}/environmentfile ${D}${sysconfdir}/default/snmpd
+    install -m 0644 ${WORKDIR}/environmentfile_trapd ${D}${sysconfdir}/default/snmptrapd
 }
 
 SYSROOT_PREPROCESS_FUNCS += "net_snmp_sysroot_preprocess"
@@ -99,6 +101,7 @@ FILES_${PN}-server-snmpd = "${sbindir}/snmpd \
 
 FILES_${PN}-server-snmptrapd = "${sbindir}/snmptrapd \
                                 ${sysconfdir}/snmp/snmptrapd.conf \
+                                ${sysconfdir}/default/snmptrapd \
                                 ${systemd_unitdir}/system/snmptrapd.service \
 "
 
@@ -109,7 +112,9 @@ FILES_${PN}-dev += "${bindir}/net-snmp-config ${bindir}/mib2c ${bindir}/mib2c-up
 CONFFILES_${PN}-server-snmpd = "${sysconfdir}/snmp/snmpd.conf \
                                 ${sysconfdir}/default/snmpd \
 "
-CONFFILES_${PN}-server-snmptrapd = "${sysconfdir}/snmp/snmptrapd.conf"
+CONFFILES_${PN}-server-snmptrapd = "${sysconfdir}/snmp/snmptrapd.conf \
+                                    ${sysconfdir}/default/snmptrapd \
+"
 
 INITSCRIPT_PACKAGES = "${PN}-server"
 INITSCRIPT_NAME_${PN}-server = "snmpd"
