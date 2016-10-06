@@ -3,6 +3,8 @@
 #
 # APP_PREFIX              (default is "/opt/apps")
 # APPNAME                 (default is "${PN}")
+# APPUSER                 (default is "carosapp")
+# APPGROUP                (default is "carosapp")
 # APPVERSION              (default is "${PV}")
 # APP_CONTROL             (default is "/usr/caros-apps/libexec/appctl.sh")
 # CAROS_APP_SERVICE_${PN} (default is " ")
@@ -10,11 +12,18 @@
 
 inherit systemd
 
-RDEPENDS_${PN} += " app-mgmt "
+RDEPENDS_${PN} += " app-mgmt carosapp "
+DEPENDS_${PN} += " carosapp "
 
 APPNAME ??= "${PN}"
 APPVERSION ??= "${PV}"
 APP_PREFIX ??= "/opt/apps"
+
+APPUSER ??= "carosapp"
+APPGROUP ??= "carosapp"
+
+USERNAME_carosapp ?= "${APPUSER}"
+GROUPNAME_carosapp ?= "${APPGROUP}"
 
 APP_CONTROL ?= "/usr/caros-apps/libexec/appctl.sh"
 
@@ -53,6 +62,8 @@ do_install_append() {
         sed -i "s|@@DESCRIPTION@@|${DESCRIPTION}|" ${D}${systemd_unitdir}/system/${CAROS_APP_SERVICE_${PN}};
         sed -i "s|@@SUMMARY@@|${SUMMARY}|" ${D}${systemd_unitdir}/system/${CAROS_APP_SERVICE_${PN}};
         sed -i "s|@@APPNAME@@|${APPNAME}|" ${D}${systemd_unitdir}/system/${CAROS_APP_SERVICE_${PN}};
+        sed -i "s|@@APPUSER@@|${APPUSER}|" ${D}${systemd_unitdir}/system/${CAROS_APP_SERVICE_${PN}};
+        sed -i "s|@@APPGROUP@@|${APPGROUP}|" ${D}${systemd_unitdir}/system/${CAROS_APP_SERVICE_${PN}};
         sed -i "s|@@APPVERSION@@|${APPVERSION}|" ${D}${systemd_unitdir}/system/${CAROS_APP_SERVICE_${PN}};
         sed -i "s|@@APP_PREFIX@@|${APP_PREFIX}|" ${D}${systemd_unitdir}/system/${CAROS_APP_SERVICE_${PN}};
         sed -i "s|@@APP_CONTROL@@|${APP_CONTROL}|" ${D}${systemd_unitdir}/system/${CAROS_APP_SERVICE_${PN}};
