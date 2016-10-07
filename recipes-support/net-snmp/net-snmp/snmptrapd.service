@@ -5,7 +5,8 @@ After=syslog.target network.target
 [Service]
 Environment=OPTIONS="-Lsd"
 EnvironmentFile=-/etc/default/snmptrapd
-ExecStart=/usr/sbin/snmptrapd $OPTIONS -f
+EnvironmentFile=-/etc/snmp/env-snmptrapd
+ExecStart=/usr/sbin/snmptrapd $OPTIONS -f $SNMPTRAPD_LISTENING_ADDRESSES
 ExecReload=/bin/kill -HUP $MAINPID
 
 [Install]
