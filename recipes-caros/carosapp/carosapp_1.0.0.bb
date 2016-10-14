@@ -31,7 +31,7 @@ GROUPADD_PARAM_${PN} = "-g 301 ${GROUPNAME_${PN}}"
 
 PACKAGES = "${PN}"
 
-do_install () {
+pkg_postinst_${PN}_append () {
   groupadd -f -g 250 config
   gpasswd -a ${USERNAME_${PN}} config
 }
