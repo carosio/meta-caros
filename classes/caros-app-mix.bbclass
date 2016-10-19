@@ -83,23 +83,7 @@ do_compile() {
 
     mv $RELXCFG rel/relx.config
 
-    if [ -e rel/vm.args ]
-    then
-        # if there is a costum vm.args we just remove the node name and cookie option
-        sed -i -e 's/^[ \t]*-s\?name\>/# disabled by packageing: &/' rel/vm.args
-        sed -i -e '/-setcookie/s/^/## removed: /' rel/vm.args
-        echo "generated vm.args:"
-        echo "==============="
-        cat rel/vm.args
-        echo "==============="
-    else
-        # else there is the default vm.args which just includes the node name and cookie option
-        # hence we just put in an empty vm.args which is then used by exrm as default
-        echo "default vm.args will be overwritten by an empty vm.args"
-        touch rel/vm.args
-    fi
-
-    mix do deps.compile, compile, release
+    mix do deps.compile, compile, release --no-confirm-missing
 }
 
 do_install() {
