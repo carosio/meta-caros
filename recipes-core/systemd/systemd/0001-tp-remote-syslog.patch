@@ -1,23 +1,23 @@
-From b25ace7f70786bce4b75909047c574053e02e17b Mon Sep 17 00:00:00 2001
+From d516f2e75367c5be55452238e871162c1c3dd757 Mon Sep 17 00:00:00 2001
 From: Tobias Hintze <thintze+git@tpip.net>
-Date: Thu, 7 Jan 2016 15:09:44 +0100
+Date: Thu, 27 Oct 2016 19:24:50 +0200
 Subject: [PATCH] native rfc5424 syslog forwarding per udp
 
 ---
  src/journal/journald-gperf.gperf |   2 +
  src/journal/journald-native.c    |   2 +-
- src/journal/journald-server.c    |  64 ++++++++++++-
+ src/journal/journald-server.c    |  61 ++++++++++++
  src/journal/journald-server.h    |  12 +++
  src/journal/journald-stream.c    |   2 +-
  src/journal/journald-syslog.c    | 200 +++++++++++++++++++++++++++++++++------
  src/journal/journald-syslog.h    |  23 +++++
- 7 files changed, 271 insertions(+), 34 deletions(-)
+ 7 files changed, 269 insertions(+), 33 deletions(-)
 
 diff --git a/src/journal/journald-gperf.gperf b/src/journal/journald-gperf.gperf
-index 74554c1..3451d1a 100644
+index c154610..1bfc35e 100644
 --- a/src/journal/journald-gperf.gperf
 +++ b/src/journal/journald-gperf.gperf
-@@ -30,6 +30,8 @@ Journal.RuntimeKeepFree,    config_parse_iec_off,    0, offsetof(Server, runtime
+@@ -32,6 +32,8 @@ Journal.RuntimeMaxFiles,    config_parse_uint64,     0, offsetof(Server, runtime
  Journal.MaxRetentionSec,    config_parse_sec,        0, offsetof(Server, max_retention_usec)
  Journal.MaxFileSec,         config_parse_sec,        0, offsetof(Server, max_file_usec)
  Journal.ForwardToSyslog,    config_parse_bool,       0, offsetof(Server, forward_to_syslog)
@@ -27,10 +27,10 @@ index 74554c1..3451d1a 100644
  Journal.ForwardToConsole,   config_parse_bool,       0, offsetof(Server, forward_to_console)
  Journal.ForwardToWall,      config_parse_bool,       0, offsetof(Server, forward_to_wall)
 diff --git a/src/journal/journald-native.c b/src/journal/journald-native.c
-index da3faef..bd66b03 100644
+index 3d8f059..327525a 100644
 --- a/src/journal/journald-native.c
 +++ b/src/journal/journald-native.c
-@@ -270,7 +270,7 @@ void server_process_native_message(
+@@ -277,7 +277,7 @@ void server_process_native_message(
          }
  
          if (message) {
@@ -40,18 +40,18 @@ index da3faef..bd66b03 100644
  
                  if (s->forward_to_kmsg)
 diff --git a/src/journal/journald-server.c b/src/journal/journald-server.c
-index fa2e9b9..ce5543f 100644
+index ee2db8d..02b22fb 100644
 --- a/src/journal/journald-server.c
 +++ b/src/journal/journald-server.c
-@@ -44,6 +44,7 @@
- #include "conf-parser.h"
- #include "selinux-util.h"
+@@ -32,6 +32,7 @@
+ #include "sd-messages.h"
+ 
  #include "acl-util.h"
 +#include "in-addr-util.h"
- #include "formats-util.h"
- #include "process-util.h"
- #include "hostname-util.h"
-@@ -1316,6 +1317,12 @@ static int server_parse_proc_cmdline(Server *s) {
+ #include "alloc-util.h"
+ #include "audit-util.h"
+ #include "cgroup-util.h"
+@@ -1416,6 +1417,12 @@ static int server_parse_proc_cmdline(Server *s) {
                                  log_warning("Failed to parse forward to syslog switch %s. Ignoring.", word + 35);
                          else
                                  s->forward_to_syslog = r;
@@ -64,7 +64,7 @@ index fa2e9b9..ce5543f 100644
                  } else if (startswith(word, "systemd.journald.forward_to_kmsg=")) {
                          r = parse_boolean(word + 33);
                          if (r < 0)
-@@ -1361,6 +1368,58 @@ static int server_dispatch_sync(sd_event_source *es, usec_t t, void *userdata) {
+@@ -1461,6 +1468,58 @@ static int server_dispatch_sync(sd_event_source *es, usec_t t, void *userdata) {
          return 0;
  }
  
@@ -123,24 +123,21 @@ index fa2e9b9..ce5543f 100644
  int server_schedule_sync(Server *s, int priority) {
          int r;
  
-@@ -1457,7 +1516,10 @@ int server_init(Server *s) {
-         assert(s);
+@@ -1722,6 +1781,8 @@ int server_init(Server *s) {
  
          zero(*s);
--        s->syslog_fd = s->native_fd = s->stdout_fd = s->dev_kmsg_fd = s->audit_fd = s->hostname_fd = -1;
-+        s->syslog_fd = s->remote_syslog_fd = s->native_fd = s->stdout_fd = s->dev_kmsg_fd = s->audit_fd = s->hostname_fd = -1;
+         s->syslog_fd = s->native_fd = s->stdout_fd = s->dev_kmsg_fd = s->audit_fd = s->hostname_fd = s->notify_fd = -1;
++        s->remote_syslog_fd = -1;
 +        s->remote_syslog_dest.in.sin_addr.s_addr = INADDR_NONE;
-+
-+
          s->compress = true;
          s->seal = true;
  
 diff --git a/src/journal/journald-server.h b/src/journal/journald-server.h
-index d954c51..a131e78 100644
+index b9551dd..eb5989a 100644
 --- a/src/journal/journald-server.h
 +++ b/src/journal/journald-server.h
-@@ -31,6 +31,8 @@
- #include "journald-rate-limit.h"
+@@ -32,6 +32,8 @@ typedef struct Server Server;
+ #include "journald-stream.h"
  #include "list.h"
  
 +#include "socket-util.h"
@@ -148,15 +145,15 @@ index d954c51..a131e78 100644
  typedef enum Storage {
          STORAGE_AUTO,
          STORAGE_VOLATILE,
-@@ -52,6 +54,7 @@ typedef struct StdoutStream StdoutStream;
+@@ -51,6 +53,7 @@ typedef enum SplitMode {
  
- typedef struct Server {
+ struct Server {
          int syslog_fd;
 +        int remote_syslog_fd;
          int native_fd;
          int stdout_fd;
          int dev_kmsg_fd;
-@@ -94,9 +97,11 @@ typedef struct Server {
+@@ -97,9 +100,11 @@ struct Server {
  
          bool forward_to_kmsg;
          bool forward_to_syslog;
@@ -168,7 +165,7 @@ index d954c51..a131e78 100644
          unsigned n_forward_syslog_missed;
          usec_t last_warn_forward_syslog_missed;
  
-@@ -154,6 +159,13 @@ const struct ConfigPerfItem* journald_gperf_lookup(const char *key, unsigned len
+@@ -165,6 +170,13 @@ const struct ConfigPerfItem* journald_gperf_lookup(const char *key, unsigned len
  
  int config_parse_storage(const char *unit, const char *filename, unsigned line, const char *section, unsigned section_line, const char *lvalue, int ltype, const char *rvalue, void *data, void *userdata);
  
@@ -183,12 +180,12 @@ index d954c51..a131e78 100644
  Storage storage_from_string(const char *s) _pure_;
  
 diff --git a/src/journal/journald-stream.c b/src/journal/journald-stream.c
-index 69e2d41..e43900e 100644
+index 6e8b405..7ccb9fe 100644
 --- a/src/journal/journald-stream.c
 +++ b/src/journal/journald-stream.c
-@@ -228,7 +228,7 @@ static int stdout_stream_log(StdoutStream *s, const char *p) {
-         if (s->level_prefix)
-                 syslog_parse_priority(&p, &priority, false);
+@@ -245,7 +245,7 @@ static int stdout_stream_log(StdoutStream *s, const char *p) {
+         if (isempty(p))
+                 return 0;
  
 -        if (s->forward_to_syslog || s->server->forward_to_syslog)
 +        if (s->forward_to_syslog || s->server->forward_to_remote_syslog || s->server->forward_to_syslog)
@@ -196,20 +193,20 @@ index 69e2d41..e43900e 100644
  
          if (s->forward_to_kmsg || s->server->forward_to_kmsg)
 diff --git a/src/journal/journald-syslog.c b/src/journal/journald-syslog.c
-index ffba451..2e60bcd 100644
+index 5153fd0..19baa89 100644
 --- a/src/journal/journald-syslog.c
 +++ b/src/journal/journald-syslog.c
-@@ -22,6 +22,9 @@
- #include <unistd.h>
+@@ -19,6 +19,9 @@
+ 
  #include <stddef.h>
  #include <sys/epoll.h>
 +#include <sys/socket.h>
 +#include <netinet/in.h>
 +#include <arpa/inet.h>
+ #include <unistd.h>
  
- #include "systemd/sd-messages.h"
- #include "socket-util.h"
-@@ -111,6 +114,53 @@ static void forward_syslog_iovec(Server *s, const struct iovec *iovec, unsigned
+ #include "sd-messages.h"
+@@ -116,6 +119,53 @@ static void forward_syslog_iovec(Server *s, const struct iovec *iovec, unsigned
                  log_debug_errno(errno, "Failed to forward syslog message: %m");
  }
  
@@ -263,7 +260,7 @@ index ffba451..2e60bcd 100644
  static void forward_syslog_raw(Server *s, int priority, const char *buffer, const struct ucred *ucred, const struct timeval *tv) {
          struct iovec iovec;
  
-@@ -124,14 +174,72 @@ static void forward_syslog_raw(Server *s, int priority, const char *buffer, cons
+@@ -129,14 +179,72 @@ static void forward_syslog_raw(Server *s, int priority, const char *buffer, cons
          forward_syslog_iovec(s, &iovec, 1, ucred, tv);
  }
  
@@ -340,7 +337,7 @@ index ffba451..2e60bcd 100644
  
          assert(s);
          assert(priority >= 0);
-@@ -141,41 +249,42 @@ void server_forward_syslog(Server *s, int priority, const char *identifier, cons
+@@ -146,41 +254,42 @@ void server_forward_syslog(Server *s, int priority, const char *identifier, cons
          if (LOG_PRI(priority) > s->max_level_syslog)
                  return;
  
@@ -403,7 +400,7 @@ index ffba451..2e60bcd 100644
  
          free(ident_buf);
  }
-@@ -325,16 +434,19 @@ void server_process_syslog_message(
+@@ -330,16 +439,19 @@ void server_process_syslog_message(
          unsigned n = 0;
          int priority = LOG_USER | LOG_INFO;
          _cleanup_free_ char *identifier = NULL, *pid = NULL;
@@ -428,15 +425,15 @@ index ffba451..2e60bcd 100644
  
          syslog_skip_date((char**) &buf);
          syslog_parse_identifier(&buf, &identifier, &pid);
-@@ -352,6 +464,7 @@ void server_process_syslog_message(
+@@ -357,6 +469,7 @@ void server_process_syslog_message(
  
-         sprintf(syslog_priority, "PRIORITY=%i", priority & LOG_PRIMASK);
+         xsprintf(syslog_priority, "PRIORITY=%i", priority & LOG_PRIMASK);
          IOVEC_SET_STRING(iovec[n++], syslog_priority);
 +        sm.priority = priority;
  
          if (priority & LOG_FACMASK) {
-                 sprintf(syslog_facility, "SYSLOG_FACILITY=%i", LOG_FAC(priority));
-@@ -362,19 +475,44 @@ void server_process_syslog_message(
+                 xsprintf(syslog_facility, "SYSLOG_FACILITY=%i", LOG_FAC(priority));
+@@ -367,19 +480,44 @@ void server_process_syslog_message(
                  syslog_identifier = strjoina("SYSLOG_IDENTIFIER=", identifier);
                  if (syslog_identifier)
                          IOVEC_SET_STRING(iovec[n++], syslog_identifier);
@@ -484,10 +481,10 @@ index ffba451..2e60bcd 100644
  
  int server_open_syslog_socket(Server *s) {
 diff --git a/src/journal/journald-syslog.h b/src/journal/journald-syslog.h
-index 3774ebd..b5d208f 100644
+index 46ad715..cadffb6 100644
 --- a/src/journal/journald-syslog.h
 +++ b/src/journal/journald-syslog.h
-@@ -23,6 +23,29 @@
+@@ -21,6 +21,29 @@
  
  #include "journald-server.h"
  
@@ -518,5 +515,5 @@ index 3774ebd..b5d208f 100644
  
  size_t syslog_parse_identifier(const char **buf, char **identifier, char **pid);
 -- 
-1.9.1
+2.7.4
 
