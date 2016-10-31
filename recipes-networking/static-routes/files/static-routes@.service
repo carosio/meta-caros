@@ -1,0 +1,9 @@
+[Unit]
+Description=Add some static routes for %I
+After=systemd-networkd.service
+
+[Service]
+ExecStart=/usr/libexec/static-routes.sh /etc/static-routes.d/%i
+
+[Install]
+WantedBy=multi-user.target
