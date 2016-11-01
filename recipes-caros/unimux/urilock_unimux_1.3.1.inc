@@ -20,7 +20,7 @@ SRC_URI += " git://github.com/heroku/ex_uri.git;protocol=https;branch=master;des
 SRCREV_ex_uri = "16f26db7026493d2934f615f8884fad42675f00e"
 
 SRC_URI += " git://github.com/xerions/exlager.git;protocol=https;branch=master;destsuffix=git-deps/exlager;name=exlager"
-SRCREV_exlager = "76280bfe6c6d78392aa791e4b4fb4a075e1855f1"
+SRCREV_exlager = "f43abf432da30ca3934b6a4d66a44c74d3f27f1b"
 
 SRC_URI += " git://github.com/Feuerlabs/exometer_core.git;protocol=https;branch=master;destsuffix=git-deps/exometer_core;name=exometer_core"
 SRCREV_exometer_core = "9206b28d045b395abd1b86cc794223ec9aeeb0ea"
@@ -47,13 +47,16 @@ SRC_URI += " git://github.com/travelping/gen_listener_tcp.git;protocol=https;bra
 SRCREV_gen_listener_tcp = "fb9626d172b09e6448d36f23e6055adf75189bfe"
 
 SRC_URI += " git://github.com/DeadZen/goldrush.git;protocol=https;branch=master;destsuffix=git-deps/goldrush;name=goldrush"
-SRCREV_goldrush = "71e63212f12c25827e0c1b4198d37d5d018a7fec"
+SRCREV_goldrush = "212299233c7e7eb63a97be2777e1c05ebaa58dbe"
 
 SRC_URI += " git://github.com/travelping/hello.git;protocol=https;branch=master;destsuffix=git-deps/hello;name=hello"
-SRCREV_hello = "12c23eff5ef52af68e7f2aff98bba121ea8acced"
+SRCREV_hello = "1205823fc2e7b617e16998919f152d509f54a9e7"
 
 SRC_URI += " git://github.com/tolbrino/hut.git;branch=master;destsuffix=git-deps/hut;name=hut"
 SRCREV_hut = "025540398478ab6f95932c3234382ac5bb21ad3e"
+
+SRC_URI += " git://github.com/basho/lager.git;protocol=https;branch=master;destsuffix=git-deps/lager;name=lager"
+SRCREV_lager = "bce5504a955e52be8d5cf4b3c6b1fcd898ab5756"
 
 SRC_URI += " git://github.com/eproxus/meck.git;protocol=https;branch=master;destsuffix=git-deps/meck;name=meck"
 SRCREV_meck = "17b0ea5b7d9c93af3a52b5152c6bee14302b3885"
@@ -119,10 +122,6 @@ SRC_URI[idna.sha256sum] = "a5d645e307aa4f67efe31682f720b7eaf431ab148b3d6fb66cbaf
 SRC_URI += " https://s3.amazonaws.com/s3.hex.pm/tarballs/jsx-2.6.2.tar;subdir=hex-deps/jsx;name=jsx"
 SRC_URI[jsx.md5sum] = "1b906e79ac6bde7eba22d4684825a3a6"
 SRC_URI[jsx.sha256sum] = "6bfccb6461cc3c7d5cc63f3e69ffeb2f1f8de50eca5980065311c056a69a907f"
-
-SRC_URI += " https://s3.amazonaws.com/s3.hex.pm/tarballs/lager-3.2.1.tar;subdir=hex-deps/lager;name=lager"
-SRC_URI[lager.md5sum] = "82a958401263c4fe8206c9809ba15cfd"
-SRC_URI[lager.sha256sum] = "09a751789852094bf1ffad239a602bc47829da13ca5937b9d12df27470692095"
 
 SRC_URI += " https://s3.amazonaws.com/s3.hex.pm/tarballs/mimerl-1.0.0.tar;subdir=hex-deps/mimerl;name=mimerl"
 SRC_URI[mimerl.md5sum] = "2462daa0a2eae770a2b48eb6f6142a80"
