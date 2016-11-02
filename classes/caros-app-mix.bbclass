@@ -42,6 +42,20 @@ DEPENDS += "avahi erlang-lager-journald-backend elixir-native elixir rebar-nativ
 INSANE_SKIP_${PN} = "already-stripped"
 
 do_compile() {
+    export HEX_OFFLINE=true
+    export HEX_HOME=${WORKDIR}/hex-home
+    mkdir -pv $HEX_HOME
+    elixir -r /dev/stdin -e 'Hex.ets_registry("'${HEX_HOME}'/registry.ets")' << 'EOF'
+defmodule Hex do
+    def ets_registry(path) do
+        tid = :ets.new(:hex_ets_registry, [])
+        :ets.insert(tid, {:"$$version$$", 4})
+        :ets.insert(tid, {:"$$installs2$$", []})
+        :ok = :ets.tab2file(tid, String.to_char_list(path))
+    end
+end
+
+EOF
     if [ -d ${WORKDIR}/git-deps ]
     then
         cp -navl ${WORKDIR}/git-deps ./deps
