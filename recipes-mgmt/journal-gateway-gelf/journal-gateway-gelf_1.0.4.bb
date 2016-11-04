@@ -11,7 +11,7 @@ LIC_FILES_CHKSUM = "file://LICENSE.LGPL2.1;md5=4fbd65380cdd255951079008b364516c"
 inherit autotools caros-service
 
 SRC_URI = "git://github.com/travelping/journal-gateway-gelf.git"
-SRCREV = "fa9f18d0dbb73dc31fe9d129850bfed45cdc718e"
+SRCREV = "e9f7c881ab89757348d834aac7c849a519eb9612"
 
 S = "${WORKDIR}/git"
 
