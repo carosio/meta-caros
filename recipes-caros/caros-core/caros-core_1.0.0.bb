@@ -11,9 +11,10 @@ RDEPENDS_${PN} = " \
     curl \
     iptables \
     less \
-    socat \
-    tcpdump \
-    zsh \
     packagegroup-core-ssh-openssh \
     smem-smemcap \
+    socat \
+    static-routes \
+    tcpdump \
+    zsh \
 "
