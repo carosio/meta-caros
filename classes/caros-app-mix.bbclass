@@ -42,6 +42,25 @@ DEPENDS += "avahi erlang-lager-journald-backend elixir-native elixir rebar-nativ
 INSANE_SKIP_${PN} = "already-stripped"
 
 do_compile() {
+    # because of our pre-downloading of all deps into deps/
+    # (similar to vendoring), there is no need for further
+    # downloading or looking up dependencies from the net.
+    # unfortunately mix/hex still fails on missing hex-registry
+    # to workaround that we create an "empty" one:
+    export HEX_OFFLINE=true
+    export HEX_HOME=${WORKDIR}/hex-home
+    mkdir -pv $HEX_HOME
+    echo 'defmodule Hex do' > ${WORKDIR}/createreg.ex
+    echo '    def ets_registry(path) do' >> ${WORKDIR}/createreg.ex
+    echo '      tid = :ets.new(:hex_ets_registry, [])' >> ${WORKDIR}/createreg.ex
+    echo '      :ets.insert(tid, {:"$$version$$", 4})' >> ${WORKDIR}/createreg.ex
+    echo '      :ets.insert(tid, {:"$$installs2$$", []})' >> ${WORKDIR}/createreg.ex
+    echo '      :ok = :ets.tab2file(tid, String.to_char_list(path))' >> ${WORKDIR}/createreg.ex
+    echo '    end' >> ${WORKDIR}/createreg.ex
+    echo 'end' >> ${WORKDIR}/createreg.ex
+
+    elixir -r ${WORKDIR}/createreg.ex -e 'Hex.ets_registry("'${HEX_HOME}'/registry.ets")'
+
     if [ -d ${WORKDIR}/git-deps ]
     then
         cp -navl ${WORKDIR}/git-deps ./deps

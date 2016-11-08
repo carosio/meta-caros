@@ -3,7 +3,7 @@ SECTION = "net"
 LICENSE = "MPL-2.0"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=815ca599c9df247a0c7f619bab123dad"
 
-PR = "r1"
+PR = "r5"
 
 inherit caros-app-mix caros-service
 include urilock_${PN}_${PV}.inc
