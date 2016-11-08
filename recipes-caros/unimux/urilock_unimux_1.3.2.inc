@@ -26,16 +26,16 @@ SRC_URI += " git://github.com/Feuerlabs/exometer_core.git;protocol=https;branch=
 SRCREV_exometer_core = "9206b28d045b395abd1b86cc794223ec9aeeb0ea"
 
 SRC_URI += " git://github.com/travelping/exometer_fetch.git;protocol=https;branch=master;destsuffix=git-deps/exometer_fetch;name=exometer_fetch"
-SRCREV_exometer_fetch = "1a0d4f033ce0e8e6bad8c40b739d4c76b0dc546b"
+SRCREV_exometer_fetch = "3bfc031b8fa2b6189cfeedf56d75c3ded85a4b7e"
 
 SRC_URI += " git://github.com/travelping/exometer_influxdb.git;protocol=https;branch=master;destsuffix=git-deps/exometer_influxdb;name=exometer_influxdb"
-SRCREV_exometer_influxdb = "e5c88f73a9dec5cf479e80f867ce3ac3d651c802"
+SRCREV_exometer_influxdb = "6efe4c19e065323552f048f087db07c1681d4039"
 
 SRC_URI += " git://github.com/bitwalker/exrm.git;protocol=https;branch=master;destsuffix=git-deps/exrm;name=exrm"
-SRCREV_exrm = "915370fb4baeb7a04ab02ee52b5e7322db7fbabe"
+SRCREV_exrm = "fa538fe39ea0e3a5a831f5f454374d018c23cf88"
 
 SRC_URI += " git://github.com/liveforeverx/exrun.git;protocol=https;branch=master;destsuffix=git-deps/exrun;name=exrun"
-SRCREV_exrun = "fc516628906cb571f832ade2b484e2ed5df40cc6"
+SRCREV_exrun = "a62044b77713a0ea7e5161f512723ceb74cc9565"
 
 SRC_URI += " git://github.com/RoadRunnr/ezmq.git;protocol=https;branch=fix-socket-crash;destsuffix=git-deps/ezmq;name=ezmq"
 SRCREV_ezmq = "a77378f0cb716b5293be6f69bdc99ed137a509c4"
@@ -44,7 +44,7 @@ SRC_URI += " git://github.com/folsom-project/folsom;branch=master;destsuffix=git
 SRCREV_folsom = "38e2cce7c64ce1f0a3a918d90394cfc0a940b1ba"
 
 SRC_URI += " git://github.com/travelping/gen_listener_tcp.git;protocol=https;branch=master;destsuffix=git-deps/gen_listener_tcp;name=gen_listener_tcp"
-SRCREV_gen_listener_tcp = "fb9626d172b09e6448d36f23e6055adf75189bfe"
+SRCREV_gen_listener_tcp = "3690477d108c7521f84a9af625ba73e525b989d6"
 
 SRC_URI += " git://github.com/DeadZen/goldrush.git;protocol=https;branch=master;destsuffix=git-deps/goldrush;name=goldrush"
 SRCREV_goldrush = "212299233c7e7eb63a97be2777e1c05ebaa58dbe"
@@ -62,16 +62,13 @@ SRC_URI += " git://github.com/eproxus/meck.git;protocol=https;branch=master;dest
 SRCREV_meck = "17b0ea5b7d9c93af3a52b5152c6bee14302b3885"
 
 SRC_URI += " git://github.com/xerions/metricman.git;protocol=https;branch=master;destsuffix=git-deps/metricman;name=metricman"
-SRCREV_metricman = "8382b2650c09975f8df9ac154b776bdfb512f1de"
-
-SRC_URI += " git://github.com/jjh42/mock.git;protocol=https;branch=master;destsuffix=git-deps/mock;name=mock"
-SRCREV_mock = "70ba88fe210cca3466696dc81834f3dbcd63f209"
+SRCREV_metricman = "a8307e54f1e395dcff705f78bb0506c470f51ff1"
 
 SRC_URI += " git://github.com/uwiger/parse_trans.git;branch=master;destsuffix=git-deps/parse_trans;name=parse_trans"
 SRCREV_parse_trans = "a210adafdfbb904d156d8f22abd5fb58fc17de1e"
 
 SRC_URI += " git://github.com/erlware/relx.git;protocol=https;branch=master;destsuffix=git-deps/relx;name=relx"
-SRCREV_relx = "53a87edc5285042355b545075440985dd3037bc6"
+SRCREV_relx = "f74972a6e65fc4c2a1ba098b4cea230a4b7a63f2"
 
 SRC_URI += " git://github.com/uwiger/setup.git;protocol=https;branch=master;destsuffix=git-deps/setup;name=setup"
 SRCREV_setup = "4de9ad24f6f89a3f9996f8f02329bc20d67f2d9e"
@@ -91,13 +88,13 @@ SRC_URI += " https://s3.amazonaws.com/s3.hex.pm/tarballs/cf-0.2.1.tar;subdir=hex
 SRC_URI[cf.md5sum] = "0b40f26fa0cd27f89b9e3cce3f9a2dd5"
 SRC_URI[cf.sha256sum] = "baee9aa7ec2dfa3cb4486b67211177caa293f876780f0b313b45718edef6a0a5"
 
-SRC_URI += " https://s3.amazonaws.com/s3.hex.pm/tarballs/cowboy-1.0.2.tar;subdir=hex-deps/cowboy;name=cowboy"
-SRC_URI[cowboy.md5sum] = "4a50d676d3b75803d5ba1070c712653b"
-SRC_URI[cowboy.sha256sum] = "aeba3815a73985ce872cb480814771c15b8dac15894fb9ee4c135800ae883fd3"
+SRC_URI += " https://s3.amazonaws.com/s3.hex.pm/tarballs/cowboy-1.0.4.tar;subdir=hex-deps/cowboy;name=cowboy"
+SRC_URI[cowboy.md5sum] = "bb849706beaae0aa33ef154142c67c12"
+SRC_URI[cowboy.sha256sum] = "6a0edee96885fae3a8dd0ac1f333538a42e807db638a9453064ccfdaa6b9fdac"
 
-SRC_URI += " https://s3.amazonaws.com/s3.hex.pm/tarballs/cowlib-1.0.1.tar;subdir=hex-deps/cowlib;name=cowlib"
-SRC_URI[cowlib.md5sum] = "fe7fb4c91234ee38fede7a3ad12fdb81"
-SRC_URI[cowlib.sha256sum] = "4f6b470c0c4cfc261eeff798b20d8e23a9d88ff595b2b19f4173fb125c23bd53"
+SRC_URI += " https://s3.amazonaws.com/s3.hex.pm/tarballs/cowlib-1.0.2.tar;subdir=hex-deps/cowlib;name=cowlib"
+SRC_URI[cowlib.md5sum] = "e343d1cca6c97f882772a704f559668a"
+SRC_URI[cowlib.sha256sum] = "db622da03aa039e6366ab953e31186cc8190d32905e33788a1acb22744e6abd2"
 
 SRC_URI += " https://s3.amazonaws.com/s3.hex.pm/tarballs/erlware_commons-0.21.0.tar;subdir=hex-deps/erlware_commons;name=erlware_commons"
 SRC_URI[erlware_commons.md5sum] = "8427291572cd6486ed9df7fcdf413d2d"
@@ -107,25 +104,25 @@ SRC_URI += " https://s3.amazonaws.com/s3.hex.pm/tarballs/getopt-0.8.2.tar;subdir
 SRC_URI[getopt.md5sum] = "7bec0d9e2fae129b0c8861c018a855cc"
 SRC_URI[getopt.sha256sum] = "736e6db3679fbbad46373efb96b69509f8e420281635e9d92989af9f0a0483f7"
 
-SRC_URI += " https://s3.amazonaws.com/s3.hex.pm/tarballs/hackney-1.4.6.tar;subdir=hex-deps/hackney;name=hackney"
-SRC_URI[hackney.md5sum] = "eb4f116c5b18c2659bd152b699903f62"
-SRC_URI[hackney.sha256sum] = "5b8f9ca492eb42c78815480d03358a3a1b8ba5c1bb5d63f1ebfb71eb746df3bb"
+SRC_URI += " https://s3.amazonaws.com/s3.hex.pm/tarballs/hackney-1.4.10.tar;subdir=hex-deps/hackney;name=hackney"
+SRC_URI[hackney.md5sum] = "2a49de8abc79b9a93e071acd3adbd377"
+SRC_URI[hackney.sha256sum] = "dbdda6c342984ab0f35c5099dfab4b419a77771d096089a9173bf11ab6a0f7bf"
 
 SRC_URI += " https://s3.amazonaws.com/s3.hex.pm/tarballs/httpoison-0.7.2.tar;subdir=hex-deps/httpoison;name=httpoison"
 SRC_URI[httpoison.md5sum] = "ce49ae44ad73650b208b4884ada2cdb4"
 SRC_URI[httpoison.sha256sum] = "afb76dd9c001771b3b50ebe4f06e484db85e057e5cd3541e18fed8b652c1089e"
 
-SRC_URI += " https://s3.amazonaws.com/s3.hex.pm/tarballs/idna-1.0.2.tar;subdir=hex-deps/idna;name=idna"
-SRC_URI[idna.md5sum] = "c1c9622a358eded9e08b5ab523165af7"
-SRC_URI[idna.sha256sum] = "a5d645e307aa4f67efe31682f720b7eaf431ab148b3d6fb66cbaf6314499610f"
+SRC_URI += " https://s3.amazonaws.com/s3.hex.pm/tarballs/idna-1.1.0.tar;subdir=hex-deps/idna;name=idna"
+SRC_URI[idna.md5sum] = "8990c35cd53b628d66a03feff44b31e9"
+SRC_URI[idna.sha256sum] = "d399393011cd2fa93761d70199b604b2f055bcf6cb45cac922870e122d2eb2fe"
 
 SRC_URI += " https://s3.amazonaws.com/s3.hex.pm/tarballs/jsx-2.6.2.tar;subdir=hex-deps/jsx;name=jsx"
 SRC_URI[jsx.md5sum] = "1b906e79ac6bde7eba22d4684825a3a6"
 SRC_URI[jsx.sha256sum] = "6bfccb6461cc3c7d5cc63f3e69ffeb2f1f8de50eca5980065311c056a69a907f"
 
-SRC_URI += " https://s3.amazonaws.com/s3.hex.pm/tarballs/mimerl-1.0.0.tar;subdir=hex-deps/mimerl;name=mimerl"
-SRC_URI[mimerl.md5sum] = "2462daa0a2eae770a2b48eb6f6142a80"
-SRC_URI[mimerl.sha256sum] = "a30b01104a29bd3a363db8646e4ce0f7980f9ecd23a98707c46c3ced918c41b4"
+SRC_URI += " https://s3.amazonaws.com/s3.hex.pm/tarballs/mimerl-1.0.2.tar;subdir=hex-deps/mimerl;name=mimerl"
+SRC_URI[mimerl.md5sum] = "2df7023b2e4b77eb9e7d1341f8189e3b"
+SRC_URI[mimerl.sha256sum] = "7a4c8e1115a2732a67d7624e28cf6c9f30c66711a9e92928e745c255887ba465"
 
 SRC_URI += " https://s3.amazonaws.com/s3.hex.pm/tarballs/msgpack-0.6.0.tar;subdir=hex-deps/msgpack;name=msgpack"
 SRC_URI[msgpack.md5sum] = "7fb135bf5189e80d8ae66a2a08c10ca3"
@@ -143,9 +140,9 @@ SRC_URI += " https://s3.amazonaws.com/s3.hex.pm/tarballs/providers-1.6.0.tar;sub
 SRC_URI[providers.md5sum] = "ac0502840b173d974df65e61024a40ff"
 SRC_URI[providers.sha256sum] = "0f6876529a613d34224de8c61d3660388eb981142360f2699486d8536050ce2f"
 
-SRC_URI += " https://s3.amazonaws.com/s3.hex.pm/tarballs/ranch-1.1.0.tar;subdir=hex-deps/ranch;name=ranch"
-SRC_URI[ranch.md5sum] = "79e3789dacb1d50a85c6dce87d1ae3d3"
-SRC_URI[ranch.sha256sum] = "98ade939e63e6567da5dec5bc5bd93cbdc53d53f8b1aa998adec60dc4057f048"
+SRC_URI += " https://s3.amazonaws.com/s3.hex.pm/tarballs/ranch-1.2.1.tar;subdir=hex-deps/ranch;name=ranch"
+SRC_URI[ranch.md5sum] = "130bc16a6e1af51b235096594779f318"
+SRC_URI[ranch.sha256sum] = "f602d057615ce737945c239e9c8155d3f5300fc5b1255abf81f2a9d0d08e5b04"
 
 SRC_URI += " https://s3.amazonaws.com/s3.hex.pm/tarballs/recon-2.2.1.tar;subdir=hex-deps/recon;name=recon"
 SRC_URI[recon.md5sum] = "c4f75d12412a6a0208f41043195f50b5"
