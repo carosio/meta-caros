@@ -6,7 +6,7 @@ LIC_FILES_CHKSUM = "file://${WORKDIR}/LICENSE;md5=815ca599c9df247a0c7f619bab123d
 
 inherit systemd
 
-PR = "r1"
+PR = "r2"
 
 SRC_URI = "file://LICENSE \
            file://static-routes@.service \
