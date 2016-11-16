@@ -31,9 +31,6 @@ SRCREV_exometer_fetch = "3bfc031b8fa2b6189cfeedf56d75c3ded85a4b7e"
 SRC_URI += " git://github.com/travelping/exometer_influxdb.git;protocol=https;branch=master;destsuffix=git-deps/exometer_influxdb;name=exometer_influxdb"
 SRCREV_exometer_influxdb = "6efe4c19e065323552f048f087db07c1681d4039"
 
-SRC_URI += " git://github.com/bitwalker/exrm.git;protocol=https;branch=master;destsuffix=git-deps/exrm;name=exrm"
-SRCREV_exrm = "fa538fe39ea0e3a5a831f5f454374d018c23cf88"
-
 SRC_URI += " git://github.com/liveforeverx/exrun.git;protocol=https;branch=master;destsuffix=git-deps/exrun;name=exrun"
 SRCREV_exrun = "a62044b77713a0ea7e5161f512723ceb74cc9565"
 
@@ -63,6 +60,9 @@ SRCREV_meck = "17b0ea5b7d9c93af3a52b5152c6bee14302b3885"
 
 SRC_URI += " git://github.com/xerions/metricman.git;protocol=https;branch=master;destsuffix=git-deps/metricman;name=metricman"
 SRCREV_metricman = "a8307e54f1e395dcff705f78bb0506c470f51ff1"
+
+SRC_URI += " git://github.com/jjh42/mock.git;protocol=https;branch=master;destsuffix=git-deps/mock;name=mock"
+SRCREV_mock = "faf899f775090024110629a26105eb53b1599168"
 
 SRC_URI += " git://github.com/uwiger/parse_trans.git;branch=master;destsuffix=git-deps/parse_trans;name=parse_trans"
 SRCREV_parse_trans = "a210adafdfbb904d156d8f22abd5fb58fc17de1e"
@@ -99,6 +99,10 @@ SRC_URI[cowlib.sha256sum] = "db622da03aa039e6366ab953e31186cc8190d32905e33788a1a
 SRC_URI += " https://s3.amazonaws.com/s3.hex.pm/tarballs/erlware_commons-0.21.0.tar;subdir=hex-deps/erlware_commons;name=erlware_commons"
 SRC_URI[erlware_commons.md5sum] = "8427291572cd6486ed9df7fcdf413d2d"
 SRC_URI[erlware_commons.sha256sum] = "e70a95762458a489dc37fe869f41517bd43c130e156ef08462f90c534300ab3f"
+
+SRC_URI += " https://s3.amazonaws.com/s3.hex.pm/tarballs/exrm-1.0.8.tar;subdir=hex-deps/exrm;name=exrm"
+SRC_URI[exrm.md5sum] = "d8aebfeac6abf3f41241b1cc6b2870d3"
+SRC_URI[exrm.sha256sum] = "4e8eebc1298fc0848f1693c527036e064f62bb609195036ecf45c0d3f0b01a7b"
 
 SRC_URI += " https://s3.amazonaws.com/s3.hex.pm/tarballs/getopt-0.8.2.tar;subdir=hex-deps/getopt;name=getopt"
 SRC_URI[getopt.md5sum] = "7bec0d9e2fae129b0c8861c018a855cc"

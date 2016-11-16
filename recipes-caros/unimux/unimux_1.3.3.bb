@@ -21,6 +21,6 @@ SYSCONFIG_PREFIX = "${sysconfdir}"
 
 SRC_URI += "git://github.com/carosio/unimux.git;protocol=git"
 
-SRCREV = "754808145cdd59d42c289b2dd9606247e662b5fe"
+SRCREV = "17b092f9c9f978917c287fd2ab3bdb61fc86c090"
 
 S = "${WORKDIR}/git"
