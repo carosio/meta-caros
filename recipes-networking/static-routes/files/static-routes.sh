@@ -2,5 +2,5 @@
 
 grep -v '^#' $1 | while read LINE
 do
-  eval "ip route add $LINE"
+  eval "ip route replace $LINE"
 done
