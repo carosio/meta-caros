@@ -2,12 +2,13 @@ SUMMARY = "FreeRADIUS Server"
 HOMEPAGE = "http://wiki.freeradius.org"
 LICENSE = "GPLv2"
 
-PR = "r3"
+PR = "r4"
 
 LIC_FILES_CHKSUM = "file://COPYRIGHT;md5=8271badacbbc8d1e3c62027d15cd176d"
 
-SRC_URI = "ftp://ftp.freeradius.org/pub/freeradius/${PN}-${PV}.tar.bz2"
+SRC_URI = "ftp://ftp.freeradius.org/pub/freeradius/old/${PN}-${PV}.tar.bz2"
 SRC_URI += "file://0001-Fix-cross-compile.patch"
+SRC_URI += "file://freeradius.service"
 
 SRC_URI[md5sum] = "e8a748fe824223ed488cc74a1645023e"
 SRC_URI[sha256sum] = "2b6109b61fc93e9fcdd3dd8a91c3abbf0ce8232244d1d214d71a4e5b7faadb80"
@@ -59,6 +60,9 @@ do_install_append() {
 	cp -a ${B}/raddb/* ${D}${sysconfdir}/freeradius
 	rm ${D}${sysconfdir}/freeradius/*.conf.in
 	rm ${D}${sysconfdir}/freeradius/all.mk
+
+	install -d ${D}${systemd_unitdir}/system
+	install -m 0644 ${WORKDIR}/freeradius.service ${D}${systemd_unitdir}/system
 }
 
 FILES_${PN} += "${datadir}"
@@ -76,3 +80,7 @@ CONFFILES_${PN} += "${sysconfdir}/freeradius/*.conf"
 CONFFILES_${PN} += "${sysconfdir}/freeradius/certs/*.cnf"
 
 inherit autotools-brokensep systemd
+
+SYSTEMD_PACKAGES = "${PN}"
+SYSTEMD_SERVICE_${PN} = "freeradius.service"
+
