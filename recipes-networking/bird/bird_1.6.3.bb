@@ -7,7 +7,7 @@ SECTION = "network"
 LICENSE = "GPL-2.0"
 DEPENDS = "readline ncurses"
 
-LIC_FILES_CHKSUM = "file://README;beginline=29;endline=41;md5=1f0a42ec48e7a3fdf869e49b1e939adc"
+LIC_FILES_CHKSUM = "file://README;beginline=87;endline=103;md5=0efecc23f039022580d0bac9a52f6117"
 
 # the "ip" command from busybox is not sufficient (flush by protocol flushes all routes)
 RDEPENDS_${PN} += "iproute2"
