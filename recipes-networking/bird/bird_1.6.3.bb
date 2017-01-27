@@ -23,8 +23,8 @@ SRC_URI += " file://bird.service"
 SRC_URI += " file://prepare-environment"
 SRC_URI += " file://envvars"
 
-SRC_URI[md5sum] = "330bde6372afa106abfe5a9737e471c1"
-SRC_URI[sha256sum] = "79d5c4254e25f5890626830ca42aae03735716bdf152ddd8368473d2b3c17b5d"
+SRC_URI[md5sum] = "63dd93a7a23c274fc5b7f2e37664bfb7"
+SRC_URI[sha256sum] = "39c51cf57c3ba8b5978b2a657ffa2f647ec7f3ae643e91cf42ee5cb070cf7e7c"
 
 inherit autotools systemd useradd
 
