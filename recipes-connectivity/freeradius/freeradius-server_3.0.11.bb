@@ -13,7 +13,7 @@ SRC_URI += "file://freeradius.service"
 SRC_URI[md5sum] = "e8a748fe824223ed488cc74a1645023e"
 SRC_URI[sha256sum] = "2b6109b61fc93e9fcdd3dd8a91c3abbf0ce8232244d1d214d71a4e5b7faadb80"
 
-DEPENDS = "gdbm talloc libpcre libpcap openssl"
+DEPENDS = "gdbm libtalloc libpcre libpcap openssl"
 
 EXTRA_OECONF += " --with-pcre-include-dir=${STAGING_INCDIR} "
 EXTRA_OECONF += " --libdir=${libdir}/freeradius "
