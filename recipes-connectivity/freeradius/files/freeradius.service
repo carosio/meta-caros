@@ -1,0 +1,16 @@
+[Unit]
+Description=FreeRADIUS multi-protocol policy server
+After=multi-user.target
+Documentation=http://wiki.freeradius.org/ http://networkradius.com/doc/
+
+[Service]
+Type=simple
+RuntimeDirectory=freeradius
+RuntimeDirectoryMode=1777
+ExecStartPre=/usr/sbin/radiusd -Cxm -lstdout -d /etc/freeradius
+ExecStart=/usr/sbin/radiusd -f -lstdout -d /etc/freeradius
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target
