@@ -1,9 +1,9 @@
-From 4cb6450535cbfd1bf4f9ea7ac3ceabe4eafef6f1 Mon Sep 17 00:00:00 2001
-From: GalaxyGorilla <skattelmann@gmail.com>
-Date: Mon, 19 Oct 2015 11:32:43 +0200
-Subject: [PATCH] Added feature to alter the appearance of the log line called
- by journalctl.
+From 7fbc2e59f4c5085ed52bd6d0813cdaab0cded502 Mon Sep 17 00:00:00 2001
+From: Tobias Hintze <thintze+git@tpip.net>
+Date: Fri, 28 Oct 2016 14:04:26 +0200
+Subject: [PATCH] add log formatter feature
 
+(patch forward-ported)
 The relevant option is the '-o' flag which can be called with a formatter
 string, e.g.
 
@@ -22,22 +22,23 @@ The possible date formats are
     - date-raw          [1445329325.056146]
 
 where 'date' is the default on "__REALTIME_TIMESTAMP".
+
 ---
  src/journal-remote/journal-gatewayd.c |   8 +-
  src/journal/journalctl.c              |  38 +--
  src/login/loginctl.c                  |  22 +-
  src/machine/machinectl.c              |  19 +-
- src/shared/logs-show.c                | 449 +++++++++++++++++++++++++++++-----
+ src/shared/logs-show.c                | 447 ++++++++++++++++++++++++++++++----
  src/shared/logs-show.h                |  14 +-
  src/shared/output-mode.h              |   1 +
  src/systemctl/systemctl.c             |  20 +-
- 8 files changed, 471 insertions(+), 100 deletions(-)
+ 8 files changed, 471 insertions(+), 98 deletions(-)
 
-Index: git/src/journal-remote/journal-gatewayd.c
-===================================================================
---- git.orig/src/journal-remote/journal-gatewayd.c	2015-11-14 23:11:22.859799467 +0000
-+++ git/src/journal-remote/journal-gatewayd.c	2015-11-14 23:11:22.847799467 +0000
-@@ -150,6 +150,7 @@
+diff --git a/src/journal-remote/journal-gatewayd.c b/src/journal-remote/journal-gatewayd.c
+index 60d8977..23600c9 100644
+--- a/src/journal-remote/journal-gatewayd.c
++++ b/src/journal-remote/journal-gatewayd.c
+@@ -150,6 +150,7 @@ static ssize_t request_reader_entries(
          RequestMeta *m = cls;
          int r;
          size_t n, k;
@@ -45,7 +46,7 @@ Index: git/src/journal-remote/journal-gatewayd.c
  
          assert(m);
          assert(buf);
-@@ -158,6 +159,11 @@
+@@ -158,6 +159,11 @@ static ssize_t request_reader_entries(
  
          pos -= m->delta;
  
@@ -57,7 +58,7 @@ Index: git/src/journal-remote/journal-gatewayd.c
          while (pos >= m->size) {
                  off_t sz;
  
-@@ -220,7 +226,7 @@
+@@ -222,7 +228,7 @@ static ssize_t request_reader_entries(
                          return MHD_CONTENT_READER_END_WITH_ERROR;
                  }
  
@@ -66,11 +67,11 @@ Index: git/src/journal-remote/journal-gatewayd.c
                  if (r < 0) {
                          log_error_errno(r, "Failed to serialize item: %m");
                          return MHD_CONTENT_READER_END_WITH_ERROR;
-Index: git/src/journal/journalctl.c
-===================================================================
---- git.orig/src/journal/journalctl.c	2015-11-14 23:11:22.859799467 +0000
-+++ git/src/journal/journalctl.c	2015-11-14 23:11:22.851799467 +0000
-@@ -70,7 +70,8 @@
+diff --git a/src/journal/journalctl.c b/src/journal/journalctl.c
+index 273242b..55f4dc2 100644
+--- a/src/journal/journalctl.c
++++ b/src/journal/journalctl.c
+@@ -80,7 +80,8 @@ enum {
          ARG_LINES_ALL = -1,
  };
  
@@ -80,7 +81,7 @@ Index: git/src/journal/journalctl.c
  static bool arg_utc = false;
  static bool arg_pager_end = false;
  static bool arg_follow = false;
-@@ -212,7 +213,8 @@
+@@ -305,7 +306,8 @@ static void help(void) {
                 "  -r --reverse             Show the newest entries first\n"
                 "  -o --output=STRING       Change journal output mode (short, short-iso,\n"
                 "                                   short-precise, short-monotonic, verbose,\n"
@@ -90,7 +91,7 @@ Index: git/src/journal/journalctl.c
                 "     --utc                 Express time in Coordinated Universal Time (UTC)\n"
                 "  -x --catalog             Add message explanations where available\n"
                 "     --no-full             Ellipsize fields\n"
-@@ -337,6 +339,8 @@
+@@ -439,6 +441,8 @@ static int parse_argv(int argc, char *argv[]) {
          };
  
          int c, r;
@@ -99,7 +100,7 @@ Index: git/src/journal/journalctl.c
  
          assert(argc >= 0);
          assert(argv);
-@@ -371,19 +375,7 @@
+@@ -471,19 +475,7 @@ static int parse_argv(int argc, char *argv[]) {
                          break;
  
                  case 'o':
@@ -120,7 +121,7 @@ Index: git/src/journal/journalctl.c
                          break;
  
                  case 'l':
-@@ -706,6 +698,20 @@
+@@ -831,6 +823,20 @@ static int parse_argv(int argc, char *argv[]) {
                          assert_not_reached("Unhandled option");
                  }
  
@@ -141,7 +142,7 @@ Index: git/src/journal/journalctl.c
          if (arg_follow && !arg_no_tail && !arg_since && arg_lines == ARG_LINES_DEFAULT)
                  arg_lines = 10;
  
-@@ -2161,7 +2167,7 @@
+@@ -2454,7 +2460,7 @@ int main(int argc, char *argv[]) {
                                  arg_catalog * OUTPUT_CATALOG |
                                  arg_utc * OUTPUT_UTC;
  
@@ -150,11 +151,11 @@ Index: git/src/journal/journalctl.c
                          need_seek = true;
                          if (r == -EADDRNOTAVAIL)
                                  break;
-Index: git/src/login/loginctl.c
-===================================================================
---- git.orig/src/login/loginctl.c	2015-11-14 23:11:22.859799467 +0000
-+++ git/src/login/loginctl.c	2015-11-14 23:11:22.851799467 +0000
-@@ -56,7 +56,8 @@
+diff --git a/src/login/loginctl.c b/src/login/loginctl.c
+index 6ad3d08..ca0e4ac 100644
+--- a/src/login/loginctl.c
++++ b/src/login/loginctl.c
+@@ -57,7 +57,8 @@ static BusTransport arg_transport = BUS_TRANSPORT_LOCAL;
  static char *arg_host = NULL;
  static bool arg_ask_password = true;
  static unsigned arg_lines = 10;
@@ -164,7 +165,7 @@ Index: git/src/login/loginctl.c
  
  static void pager_open_if_enabled(void) {
  
-@@ -538,7 +539,7 @@
+@@ -539,7 +540,7 @@ static int print_session_status_info(sd_bus *bus, const char *path, bool *new_li
                          show_journal_by_unit(
                                          stdout,
                                          i.scope,
@@ -173,7 +174,7 @@ Index: git/src/login/loginctl.c
                                          0,
                                          i.timestamp.monotonic,
                                          arg_lines,
-@@ -618,7 +619,7 @@
+@@ -619,7 +620,7 @@ static int print_user_status_info(sd_bus *bus, const char *path, bool *new_line)
                  show_journal_by_unit(
                                  stdout,
                                  i.slice,
@@ -182,7 +183,7 @@ Index: git/src/login/loginctl.c
                                  0,
                                  i.timestamp.monotonic,
                                  arg_lines,
-@@ -1196,7 +1197,8 @@
+@@ -1343,7 +1344,8 @@ static int help(int argc, char *argv[], void *userdata) {
                 "  -s --signal=SIGNAL       Which signal to send\n"
                 "  -n --lines=INTEGER       Number of journal entries to show\n"
                 "  -o --output=STRING       Change journal output mode (short, short-monotonic,\n"
@@ -192,7 +193,7 @@ Index: git/src/login/loginctl.c
                 "Session Commands:\n"
                 "  list-sessions            List sessions\n"
                 "  session-status [ID...]   Show session status\n"
-@@ -1257,6 +1259,7 @@
+@@ -1404,6 +1406,7 @@ static int parse_argv(int argc, char *argv[]) {
          };
  
          int c, r;
@@ -200,7 +201,7 @@ Index: git/src/login/loginctl.c
  
          assert(argc >= 0);
          assert(argv);
-@@ -1302,11 +1305,7 @@
+@@ -1447,11 +1450,7 @@ static int parse_argv(int argc, char *argv[]) {
                          break;
  
                  case 'o':
@@ -213,7 +214,7 @@ Index: git/src/login/loginctl.c
                          break;
  
                  case ARG_NO_PAGER:
-@@ -1350,6 +1349,11 @@
+@@ -1495,6 +1494,11 @@ static int parse_argv(int argc, char *argv[]) {
                          assert_not_reached("Unhandled option");
                  }
  
@@ -225,11 +226,11 @@ Index: git/src/login/loginctl.c
          return 1;
  }
  
-Index: git/src/machine/machinectl.c
-===================================================================
---- git.orig/src/machine/machinectl.c	2015-11-14 23:11:22.859799467 +0000
-+++ git/src/machine/machinectl.c	2015-11-14 23:11:22.851799467 +0000
-@@ -72,7 +72,8 @@
+diff --git a/src/machine/machinectl.c b/src/machine/machinectl.c
+index 4853139..ccdf08c 100644
+--- a/src/machine/machinectl.c
++++ b/src/machine/machinectl.c
+@@ -73,7 +73,8 @@ static bool arg_mkdir = false;
  static bool arg_quiet = false;
  static bool arg_ask_password = true;
  static unsigned arg_lines = 10;
@@ -238,8 +239,8 @@ Index: git/src/machine/machinectl.c
 +static OutputFormatter *arg_formatter = NULL;
  static bool arg_force = false;
  static ImportVerify arg_verify = IMPORT_VERIFY_SIGNATURE;
- static const char* arg_dkr_index_url = NULL;
-@@ -603,7 +604,7 @@
+ static const char* arg_format = NULL;
+@@ -602,7 +603,7 @@ static void print_machine_status_info(sd_bus *bus, MachineStatusInfo *i) {
                          show_journal_by_unit(
                                          stdout,
                                          i->unit,
@@ -248,7 +249,7 @@ Index: git/src/machine/machinectl.c
                                          0,
                                          i->timestamp.monotonic,
                                          arg_lines,
-@@ -2453,7 +2454,7 @@
+@@ -2374,7 +2375,7 @@ static int help(int argc, char *argv[], void *userdata) {
                 "  -n --lines=INTEGER          Number of journal entries to show\n"
                 "  -o --output=STRING          Change journal output mode (short,\n"
                 "                              short-monotonic, verbose, export, json,\n"
@@ -256,8 +257,8 @@ Index: git/src/machine/machinectl.c
 +               "                              json-pretty, json-sse, cat, format:FORMAT-STRING)\n"
                 "      --verify=MODE           Verification mode for downloaded images (no,\n"
                 "                              checksum, signature)\n"
-                "      --force                 Download image even if already exists\n"
-@@ -2548,6 +2549,7 @@
+                "      --force                 Download image even if already exists\n\n"
+@@ -2464,6 +2465,7 @@ static int parse_argv(int argc, char *argv[]) {
          };
  
          int c, r;
@@ -265,7 +266,7 @@ Index: git/src/machine/machinectl.c
  
          assert(argc >= 0);
          assert(argv);
-@@ -2591,11 +2593,7 @@
+@@ -2505,11 +2507,7 @@ static int parse_argv(int argc, char *argv[]) {
                          break;
  
                  case 'o':
@@ -278,7 +279,7 @@ Index: git/src/machine/machinectl.c
                          break;
  
                  case ARG_NO_PAGER:
-@@ -2696,6 +2694,11 @@
+@@ -2601,6 +2599,11 @@ static int parse_argv(int argc, char *argv[]) {
                          assert_not_reached("Unhandled option");
                  }
  
@@ -290,11 +291,11 @@ Index: git/src/machine/machinectl.c
          return 1;
  }
  
-Index: git/src/shared/logs-show.c
-===================================================================
---- git.orig/src/shared/logs-show.c	2015-11-14 23:11:22.859799467 +0000
-+++ git/src/shared/logs-show.c	2015-11-14 23:11:22.851799467 +0000
-@@ -43,6 +43,35 @@
+diff --git a/src/shared/logs-show.c b/src/shared/logs-show.c
+index 5eb3bd3..c074277 100644
+--- a/src/shared/logs-show.c
++++ b/src/shared/logs-show.c
+@@ -58,6 +58,35 @@
  
  #define JSON_THRESHOLD 4096
  
@@ -330,7 +331,7 @@ Index: git/src/shared/logs-show.c
  static int print_catalog(FILE *f, sd_journal *j) {
          int r;
          _cleanup_free_ char *t = NULL, *z = NULL;
-@@ -190,10 +219,57 @@
+@@ -206,10 +235,57 @@ static bool print_multiline(FILE *f, unsigned prefix, unsigned n_columns, Output
          return ellipsized;
  }
  
@@ -389,7 +390,7 @@ Index: git/src/shared/logs-show.c
                  unsigned n_columns,
                  OutputFlags flags) {
  
-@@ -206,6 +282,7 @@
+@@ -222,6 +298,7 @@ static int output_short(
          int p = LOG_INFO;
          bool ellipsized = false;
  
@@ -397,7 +398,7 @@ Index: git/src/shared/logs-show.c
          assert(f);
          assert(j);
  
-@@ -286,7 +363,7 @@
+@@ -302,7 +379,7 @@ static int output_short(
          if (priority_len == 1 && *priority >= '0' && *priority <= '7')
                  p = *priority - '0';
  
@@ -406,7 +407,7 @@ Index: git/src/shared/logs-show.c
                  uint64_t t;
                  sd_id128_t boot_id;
  
-@@ -301,21 +378,15 @@
+@@ -317,21 +394,15 @@ static int output_short(
                  if (r < 0)
                          return log_error_errno(r, "Failed to get monotonic timestamp: %m");
  
@@ -431,14 +432,14 @@ Index: git/src/shared/logs-show.c
  
                  if (realtime)
                          r = safe_atou64(realtime, &x);
-@@ -326,30 +397,21 @@
+@@ -342,29 +413,22 @@ static int output_short(
                  if (r < 0)
                          return log_error_errno(r, "Failed to get realtime timestamp: %m");
  
 -                t = (time_t) (x / USEC_PER_SEC);
 -
 -                switch(mode) {
-+                switch (formatter->mode) {
++                switch(formatter->mode) {
                  case OUTPUT_SHORT_ISO:
 -                        r = strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S%z", gettime_r(&t, &tm));
 +                        if ((r = print_time(x, OUTPUT_FIELD_DATE_ISO, f)) < 0)
@@ -446,10 +447,9 @@ Index: git/src/shared/logs-show.c
                          break;
                  case OUTPUT_SHORT_PRECISE:
 -                        r = strftime(buf, sizeof(buf), "%b %d %H:%M:%S", gettime_r(&t, &tm));
--                        if (r > 0) {
+-                        if (r > 0)
 -                                snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf),
 -                                         ".%06llu", (unsigned long long) (x % USEC_PER_SEC));
--                        }
 +                        if ((r = print_time(x, OUTPUT_FIELD_DATE_PRECISE, f)) < 0)
 +                                return log_error_errno(r, "Failed to format time as precise timestamp: %m");
                          break;
@@ -464,14 +464,14 @@ Index: git/src/shared/logs-show.c
 +                                return log_error_errno(r, "Failed to format time as default timestamp: %m");
 +                        break;
                  }
--
+ 
 -                fputs(buf, f);
 -                n += strlen(buf);
 +                n += r;
          }
  
          if (hostname && shall_print(hostname, hostname_len, flags)) {
-@@ -390,9 +452,9 @@
+@@ -405,9 +469,9 @@ static int output_short(
  }
  
  static int output_verbose(
@@ -482,7 +482,7 @@ Index: git/src/shared/logs-show.c
                  unsigned n_columns,
                  OutputFlags flags) {
  
-@@ -403,6 +465,7 @@
+@@ -418,6 +482,7 @@ static int output_verbose(
          char ts[FORMAT_TIMESTAMP_MAX + 7];
          int r;
  
@@ -490,7 +490,7 @@ Index: git/src/shared/logs-show.c
          assert(f);
          assert(j);
  
-@@ -488,9 +551,9 @@
+@@ -502,9 +567,9 @@ static int output_verbose(
  }
  
  static int output_export(
@@ -501,7 +501,7 @@ Index: git/src/shared/logs-show.c
                  unsigned n_columns,
                  OutputFlags flags) {
  
-@@ -502,6 +565,7 @@
+@@ -516,6 +581,7 @@ static int output_export(
          const void *data;
          size_t length;
  
@@ -509,7 +509,7 @@ Index: git/src/shared/logs-show.c
          assert(j);
  
          sd_journal_set_data_threshold(j, 0);
-@@ -619,9 +683,9 @@
+@@ -633,9 +699,9 @@ void json_escape(
  }
  
  static int output_json(
@@ -520,7 +520,7 @@ Index: git/src/shared/logs-show.c
                  unsigned n_columns,
                  OutputFlags flags) {
  
-@@ -635,6 +699,7 @@
+@@ -649,6 +715,7 @@ static int output_json(
          Hashmap *h = NULL;
          bool done, separator;
  
@@ -528,7 +528,7 @@ Index: git/src/shared/logs-show.c
          assert(j);
  
          sd_journal_set_data_threshold(j, flags & OUTPUT_SHOW_ALL ? 0 : JSON_THRESHOLD);
-@@ -651,7 +716,7 @@
+@@ -665,7 +732,7 @@ static int output_json(
          if (r < 0)
                  return log_error_errno(r, "Failed to get cursor: %m");
  
@@ -537,7 +537,7 @@ Index: git/src/shared/logs-show.c
                  fprintf(f,
                          "{\n"
                          "\t\"__CURSOR\" : \"%s\",\n"
-@@ -663,7 +728,7 @@
+@@ -677,7 +744,7 @@ static int output_json(
                          monotonic,
                          sd_id128_to_string(boot_id, sid));
          else {
@@ -546,7 +546,7 @@ Index: git/src/shared/logs-show.c
                          fputs("data: ", f);
  
                  fprintf(f,
-@@ -743,7 +808,7 @@
+@@ -757,7 +824,7 @@ static int output_json(
                                  continue;
  
                          if (separator) {
@@ -555,7 +555,7 @@ Index: git/src/shared/logs-show.c
                                          fputs(",\n\t", f);
                                  else
                                          fputs(", ", f);
-@@ -818,9 +883,9 @@
+@@ -832,9 +899,9 @@ static int output_json(
  
          } while (!done);
  
@@ -567,7 +567,7 @@ Index: git/src/shared/logs-show.c
                  fputs("}\n\n", f);
          else
                  fputs(" }\n", f);
-@@ -837,9 +902,9 @@
+@@ -851,9 +918,9 @@ finish:
  }
  
  static int output_cat(
@@ -578,7 +578,7 @@ Index: git/src/shared/logs-show.c
                  unsigned n_columns,
                  OutputFlags flags) {
  
-@@ -847,6 +912,7 @@
+@@ -861,6 +928,7 @@ static int output_cat(
          size_t l;
          int r;
  
@@ -586,7 +586,7 @@ Index: git/src/shared/logs-show.c
          assert(j);
          assert(f);
  
-@@ -869,13 +935,110 @@
+@@ -883,13 +951,110 @@ static int output_cat(
          return 0;
  }
  
@@ -674,7 +674,7 @@ Index: git/src/shared/logs-show.c
 +                        } else {
 +                                truncated = false;
 +                        }
- 
++
 +                        if (formatter->fields[i].type == OUTPUT_FIELD_RAW) {
 +                                fwrite((const char*) data, 1, l, f);
 +                        } else {
@@ -696,12 +696,12 @@ Index: git/src/shared/logs-show.c
 +
 +        return 0;
 +}
-+
+ 
 +static OutputFunc output_funcs[_OUTPUT_MODE_MAX] = {
          [OUTPUT_SHORT] = output_short,
          [OUTPUT_SHORT_ISO] = output_short,
          [OUTPUT_SHORT_PRECISE] = output_short,
-@@ -885,25 +1048,25 @@
+@@ -899,25 +1064,25 @@ static int (*output_funcs[_OUTPUT_MODE_MAX])(
          [OUTPUT_JSON] = output_json,
          [OUTPUT_JSON_PRETTY] = output_json,
          [OUTPUT_JSON_SSE] = output_json,
@@ -732,7 +732,7 @@ Index: git/src/shared/logs-show.c
          fflush(stdout);
  
          if (ellipsized && ret > 0)
-@@ -929,7 +1092,7 @@
+@@ -943,7 +1108,7 @@ static int maybe_print_begin_newline(FILE *f, OutputFlags *flags) {
  
  static int show_journal(FILE *f,
                          sd_journal *j,
@@ -741,7 +741,7 @@ Index: git/src/shared/logs-show.c
                          unsigned n_columns,
                          usec_t not_before,
                          unsigned how_many,
-@@ -942,8 +1105,7 @@
+@@ -956,8 +1121,7 @@ static int show_journal(FILE *f,
          int warn_cutoff = flags & OUTPUT_WARN_CUTOFF;
  
          assert(j);
@@ -751,7 +751,7 @@ Index: git/src/shared/logs-show.c
  
          /* Seek to end */
          r = sd_journal_seek_tail(j);
-@@ -986,7 +1148,7 @@
+@@ -1000,7 +1164,7 @@ static int show_journal(FILE *f,
                          line ++;
                          maybe_print_begin_newline(f, &flags);
  
@@ -760,7 +760,7 @@ Index: git/src/shared/logs-show.c
                          if (r < 0)
                                  return r;
                  }
-@@ -1227,7 +1389,7 @@
+@@ -1241,7 +1405,7 @@ int add_match_this_boot(sd_journal *j, const char *machine) {
  int show_journal_by_unit(
                  FILE *f,
                  const char *unit,
@@ -769,8 +769,8 @@ Index: git/src/shared/logs-show.c
                  unsigned n_columns,
                  usec_t not_before,
                  unsigned how_many,
-@@ -1240,8 +1402,7 @@
-         _cleanup_journal_close_ sd_journal*j = NULL;
+@@ -1254,8 +1418,7 @@ int show_journal_by_unit(
+         _cleanup_(sd_journal_closep) sd_journal *j = NULL;
          int r;
  
 -        assert(mode >= 0);
@@ -779,7 +779,7 @@ Index: git/src/shared/logs-show.c
          assert(unit);
  
          if (how_many <= 0)
-@@ -1272,7 +1433,7 @@
+@@ -1286,7 +1449,7 @@ int show_journal_by_unit(
                  log_debug("Journal filter: %s", filter);
          }
  
@@ -788,7 +788,7 @@ Index: git/src/shared/logs-show.c
  }
  
  static const char *const output_mode_table[_OUTPUT_MODE_MAX] = {
-@@ -1285,7 +1446,183 @@
+@@ -1299,7 +1462,183 @@ static const char *const output_mode_table[_OUTPUT_MODE_MAX] = {
          [OUTPUT_JSON] = "json",
          [OUTPUT_JSON_PRETTY] = "json-pretty",
          [OUTPUT_JSON_SSE] = "json-sse",
@@ -973,13 +973,13 @@ Index: git/src/shared/logs-show.c
 +
 +        return formatter->mode;
 +}
-Index: git/src/shared/logs-show.h
-===================================================================
---- git.orig/src/shared/logs-show.h	2015-11-14 23:11:22.859799467 +0000
-+++ git/src/shared/logs-show.h	2015-11-14 23:11:22.851799467 +0000
-@@ -29,10 +29,12 @@
+diff --git a/src/shared/logs-show.h b/src/shared/logs-show.h
+index 9765a24..9cf61cb 100644
+--- a/src/shared/logs-show.h
++++ b/src/shared/logs-show.h
+@@ -31,10 +31,12 @@
+ #include "time-util.h"
  #include "util.h"
- #include "output-mode.h"
  
 +typedef struct _OutputFormatter OutputFormatter;
 +
@@ -991,7 +991,7 @@ Index: git/src/shared/logs-show.h
                  unsigned n_columns,
                  OutputFlags flags,
                  bool *ellipsized);
-@@ -51,7 +53,7 @@
+@@ -53,7 +55,7 @@ int add_matches_for_user_unit(
  int show_journal_by_unit(
                  FILE *f,
                  const char *unit,
@@ -1000,7 +1000,7 @@ Index: git/src/shared/logs-show.h
                  unsigned n_columns,
                  usec_t not_before,
                  unsigned how_many,
-@@ -69,3 +71,11 @@
+@@ -71,3 +73,11 @@ void json_escape(
  
  const char* output_mode_to_string(OutputMode m) _const_;
  OutputMode output_mode_from_string(const char *s) _pure_;
@@ -1012,11 +1012,11 @@ Index: git/src/shared/logs-show.h
 +
 +void output_formatter_free(OutputFormatter **formatter);
 +#define _cleanup_output_formatter_ _cleanup_(output_formatter_free)
-Index: git/src/shared/output-mode.h
-===================================================================
---- git.orig/src/shared/output-mode.h	2015-11-14 23:11:22.859799467 +0000
-+++ git/src/shared/output-mode.h	2015-11-14 23:11:22.855799467 +0000
-@@ -32,6 +32,7 @@
+diff --git a/src/shared/output-mode.h b/src/shared/output-mode.h
+index c5470e7..b565840 100644
+--- a/src/shared/output-mode.h
++++ b/src/shared/output-mode.h
+@@ -30,6 +30,7 @@ typedef enum OutputMode {
          OUTPUT_JSON_PRETTY,
          OUTPUT_JSON_SSE,
          OUTPUT_CAT,
@@ -1024,13 +1024,13 @@ Index: git/src/shared/output-mode.h
          _OUTPUT_MODE_MAX,
          _OUTPUT_MODE_INVALID = -1
  } OutputMode;
-Index: git/src/systemctl/systemctl.c
-===================================================================
---- git.orig/src/systemctl/systemctl.c	2015-11-14 23:11:22.859799467 +0000
-+++ git/src/systemctl/systemctl.c	2015-11-14 23:15:15.819794775 +0000
-@@ -135,7 +135,8 @@
+diff --git a/src/systemctl/systemctl.c b/src/systemctl/systemctl.c
+index c75d12c..deee75f 100644
+--- a/src/systemctl/systemctl.c
++++ b/src/systemctl/systemctl.c
+@@ -145,7 +145,8 @@ static enum action {
  static BusTransport arg_transport = BUS_TRANSPORT_LOCAL;
- static char *arg_host = NULL;
+ static const char *arg_host = NULL;
  static unsigned arg_lines = 10;
 -static OutputMode arg_output = OUTPUT_SHORT;
 +static const char *arg_output = "short";
@@ -1038,7 +1038,7 @@ Index: git/src/systemctl/systemctl.c
  static bool arg_plain = false;
  static bool arg_firmware_setup = false;
  static bool arg_now = false;
-@@ -3587,7 +3588,7 @@
+@@ -3735,7 +3736,7 @@ static void print_status_info(
                  show_journal_by_unit(
                                  stdout,
                                  i->id,
@@ -1047,7 +1047,7 @@ Index: git/src/systemctl/systemctl.c
                                  0,
                                  i->inactive_exit_timestamp_monotonic,
                                  arg_lines,
-@@ -6104,7 +6105,8 @@
+@@ -6224,7 +6225,8 @@ static void systemctl_help(void) {
                 "  -n --lines=INTEGER  Number of journal entries to show\n"
                 "  -o --output=STRING  Change journal output mode (short, short-iso,\n"
                 "                              short-precise, short-monotonic, verbose,\n"
@@ -1057,15 +1057,7 @@ Index: git/src/systemctl/systemctl.c
                 "     --firmware-setup Tell the firmware to show the setup menu on next boot\n"
                 "     --plain          Print unit dependencies as a list instead of a tree\n\n"
                 "Unit Commands:\n"
-@@ -6337,6 +6339,7 @@
-         };
- 
-         int c;
-+        int err;
- 
-         assert(argc >= 0);
-         assert(argv);
-@@ -6558,11 +6561,7 @@
+@@ -6759,11 +6761,7 @@ static int systemctl_parse_argv(int argc, char *argv[]) {
                          break;
  
                  case 'o':
@@ -1078,7 +1070,15 @@ Index: git/src/systemctl/systemctl.c
                          break;
  
                  case 'i':
-@@ -6634,6 +6633,11 @@
+@@ -7197,6 +7195,7 @@ static int runlevel_parse_argv(int argc, char *argv[]) {
+         };
+ 
+         int c;
++        int err;
+ 
+         assert(argc >= 0);
+         assert(argv);
+@@ -7220,6 +7219,11 @@ static int runlevel_parse_argv(int argc, char *argv[]) {
                  return -EINVAL;
          }
  
@@ -1090,3 +1090,6 @@ Index: git/src/systemctl/systemctl.c
          return 1;
  }
  
+-- 
+2.7.4
+

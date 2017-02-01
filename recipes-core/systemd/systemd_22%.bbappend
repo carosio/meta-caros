@@ -32,6 +32,8 @@ MGMT_IF_vmware ?= "ven0"
 SYSTEMD_PACKAGES += "${PN}-binfmt"
 
 PACKAGECONFIG += "microhttpd"
+PACKAGECONFIG += "timesyncd"
+PACKAGECONFIG += "binfmt"
 
 do_install_append() {
 	install -m 0644 ${WORKDIR}/timesyncd.conf ${D}${sysconfdir}/systemd/timesyncd.conf

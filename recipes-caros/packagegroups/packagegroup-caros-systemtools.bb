@@ -10,10 +10,10 @@ PACKAGES = "${PN}"
 PACKAGE_GROUP_caros_systemtools = "${PN}"
 
 RDEPENDS_${PN} = "\
+iproute2 \
 lsof \
 perf \
 smem \
-ss \
 strace \
 sudo \
 "
