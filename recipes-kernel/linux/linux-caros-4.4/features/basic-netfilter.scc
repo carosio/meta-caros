@@ -1,0 +1,6 @@
+include features/netfilter/netfilter.scc
+
+define KFEATURE_DESCRIPTION "a basic netfilter feature-set"
+define KFEATURE_COMPATIBILITY all
+
+kconf non-hardware basic-netfilter.cfg

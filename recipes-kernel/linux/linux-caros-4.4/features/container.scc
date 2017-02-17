@@ -1,0 +1,4 @@
+define KFEATURE_DESCRIPTION "feature-set for containerization"
+define KFEATURE_COMPATIBILITY all
+
+kconf non-hardware container.cfg

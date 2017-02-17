@@ -1,3 +1,5 @@
+include features/basic-netfilter.scc
+include features/cgroups.scc
 include features/openvswitch.scc
-include features/vxlan/vxlan-enable.scc
 include features/tcp-md5sig.scc
+include features/vxlan/vxlan-enable.scc
