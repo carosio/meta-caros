@@ -1,6 +1,6 @@
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
-PR := "${PR}.12"
+PR := "${PR}.13"
 
 SRC_URI += " \
 	file://0001-tp-remote-syslog.patch \
