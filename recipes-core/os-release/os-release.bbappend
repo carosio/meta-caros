@@ -1,6 +1,6 @@
-PR:="${PR}.1"
+PR:="${PR}.2"
 HOME_URL="caros.io"
 BUG_REPORT_URL="support@travelping.com"
 
 OS_RELEASE_FIELDS += "HOME_URL BUG_REPORT_URL"
-PRETTY_NAME = '"${DISTRO_NAME} ${VERSION}"'
+PRETTY_NAME = '${DISTRO_NAME} ${VERSION}'
