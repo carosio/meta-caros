@@ -7,14 +7,14 @@ S = "${WORKDIR}/git"
 
 SRCREV="5c061b29da2ead57a70edaa347ee21a1a48ebac0"
 
-PR = "r1"
+PR = "r2"
 
 SRC_URI = "git://github.com/travelping/eradius.git;protocol=git"
 SRC_URI += "file://tetrapak-exclude-rebar.patch"
 
 inherit tetrapak
 
-DEPENDS = "erlang-lager"
+DEPENDS = "erlang-lager erlang-exometer-core"
 
 python () {
     erlang_def_package("eradius", "eradius-*", "ebin priv", ".travis.yml .pc src include mibs test NEWS.md README_eradius_journal.adoc README.md MIT_LICENSE MAINTAINERS cover.spec", d)
