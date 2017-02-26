@@ -1,0 +1,12 @@
+[Unit]
+Description=SNMP-Agent for BGP4 state of BIRD Routing Daemon
+Requires=bird-snmp-agent.service
+
+[Service]
+Environment=BGPMIBFILE=@LIBEXEC@/BGP4-MIB.txt
+SyslogIdentifier=bird-snmp-agent
+ExecStart=@SBINDIR@/bird-snmp-agent-bgp
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

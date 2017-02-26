@@ -2,7 +2,7 @@ SUMMARY = "Various tools relating to the Simple Network Management Protocol"
 HOMEPAGE = "http://www.net-snmp.org/"
 LICENSE = "BSD"
 
-PR = "r1"
+PR = "r2"
 
 LIC_FILES_CHKSUM = "file://README;beginline=3;endline=8;md5=7f7f00ba639ac8e8deb5a622ea24634e"
 
@@ -17,8 +17,9 @@ SRC_URI = "${SOURCEFORGE_MIRROR}/net-snmp/net-snmp-${PV}.zip \
         file://snmptrapd.service \
         file://agentx-crash.patch \
         file://fix-request-id-0.patch \
-        file://10-listen-on-ipv4-and-ipv6.conf \
         file://remove-build-host-includes.patch \
+        file://environmentfile \
+        file://environmentfile_trapd \
 	file://fix-libnl-include-headers-detection.patch"
 
 SRC_URI[md5sum] = "9f682bd70c717efdd9f15b686d07baee"
@@ -55,11 +56,11 @@ do_configure_prepend() {
 
 do_install_append() {
     install -d ${D}${sysconfdir}/snmp
+    install -d ${D}${sysconfdir}/default
     install -d ${D}${sysconfdir}/snmp/config.d
     install -d ${D}${sysconfdir}/init.d
     install -m 755 ${WORKDIR}/init ${D}${sysconfdir}/init.d/snmpd
     install -m 644 ${WORKDIR}/snmpd.conf ${D}${sysconfdir}/snmp/
-    install -m 644 ${WORKDIR}/10-listen-on-ipv4-and-ipv6.conf ${D}${sysconfdir}/snmp/config.d/
     install -m 644 ${WORKDIR}/snmptrapd.conf ${D}${sysconfdir}/snmp/
     sed -e "s@-I/usr/include@@g" \
         -e "s@^prefix=.*@prefix=${STAGING_DIR_HOST}@g" \
@@ -70,6 +71,8 @@ do_install_append() {
     install -d ${D}${systemd_unitdir}/system
     install -m 0644 ${WORKDIR}/snmpd.service ${D}${systemd_unitdir}/system
     install -m 0644 ${WORKDIR}/snmptrapd.service ${D}${systemd_unitdir}/system
+    install -m 0644 ${WORKDIR}/environmentfile ${D}${sysconfdir}/default/snmpd
+    install -m 0644 ${WORKDIR}/environmentfile_trapd ${D}${sysconfdir}/default/snmptrapd
 }
 
 SYSROOT_PREPROCESS_FUNCS += "net_snmp_sysroot_preprocess"
@@ -93,10 +96,12 @@ FILES_${PN}-server-snmpd = "${sbindir}/snmpd \
                             ${sysconfdir}/snmp/config.d \
                             ${sysconfdir}/init.d \
                             ${systemd_unitdir}/system/snmpd.service \
+                            ${sysconfdir}/default/snmpd \
 "
 
 FILES_${PN}-server-snmptrapd = "${sbindir}/snmptrapd \
                                 ${sysconfdir}/snmp/snmptrapd.conf \
+                                ${sysconfdir}/default/snmptrapd \
                                 ${systemd_unitdir}/system/snmptrapd.service \
 "
 
@@ -104,8 +109,12 @@ FILES_${PN}-client = "${bindir}/* ${datadir}/snmp/"
 FILES_${PN}-dbg += "${libdir}/.debug/ ${sbindir}/.debug/ ${bindir}/.debug/"
 FILES_${PN}-dev += "${bindir}/net-snmp-config ${bindir}/mib2c ${bindir}/mib2c-update"
 
-CONFFILES_${PN}-server-snmpd = "${sysconfdir}/snmp/snmpd.conf"
-CONFFILES_${PN}-server-snmptrapd = "${sysconfdir}/snmp/snmptrapd.conf"
+CONFFILES_${PN}-server-snmpd = "${sysconfdir}/snmp/snmpd.conf \
+                                ${sysconfdir}/default/snmpd \
+"
+CONFFILES_${PN}-server-snmptrapd = "${sysconfdir}/snmp/snmptrapd.conf \
+                                    ${sysconfdir}/default/snmptrapd \
+"
 
 INITSCRIPT_PACKAGES = "${PN}-server"
 INITSCRIPT_NAME_${PN}-server = "snmpd"

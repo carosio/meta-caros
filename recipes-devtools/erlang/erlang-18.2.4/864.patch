@@ -1,0 +1,705 @@
+From ba279779b85741f7491b42a70bd80f689b000bb6 Mon Sep 17 00:00:00 2001
+From: Michael Santos <michael.santos@gmail.com>
+Date: Sun, 18 Oct 2015 16:20:37 -0400
+Subject: [PATCH] epmd: support IPv6 node registration
+
+Allow IPv6 nodes to register with and query epmd. On systems with
+IPv6 support:
+
+* epmd listens on both the IPv4 and IPv6 ANY or loopback sockets
+
+* the epmd cli client connects to epmd over the IPv6 loopback
+
+* distributed nodes started with "-proto_dist inet6_tcp" will register
+  with epmd over IPv6
+
+To work on IPv6 capable systems that have IPv6 support disabled,
+epmd ignores errors opening the socket if the protocol is not
+supported. Similarly, the epmd client will fall back to IPv4 if the IPv6
+socket is not available.
+
+The interaction between IPv4 and IPv6 sockets depends on the platform:
+
+* FreeBSD allows multiple "specific" sockets to bind the same port (such
+  as 2 sockets listening to the same port on ANY and the loopback).
+  Binding port 4369 to IPv4 and IPv6 sockets simulataneously is allowed.
+
+* Linux does not allow the same port to be bound by different sockets.
+  Setting the IPV6_V6ONLY socket option is required.
+
+* Windows
+
+  The behaviour differs depending on the version of Windows:
+
+  http://msdn.microsoft.com/en-us/library/windows/desktop/bb513665(v=vs.85).aspx
+
+  According to the site, sockets on Windows XP with Service Pack 1 (SP1)
+  and Windows Server 2003 will only listen on either IPv4 or IPv6, so
+  creating two sockets is required to service IPv4 and IPv6 traffic on
+  the same port. The IPV6_V6ONLY socket option is not supported.
+
+  For Windows Vista and later, a single socket can handle IPv4 and IPv6
+  traffic for the same port. The IPV6_V6ONLY socket option is supported
+  and is enabled for IPv6 sockets by default.
+---
+ erts/doc/src/epmd.xml         |   2 +-
+ erts/doc/src/erl.xml          |  22 +++++
+ erts/epmd/src/epmd.c          |   2 +-
+ erts/epmd/src/epmd_cli.c      |  30 +++++--
+ erts/epmd/src/epmd_int.h      |  63 ++++++++-----
+ erts/epmd/src/epmd_srv.c      | 199 ++++++++++++++++++++++++++++++------------
+ erts/epmd/test/epmd_SUITE.erl |  33 ++++++-
+ lib/kernel/src/erl_epmd.erl   |  18 ++--
+ 8 files changed, 272 insertions(+), 97 deletions(-)
+
+diff --git a/erts/doc/src/epmd.xml b/erts/doc/src/epmd.xml
+index 28fcc8f..7f61804 100644
+--- a/erts/doc/src/epmd.xml
++++ b/erts/doc/src/epmd.xml
+@@ -37,7 +37,7 @@
+   <comsummary>
+   <p>Erlang Port Mapper Daemon</p>
+   <taglist>
+-  <tag><c><![CDATA[epmd [-d|-debug] [DbgExtra...] [-port No] [-daemon] [-relaxed_command_check]]]></c></tag>
++  <tag><c><![CDATA[epmd [-d|-debug] [DbgExtra...] [-address Addresses] [-port No] [-daemon] [-relaxed_command_check]]]></c></tag>
+   <item>
+   <p>Starts the port mapper daemon</p>
+   </item>
+diff --git a/erts/doc/src/erl.xml b/erts/doc/src/erl.xml
+index ec4a0de..545e1d8 100644
+--- a/erts/doc/src/erl.xml
++++ b/erts/doc/src/erl.xml
+@@ -382,6 +382,28 @@
+           similar to <c><![CDATA[code:add_pathsz/1]]></c>. See
+           <seealso marker="kernel:code">code(3)</seealso>.</p>
+       </item>
++      <tag><c><![CDATA[-proto_dist Proto]]></c></tag>
++      <item>
++        <p>Specify a protocol for Erlang distribution.</p>
++	    <taglist>
++	      <tag><c>inet_tcp</c></tag>
++              <item>
++                  <p>TCP over IPv4 (the default)</p>
++              </item>
++	      <tag><c>inet_ssl</c></tag>
++              <item>
++                  <p>distribution over SSL</p>
++              </item>
++	      <tag><c>inet6_tcp</c></tag>
++              <item>
++                  <p>TCP over IPv6</p>
++              </item>
++        </taglist>
++        <p>For example, to start up IPv6 distributed nodes:</p>
++<pre>
++% <input>erl -name test@ipv6node.example.com -proto_dist inet6_tcp</input>
++</pre>
++      </item>
+       <tag><c><![CDATA[-remsh Node]]></c></tag>
+       <item>
+         <p>Starts Erlang with a remote shell connected to <c><![CDATA[Node]]></c>.</p>
+diff --git a/erts/epmd/src/epmd.c b/erts/epmd/src/epmd.c
+index 63ec18d..5513cb2 100644
+--- a/erts/epmd/src/epmd.c
++++ b/erts/epmd/src/epmd.c
+@@ -343,7 +343,7 @@ static void run_daemon(EpmdVars *g)
+     for (fd = 0; fd < g->max_conn ; fd++) /* close all files ... */
+         close(fd);
+     /* Syslog on linux will try to write to whatever if we dont
+-       inform it of that the log is closed. */
++       inform it that the log is closed. */
+     closelog();
+ 
+     /* These shouldn't be needed but for safety... */
+diff --git a/erts/epmd/src/epmd_cli.c b/erts/epmd/src/epmd_cli.c
+index a8fe865..9e158c6 100644
+--- a/erts/epmd/src/epmd_cli.c
++++ b/erts/epmd/src/epmd_cli.c
+@@ -136,19 +136,33 @@ void epmd_call(EpmdVars *g,int what)
+ static int conn_to_epmd(EpmdVars *g)
+ {
+     struct EPMD_SOCKADDR_IN address;
++    size_t salen = 0;
+     int connect_sock;
+-    
+-    connect_sock = socket(FAMILY, SOCK_STREAM, 0);
+-    if (connect_sock<0)
+-	goto error;
++    unsigned short sport = g->port;
++
++#if defined(HAVE_IN6) && defined(AF_INET6)
++    SET_ADDR6(address, in6addr_loopback, sport);
++    salen = sizeof(struct sockaddr_in6);
++
++    connect_sock = socket(AF_INET6, SOCK_STREAM, 0);
++    if (connect_sock>=0) {
++
++    if (connect(connect_sock, (struct sockaddr*)&address, salen) == 0)
++	return connect_sock;
+ 
+-    { /* store port number in unsigned short */
+-      unsigned short sport = g->port;
+-      SET_ADDR(address, EPMD_ADDR_LOOPBACK, sport);
++    close(connect_sock);
+     }
++#endif
++    SET_ADDR(address, htonl(INADDR_LOOPBACK), sport);
++    salen = sizeof(struct sockaddr_in);
+ 
+-    if (connect(connect_sock, (struct sockaddr*)&address, sizeof address) < 0) 
++    connect_sock = socket(AF_INET, SOCK_STREAM, 0);
++    if (connect_sock<0)
+ 	goto error;
++
++    if (connect(connect_sock, (struct sockaddr*)&address, salen) < 0)
++	goto error;
++
+     return connect_sock;
+ 
+  error:
+diff --git a/erts/epmd/src/epmd_int.h b/erts/epmd/src/epmd_int.h
+index 26100af..94b9cca 100644
+--- a/erts/epmd/src/epmd_int.h
++++ b/erts/epmd/src/epmd_int.h
+@@ -52,9 +52,14 @@
+ #include <string.h>
+ 
+ #ifdef __WIN32__
++#  ifdef _WIN32_WINVER
++#    undef _WIN32_WINVER
++#  endif
++#  define _WIN32_WINVER 0x0501
+ #  ifndef WINDOWS_H_INCLUDES_WINSOCK2_H
+ #    include <winsock2.h>
+ #  endif
++#  include <ws2tcpip.h>
+ #  include <windows.h>
+ #  include <process.h>
+ #endif
+@@ -183,33 +188,53 @@
+ /* ************************************************************************ */
+ /* Macros that let us use IPv6                                              */
+ 
+-#if defined(HAVE_IN6) && defined(AF_INET6) && defined(EPMD6)
++#if HAVE_IN6
++#  if ! defined(HAVE_IN6ADDR_ANY) || ! HAVE_IN6ADDR_ANY
++#    if HAVE_DECL_IN6ADDR_ANY_INIT
++static const struct in6_addr in6addr_any = { { IN6ADDR_ANY_INIT } };
++#    else
++static const struct in6_addr in6addr_any =
++    { { { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 } } };
++#    endif /* HAVE_IN6ADDR_ANY_INIT */
++#  endif /* ! HAVE_DECL_IN6ADDR_ANY */
++
++#  if ! defined(HAVE_IN6ADDR_LOOPBACK) || ! HAVE_IN6ADDR_LOOPBACK
++#    if HAVE_DECL_IN6ADDR_LOOPBACK_INIT
++static const struct in6_addr in6addr_loopback =
++    { { IN6ADDR_LOOPBACK_INIT } };
++#    else
++static const struct in6_addr in6addr_loopback =
++    { { { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1 } } };
++#    endif /* HAVE_IN6ADDR_LOOPBACK_INIT */
++#  endif /* ! HAVE_DECL_IN6ADDR_LOOPBACK */
++#endif /* HAVE_IN6 */
++
++#define IS_ADDR_LOOPBACK(addr) ((addr).s_addr == htonl(INADDR_LOOPBACK))
++
++#if defined(HAVE_IN6) && defined(AF_INET6)
+ 
+-#define EPMD_SOCKADDR_IN sockaddr_in6
+-#define EPMD_IN_ADDR in6_addr
+-#define EPMD_S_ADDR s6_addr
+-#define EPMD_ADDR_LOOPBACK in6addr_loopback.s6_addr
+-#define EPMD_ADDR_ANY in6addr_any.s6_addr
++#define EPMD_SOCKADDR_IN sockaddr_storage
+ #define FAMILY AF_INET6
+ 
+-#define SET_ADDR(dst, addr, port) do { \
+-    memset((char*)&(dst), 0, sizeof(dst)); \
+-    memcpy((char*)&(dst).sin6_addr.s6_addr, (char*)&(addr), 16); \
+-    (dst).sin6_family = AF_INET6; \
+-    (dst).sin6_flowinfo = 0; \
+-    (dst).sin6_port = htons(port); \
++#define SET_ADDR6(dst, addr, port) do { \
++    struct sockaddr_in6 *sa = (struct sockaddr_in6 *)&(dst); \
++    memset(sa, 0, sizeof(dst)); \
++    sa->sin6_family = AF_INET6; \
++    sa->sin6_addr = (addr); \
++    sa->sin6_port = htons(port); \
+  } while(0)
+ 
+-#define IS_ADDR_LOOPBACK(addr) \
+-    (memcmp((addr).s6_addr, in6addr_loopback.s6_addr, 16) == 0)
++#define SET_ADDR(dst, addr, port) do { \
++    struct sockaddr_in *sa = (struct sockaddr_in *)&(dst); \
++    memset(sa, 0, sizeof(dst)); \
++    sa->sin_family = AF_INET; \
++    sa->sin_addr.s_addr = (addr); \
++    sa->sin_port = htons(port); \
++ } while(0)
+ 
+ #else /* Not IP v6 */
+ 
+ #define EPMD_SOCKADDR_IN sockaddr_in
+-#define EPMD_IN_ADDR in_addr
+-#define EPMD_S_ADDR s_addr
+-#define EPMD_ADDR_LOOPBACK htonl(INADDR_LOOPBACK)
+-#define EPMD_ADDR_ANY htonl(INADDR_ANY)
+ #define FAMILY AF_INET
+ 
+ #define SET_ADDR(dst, addr, port) do { \
+@@ -219,8 +244,6 @@
+     (dst).sin_port = htons(port); \
+  } while(0)
+ 
+-#define IS_ADDR_LOOPBACK(addr) ((addr).s_addr == htonl(INADDR_LOOPBACK))
+-
+ #endif /* Not IP v6 */
+ 
+ /* ************************************************************************ */
+diff --git a/erts/epmd/src/epmd_srv.c b/erts/epmd/src/epmd_srv.c
+index 5b58554..6d7dce2 100644
+--- a/erts/epmd/src/epmd_srv.c
++++ b/erts/epmd/src/epmd_srv.c
+@@ -76,6 +76,7 @@ static time_t current_time(EpmdVars*);
+ 
+ static Connection *conn_init(EpmdVars*);
+ static int conn_open(EpmdVars*,int);
++static int conn_local_peer_check(EpmdVars*, int);
+ static int conn_close_fd(EpmdVars*,int);
+ 
+ static void node_init(EpmdVars*);
+@@ -206,10 +207,11 @@ void run(EpmdVars *g)
+ {
+   struct EPMD_SOCKADDR_IN iserv_addr[MAX_LISTEN_SOCKETS];
+   int listensock[MAX_LISTEN_SOCKETS];
+-  int num_sockets;
++  int num_sockets = 0;
+   int i;
+   int opt;
+   unsigned short sport = g->port;
++  int bound = 0;
+ 
+   node_init(g);
+   g->conn = conn_init(g);
+@@ -252,64 +254,82 @@ void run(EpmdVars *g)
+   if (g->addresses != NULL && /* String contains non-separator characters if: */
+       g->addresses[strspn(g->addresses," ,")] != '\000')
+     {
+-      char *tmp;
+-      char *token;
+-      int loopback_ok = 0;
++      char *tmp = NULL;
++      char *token = NULL;
++
++      /* Always listen on the loopback. */
++      SET_ADDR(iserv_addr[num_sockets],htonl(INADDR_LOOPBACK),sport);
++      num_sockets++;
++#if defined(HAVE_IN6) && defined(AF_INET6)
++      SET_ADDR6(iserv_addr[num_sockets],in6addr_loopback,sport);
++      num_sockets++;
++#endif
+ 
+-      if ((tmp = (char *)malloc(strlen(g->addresses) + 1)) == NULL)
++	  if ((tmp = strdup(g->addresses)) == NULL)
+ 	{
+ 	  dbg_perror(g,"cannot allocate memory");
+ 	  epmd_cleanup_exit(g,1);
+ 	}
+-      strcpy(tmp,g->addresses);
+ 
+-      for(token = strtok(tmp,", "), num_sockets = 0;
++      for(token = strtok(tmp,", ");
+ 	  token != NULL;
+-	  token = strtok(NULL,", "), num_sockets++)
++	  token = strtok(NULL,", "))
+ 	{
+-	  struct EPMD_IN_ADDR addr;
++	  struct in_addr addr;
+ #ifdef HAVE_INET_PTON
+-	  int ret;
++	  struct in6_addr addr6;
++	  struct sockaddr_storage *sa = &iserv_addr[num_sockets];
+ 
+-	  if ((ret = inet_pton(FAMILY,token,&addr)) == -1)
++	  if (inet_pton(AF_INET6,token,&addr6) == 1)
+ 	    {
+-	      dbg_perror(g,"cannot convert IP address to network format");
+-	      epmd_cleanup_exit(g,1);
++	      SET_ADDR6(iserv_addr[num_sockets],addr6,sport);
++	    }
++	  else if (inet_pton(AF_INET,token,&addr) == 1)
++	    {
++	      SET_ADDR(iserv_addr[num_sockets],addr.s_addr,sport);
++	    }
++	  else
++#else
++	  if ((addr.s_addr = inet_addr(token)) != INADDR_NONE)
++	    {
++	      SET_ADDR(iserv_addr[num_sockets],addr.s_addr,sport);
+ 	    }
+-	  else if (ret == 0)
+-#elif !defined(EPMD6)
+-	  if ((addr.EPMD_S_ADDR = inet_addr(token)) == INADDR_NONE)
++	  else
+ #endif
+ 	    {
+ 	      dbg_tty_printf(g,0,"cannot parse IP address \"%s\"",token);
+ 	      epmd_cleanup_exit(g,1);
+ 	    }
+ 
++#if defined(HAVE_IN6) && defined(AF_INET6)
++	  if (sa->ss_family == AF_INET6 && IN6_IS_ADDR_LOOPBACK(&addr6))
++	      continue;
++
++	  if (sa->ss_family == AF_INET)
++#endif
+ 	  if (IS_ADDR_LOOPBACK(addr))
+-	    loopback_ok = 1;
++	    continue;
++
++	  num_sockets++;
+ 
+-	  if (num_sockets - loopback_ok == MAX_LISTEN_SOCKETS - 1)
++	  if (num_sockets >= MAX_LISTEN_SOCKETS)
+ 	    {
+ 	      dbg_tty_printf(g,0,"cannot listen on more than %d IP addresses",
+ 			     MAX_LISTEN_SOCKETS);
+ 	      epmd_cleanup_exit(g,1);
+ 	    }
+-
+-	  SET_ADDR(iserv_addr[num_sockets],addr.EPMD_S_ADDR,sport);
+ 	}
+ 
+       free(tmp);
+-
+-      if (!loopback_ok)
+-	{
+-	  SET_ADDR(iserv_addr[num_sockets],EPMD_ADDR_LOOPBACK,sport);
+-	  num_sockets++;
+-	}
+     }
+   else
+     {
+-      SET_ADDR(iserv_addr[0],EPMD_ADDR_ANY,sport);
+-      num_sockets = 1;
++      SET_ADDR(iserv_addr[num_sockets],htonl(INADDR_ANY),sport);
++      num_sockets++;
++#if defined(HAVE_IN6) && defined(AF_INET6)
++      SET_ADDR6(iserv_addr[num_sockets],in6addr_any,sport);
++      num_sockets++;
++#endif
+     }
+ #ifdef HAVE_SYSTEMD_DAEMON
+     }
+@@ -340,13 +360,39 @@ void run(EpmdVars *g)
+ #endif /* HAVE_SYSTEMD_DAEMON */
+   for (i = 0; i < num_sockets; i++)
+     {
+-      if ((listensock[i] = socket(FAMILY,SOCK_STREAM,0)) < 0)
++      struct sockaddr *sa = (struct sockaddr *)&iserv_addr[i];
++#if defined(HAVE_IN6) && defined(AF_INET6)
++      size_t salen = (sa->sa_family == AF_INET6 ?
++              sizeof(struct sockaddr_in6) :
++              sizeof(struct sockaddr_in));
++#else
++      size_t salen = sizeof(struct sockaddr_in);
++#endif
++
++      if ((listensock[i] = socket(sa->sa_family,SOCK_STREAM,0)) < 0)
+ 	{
+-	  dbg_perror(g,"error opening stream socket");
+-	  epmd_cleanup_exit(g,1);
++	  switch (errno) {
++	      case EAFNOSUPPORT:
++	      case EPROTONOSUPPORT:
++	          continue;
++	      default:
++	          dbg_perror(g,"error opening stream socket");
++	          epmd_cleanup_exit(g,1);
++	  }
+ 	}
+       g->listenfd[i] = listensock[i];
+-  
++
++#if HAVE_DECL_IPV6_V6ONLY
++      opt = 1;
++      if (sa->sa_family == AF_INET6 &&
++          setsockopt(listensock[i],IPPROTO_IPV6,IPV6_V6ONLY,&opt,
++              sizeof(opt)) <0)
++	{
++	  dbg_perror(g,"can't set IPv6 only socket option");
++	  epmd_cleanup_exit(g,1);
++	}
++#endif
++
+       /*
+        * Note that we must not enable the SO_REUSEADDR on Windows,
+        * because addresses will be reused even if they are still in use.
+@@ -378,8 +424,7 @@ void run(EpmdVars *g)
+ 	dbg_perror(g,"failed to set non-blocking mode of listening socket %d",
+ 		   listensock[i]);
+ 
+-      if (bind(listensock[i], (struct sockaddr*) &iserv_addr[i],
+-	  sizeof(iserv_addr[i])) < 0)
++      if (bind(listensock[i], (struct sockaddr*) &iserv_addr[i], salen) < 0)
+ 	{
+ 	  if (errno == EADDRINUSE)
+ 	    {
+@@ -394,12 +439,18 @@ void run(EpmdVars *g)
+ 	    }
+ 	}
+ 
++      bound++;
++
+       if(listen(listensock[i], SOMAXCONN) < 0) {
+           dbg_perror(g,"failed to listen on socket");
+           epmd_cleanup_exit(g,1);
+       }
+       select_fd_set(g, listensock[i]);
+     }
++  if (bound == 0) {
++      dbg_perror(g,"unable to bind any address");
++      epmd_cleanup_exit(g,1);
++  }
+ #ifdef HAVE_SYSTEMD_DAEMON
+     }
+     sd_notifyf(0, "READY=1\n"
+@@ -1004,15 +1055,6 @@ static int conn_open(EpmdVars *g,int fd)
+ 
+   for (i = 0; i < g->max_conn; i++) {
+     if (g->conn[i].open == EPMD_FALSE) {
+-      struct sockaddr_in si;
+-      struct sockaddr_in di;
+-#ifdef HAVE_SOCKLEN_T
+-      socklen_t st;
+-#else
+-      int st;
+-#endif
+-      st = sizeof(si);
+-
+       g->active_conn++;
+       s = &g->conn[i];
+      
+@@ -1023,20 +1065,7 @@ static int conn_open(EpmdVars *g,int fd)
+       s->open = EPMD_TRUE;
+       s->keep = EPMD_FALSE;
+ 
+-      /* Determine if connection is from localhost */
+-      if (getpeername(s->fd,(struct sockaddr*) &si,&st) ||
+-	  st < sizeof(si)) {
+-	  /* Failure to get peername is regarded as non local host */
+-	  s->local_peer = EPMD_FALSE;
+-      } else {
+-	  /* Only 127.x.x.x and connections from the host's IP address
+-	     allowed, no false positives */
+-	  s->local_peer =
+-	      (((((unsigned) ntohl(si.sin_addr.s_addr)) & 0xFF000000U) ==
+-	       0x7F000000U) ||
+-	       (getsockname(s->fd,(struct sockaddr*) &di,&st) ?
+-	       EPMD_FALSE : si.sin_addr.s_addr == di.sin_addr.s_addr));
+-      }
++      s->local_peer = conn_local_peer_check(g, s->fd);
+       dbg_tty_printf(g,2,(s->local_peer) ? "Local peer connected" :
+ 		     "Non-local peer connected");
+ 
+@@ -1044,7 +1073,7 @@ static int conn_open(EpmdVars *g,int fd)
+       s->got  = 0;
+       s->mod_time = current_time(g); /* Note activity */
+ 
+-      s->buf = (char *)malloc(INBUF_SIZE);
++      s->buf = malloc(INBUF_SIZE);
+ 
+       if (s->buf == NULL) {
+ 	dbg_printf(g,0,"epmd: Insufficient memory");
+@@ -1062,6 +1091,60 @@ static int conn_open(EpmdVars *g,int fd)
+   return EPMD_FALSE;
+ }
+ 
++static int conn_local_peer_check(EpmdVars *g, int fd)
++{
++  struct EPMD_SOCKADDR_IN si;
++  struct EPMD_SOCKADDR_IN di;
++
++  struct sockaddr_in *si4 = (struct sockaddr_in *)&si;
++  struct sockaddr_in *di4 = (struct sockaddr_in *)&di;
++
++#if defined(HAVE_IN6) && defined(AF_INET6)
++  struct sockaddr_in6 *si6 = (struct sockaddr_in6 *)&si;
++  struct sockaddr_in6 *di6 = (struct sockaddr_in6 *)&di;
++#endif
++
++#ifdef HAVE_SOCKLEN_T
++  socklen_t st;
++#else
++  int st;
++#endif
++
++  st = sizeof(si);
++
++  /* Determine if connection is from localhost */
++  if (getpeername(fd,(struct sockaddr*) &si,&st) ||
++	  st > sizeof(si)) {
++	  /* Failure to get peername is regarded as non local host */
++	  return EPMD_FALSE;
++  }
++
++  /* Only 127.x.x.x and connections from the host's IP address
++	 allowed, no false positives */
++#if defined(HAVE_IN6) && defined(AF_INET6)
++  if (si.ss_family == AF_INET6 && IN6_IS_ADDR_LOOPBACK(&(si6->sin6_addr)))
++	  return EPMD_TRUE;
++
++  if (si.ss_family == AF_INET)
++#endif
++  if ((((unsigned) ntohl(si4->sin_addr.s_addr)) & 0xFF000000U) ==
++	  0x7F000000U)
++	  return EPMD_TRUE;
++
++  if (getsockname(fd,(struct sockaddr*) &di,&st))
++	  return EPMD_FALSE;
++
++#if defined(HAVE_IN6) && defined(AF_INET6)
++  if (si.ss_family == AF_INET6)
++      return IN6_ARE_ADDR_EQUAL( &(si6->sin6_addr), &(di6->sin6_addr));
++  if (si.ss_family == AF_INET)
++#endif
++  return si4->sin_addr.s_addr == di4->sin_addr.s_addr;
++#if defined(HAVE_IN6) && defined(AF_INET6)
++  return EPMD_FALSE;
++#endif
++}
++
+ static int conn_close_fd(EpmdVars *g,int fd)
+ {
+   int i;
+diff --git a/erts/epmd/test/epmd_SUITE.erl b/erts/epmd/test/epmd_SUITE.erl
+index e8bbfdb..f3c0ada 100644
+--- a/erts/epmd/test/epmd_SUITE.erl
++++ b/erts/epmd/test/epmd_SUITE.erl
+@@ -43,6 +43,7 @@
+ -export(
+    [
+     register_name/1,
++    register_name_ipv6/1,
+     register_names_1/1,
+     register_names_2/1,
+     register_duplicate_name/1,
+@@ -111,7 +112,8 @@
+ suite() -> [{ct_hooks,[ts_install_cth]}].
+ 
+ all() -> 
+-    [register_name, register_names_1, register_names_2,
++    [register_name, register_name_ipv6,
++     register_names_1, register_names_2,
+      register_duplicate_name, unicode_name, long_unicode_name,
+      get_port_nr, slow_get_port_nr,
+      unregister_others_name_1, unregister_others_name_2,
+@@ -169,6 +171,24 @@ register_name(Config) when is_list(Config) ->
+     ?line ok = close(Sock),			% Unregister
+     ok.
+ 
++register_name_ipv6(doc) ->
++    ["Register a name over IPv6"];
++register_name_ipv6(suite) ->
++    [];
++register_name_ipv6(Config) when is_list(Config) ->
++    % Test if the host has an IPv6 loopback address
++    Res = gen_tcp:listen(0, [inet6, {ip, {0,0,0,0,0,0,0,1}}]),
++    case Res of
++    {ok,LSock} ->
++	    gen_tcp:close(LSock),
++	    ?line ok = epmdrun(),
++	    ?line {ok,Sock} = register_node6("foobar6"),
++	    ?line ok = close(Sock),         % Unregister
++	    ok;
++    _Error ->
++	    {skip, "Host does not have an IPv6 loopback address"}
++    end.
++
+ register_names_1(doc) ->
+     ["Register and unregister two nodes"];
+ register_names_1(suite) ->
+@@ -242,13 +262,18 @@ register_node(Name) ->
+ register_node(Name,Port) ->
+     register_node_v2(Port,$M,0,5,5,Name,"").
+ 
++register_node6(Name) ->
++    register_node_v2({0,0,0,0,0,0,0,1},?DUMMY_PORT,$M,0,5,5,Name,"").
++
+ register_node_v2(Port, NodeType, Prot, HVsn, LVsn, Name, Extra) ->
++    register_node_v2("localhost", Port, NodeType, Prot, HVsn, LVsn, Name, Extra).
++register_node_v2(Addr, Port, NodeType, Prot, HVsn, LVsn, Name, Extra) ->
+     Utf8Name = unicode:characters_to_binary(Name),
+     Req = [?EPMD_ALIVE2_REQ, put16(Port), NodeType, Prot,
+ 	   put16(HVsn), put16(LVsn),
+ 	   put16(size(Utf8Name)), binary_to_list(Utf8Name),
+ 	   size16(Extra), Extra],
+-    case send_req(Req) of
++    case send_req(Req, Addr) of
+ 	{ok,Sock} ->
+ 	    case recv(Sock,4) of
+ 		{ok, [?EPMD_ALIVE2_RESP,_Res=0,_C0,_C1]} ->
+@@ -1151,7 +1176,9 @@ send_direct(Sock, Bytes) ->
+     end.
+ 
+ send_req(Req) ->
+-    case connect() of
++    send_req(Req, "localhost").
++send_req(Req, Addr) ->
++    case connect(Addr) of
+ 	{ok,Sock} ->
+ 	    case send(Sock, [size16(Req), Req]) of
+ 		ok ->
+diff --git a/lib/kernel/src/erl_epmd.erl b/lib/kernel/src/erl_epmd.erl
+index 55ce9a7..c6202dd 100644
+--- a/lib/kernel/src/erl_epmd.erl
++++ b/lib/kernel/src/erl_epmd.erl
+@@ -32,7 +32,7 @@
+ %% External exports
+ -export([start/0, start_link/0, stop/0, port_please/2, 
+ 	 port_please/3, names/0, names/1,
+-	 register_node/2, open/0, open/1, open/2]).
++	 register_node/2, register_node/3, open/0, open/1, open/2]).
+ 
+ %% gen_server callbacks
+ -export([init/1, handle_call/3, handle_cast/2, handle_info/2, 
+@@ -102,7 +102,9 @@ names(EpmdAddr) ->
+ 
+ 
+ register_node(Name, PortNo) ->
+-    gen_server:call(erl_epmd, {register, Name, PortNo}, infinity).
++    register_node(Name, PortNo, inet).
++register_node(Name, PortNo, Family) ->
++    gen_server:call(erl_epmd, {register, Name, PortNo, Family}, infinity).
+ 
+ %%%----------------------------------------------------------------------
+ %%% Callback functions from gen_server
+@@ -120,10 +122,10 @@ init(_) ->
+ -spec handle_call(calls(), term(), state()) ->
+         {'reply', term(), state()} | {'stop', 'shutdown', 'ok', state()}.
+ 
+-handle_call({register, Name, PortNo}, _From, State) ->
++handle_call({register, Name, PortNo, Family}, _From, State) ->
+     case State#state.socket of
+ 	P when P < 0 ->
+-	    case do_register_node(Name, PortNo) of
++	    case do_register_node(Name, PortNo, Family) of
+ 		{alive, Socket, Creation} ->
+ 		    S = State#state{socket = Socket,
+ 				    port_no = PortNo,
+@@ -206,8 +208,12 @@ open({A,B,C,D,E,F,G,H}=EpmdAddr, Timeout) when ?ip6(A,B,C,D,E,F,G,H) ->
+ close(Socket) ->
+     gen_tcp:close(Socket).
+ 
+-do_register_node(NodeName, TcpPort) ->
+-    case open() of
++do_register_node(NodeName, TcpPort, Family) ->
++    Localhost = case Family of
++        inet -> open({127,0,0,1});
++        inet6 -> open({0,0,0,0,0,0,0,1})
++    end,
++    case Localhost of
+ 	{ok, Socket} ->
+ 	    Name = to_string(NodeName),
+ 	    Extra = "",

@@ -1,0 +1,26 @@
+--- a/rebar.config        2016-01-02 13:49:45.000000000 +0000
++++ b/rebar-new.config    2016-02-19 11:39:04.525878459 +0000
+@@ -19,23 +19,3 @@
+         {certifi, "0.3.0"},
+         {ssl_verify_hostname, "1.0.5"}
+        ]}.
+-
+-{profiles, [{docs, [{deps,
+-                     [
+-                      {edown,
+-                       {git, "https://github.com/uwiger/edown.git",
+-                        {tag, "0.7"}}}
+-                     ]},
+-
+-              {edoc_opts, [{doclet, edown_doclet},
+-                           {source_path, ["src/socket",
+-                                          "src/http",
+-                                          "src/metrics"]},
+-                           {packages, false},
+-                           {subpackages, true},
+-                           {top_level_readme,
+-                            {"./README.md", "http://github.com/benoitc/hackney"}}]}]},
+-             {test, [
+-               {deps, [{cowboy, "1.0.4"}]}
+-             ]}
+-           ]}.
