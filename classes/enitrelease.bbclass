@@ -1,4 +1,4 @@
-inherit useradd systemd
+inherit useradd caros-service
 
 RDEPENDS_${PN} += "logrotate erlang-enit erlang-epmd"
 
