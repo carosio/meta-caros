@@ -5,12 +5,13 @@ LIC_FILES_CHKSUM = "file://src/netlink.erl;beginline=1;endline=19;md5=9c3283402c
 
 PR = "r0"
 
-SRC_URI = "https://github.com/travelping/gen_netlink/archive/master.tar.gz;downloadfilename=gen_netlink-${PV}.tar.gz"
-SRC_URI[md5sum] = "c7c3808891353ef2e89a0bcfdc5edcad"
-SRC_URI[sha256sum] = "4c4ce712b93b06c7b51a898ef647a6d6bcc5d70ee1b9c7c81dc0780e93478350"
+SRCREV = "765184761840aa271d7abb86c9185d66dc88dda0"
+SRC_URI = "https://github.com/travelping/gen_netlink/archive/${SRCREV}.tar.gz;downloadfilename=gen_netlink-${PV}.tar.gz"
+SRC_URI[md5sum] = "4136344dd01e880175805588c919b76b"
+SRC_URI[sha256sum] = "f3bda85fd3c09912b4b9665b992274347c6a81cc055de1bf0363527a006075a1"
 
 #S = "${WORKDIR}/gen_netlink-${PV}"
-S = "${WORKDIR}/gen_netlink-master"
+S = "${WORKDIR}/gen_netlink-${SRCREV}"
 
 TETRAPAK_OPTS += "-o build.version ${PV}-${PR}"
 
