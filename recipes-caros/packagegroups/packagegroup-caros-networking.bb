@@ -16,4 +16,5 @@ RDEPENDS_${PN} = "\
 	iptables \
 	nftables \
 	openvswitch \
+	pmacct \
 "
