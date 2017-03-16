@@ -3,4 +3,4 @@ Description=logrotate
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/logrotate /etc/logrotate.conf
+ExecStart=/usr/sbin/logrotate /etc/logrotate.conf
