@@ -14,7 +14,7 @@ LIC_FILES_CHKSUM = "file://nrpe.spec;beginline=42;endline=42;md5=cced8b49901709f
 
 SECTION = "devel"
 
-PR = "r3"
+PR = "r4"
 
 SRC_URI = "http://downloads.sourceforge.net/project/nagios/nrpe-2.x/nrpe-${PV}/nrpe-${PV}.tar.gz"
 SRC_URI += "file://nrpe@.service file://nrpe.socket"
@@ -23,7 +23,7 @@ SRC_URI += "file://nrpe.cfg"
 SRC_URI[md5sum] = "3921ddc598312983f604541784b35a50"
 SRC_URI[sha256sum] = "66383b7d367de25ba031d37762d83e2b55de010c573009c6f58270b137131072"
 
-inherit systemd
+inherit caros-service
 SYSTEMD_PACKAGES = "${PN}"
 SYSTEMD_SERVICE_${PN} = "nrpe.socket"
 SYSTEMD_AUTO_ENABLE ?= "disable"
