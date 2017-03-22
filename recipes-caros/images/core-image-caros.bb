@@ -11,6 +11,7 @@ IMAGE_INSTALL += "util-linux-setterm"
 IMAGE_INSTALL += "parted btrfs-tools e2fsprogs-mke2fs e2fsprogs-resize2fs e2fsprogs-tune2fs"
 IMAGE_INSTALL += "caros-core"
 IMAGE_INSTALL += "carosadm"
+IMAGE_INSTALL += "packagegroup-caros-ansible-deps"
 
 # having at least 4k blocks allows conversion from ext3 to btrfs
 EXTRA_IMAGECMD_ext3 += "-b 4096"
