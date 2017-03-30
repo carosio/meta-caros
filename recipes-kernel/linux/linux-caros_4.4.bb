@@ -32,7 +32,7 @@ LINUX_VERSION ?= "4.4.15"
 LINUX_VERSION_EXTENSION = "-caros-${LINUX_KERNEL_TYPE}"
 
 PV = "${LINUX_VERSION}+git${SRCPV}"
-PR := "${PR}.2"
+PR := "${PR}.3"
 
 KMETA = "kernel-meta"
 KCONF_BSP_AUDIT_LEVEL = "2"

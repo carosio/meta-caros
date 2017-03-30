@@ -1,0 +1,4 @@
+define KFEATURE_DESCRIPTION "a ipvs netfilter feature-set"
+define KFEATURE_COMPATIBILITY all
+
+kconf non-hardware ipvs-netfilter.cfg
