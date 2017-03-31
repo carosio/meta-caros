@@ -21,6 +21,7 @@ SRCREV_machine ?= "5ff54d8fbf74278e9e5074cbba516a14f0915ff7"
 SRCREV_meta ?= "b81030f9ec2de3dc6c048e142dcbff62e305cc40"
 
 SRC_URI = "git://git.yoctoproject.org/linux-yocto-3.17.git;bareclone=1;branch=${KBRANCH},${KMETA};name=machine,meta"
+SRC_URI += "file://caros-features.scc"
 
 LINUX_VERSION ?= "3.17.6"
 LINUX_VERSION_EXTENSION = "-caros-${LINUX_KERNEL_TYPE}"
