@@ -78,42 +78,39 @@ do_compile() {
     done
 
     export LC_ALL=en_US.UTF-8
-    export MIX_ENV=release
+    export MIX_ENV=prod
 
     # explicitly use TARGET erts instead of the erlang-native provided one:
     TARGET_ERTS="${STAGING_DIR_TARGET}/usr/lib/erlang"
-    mkdir -pv rel
 
-    RELXCFG=`mktemp`
-    echo "{include_erts, \"${TARGET_ERTS}\"}." > $RELXCFG
+    OPTS=`mktemp`
+    echo "  set include_erts: \"${TARGET_ERTS}\"" > $OPTS
 
-    echo "{lib_dirs, [" >> $RELXCFG
-        echo "\"${STAGING_DIR_TARGET}/usr/lib/erlang/lib/lager_journald_backend-*\"," >> $RELXCFG
-        echo "\"${STAGING_DIR_TARGET}/usr/lib/erlang/lib/ejournald-*\"" >> $RELXCFG
-    echo "]}." >> $RELXCFG
+    # use some additional systemd specific logging libraries
+    echo -n "  set code_paths: [" >> $OPTS
+        echo -n "\"${TARGET_ERTS}/lib/lager_journald_backend-*\"," >> $OPTS
+        echo -n "\"${TARGET_ERTS}/lib/ejournald-*\"" >> $OPTS
+    echo "]" >> $OPTS
 
-    # include pre-existing relx.config
-    [ -e rel/relx.config ] && cat rel/relx.config >> $RELXCFG
+    HEADER=`mktemp`; cat rel/config.exs | awk '{print $0} /^environment :prod do/{exit} ' > $HEADER
+    FOOTER=`mktemp`; cat rel/config.exs | awk '{if (foot) {print $0}} /^environment :prod do/{foot=1} ' > $FOOTER
 
-    echo "generated relx.config:"
-    echo "==============="
-    cat $RELXCFG
-    echo "==============="
+    cat $HEADER $OPTS $FOOTER > rel/config.exs
+    rm $HEADER $OPTS $FOOTER
 
-    mv $RELXCFG rel/relx.config
-
-    mix do deps.compile, compile, release --no-confirm-missing
+    mix compile
+    mix release --name=${REL_NAME} --env=prod
 }
 
 do_install() {
-    if [ -e rel/${REL_NAME}/releases/${REL_VSN}/${REL_NAME}.tar.gz ]
+    if [ -e _build/prod/rel/${REL_NAME}/releases/${REL_VSN}/${REL_NAME}.tar.gz ]
     then
-        RELEASE_TAR="rel/${REL_NAME}/releases/${REL_VSN}/${REL_NAME}.tar.gz"
-        bbnote "tar found at rel/${REL_NAME}/releases/${REL_VSN}/${REL_NAME}.tar.gz"
+        RELEASE_TAR="_build/prod/rel/${REL_NAME}/releases/${REL_VSN}/${REL_NAME}.tar.gz"
+        bbnote "tar found at _build/prod/rel/${REL_NAME}/releases/${REL_VSN}/${REL_NAME}.tar.gz"
     elif [ -e rel/${REL_NAME}/${REL_NAME}-${REL_VSN}.tar.gz ]
     then
-        RELEASE_TAR="rel/${REL_NAME}/${REL_NAME}-${REL_VSN}.tar.gz"
-        bbnote "tar found at rel/${REL_NAME}-${REL_VSN}.tar.gz"
+        RELEASE_TAR="_build/prod/rel/${REL_NAME}/${REL_NAME}-${REL_VSN}.tar.gz"
+        bbnote "tar found at _build/prod/rel/${REL_NAME}-${REL_VSN}.tar.gz"
     else
         bbfatal "${REL_NAME}: tar file not found"
         exit 1
