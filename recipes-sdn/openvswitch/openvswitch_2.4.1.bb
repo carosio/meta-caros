@@ -4,11 +4,11 @@ require openvswitch.inc
 
 LIC_FILES_CHKSUM = "file://COPYING;md5=5973c953e3c8a767cf0808ff8a0bac1b"
 
-SRC_URI_prepend = "git://github.com/openvswitch/ovs.git;protocol=git"
+SRC_URI_prepend = "git://github.com/openvswitch/ovs.git;protocol=git;branch=branch-2.4"
 SRC_URI += "file://fix_missing_dist_file.patch \
 	    file://remove-depmod.patch"
 
-SRCREV="ebdabd05e9465dd6e50adedb4a0bcb5678e563de"
+SRCREV="f8184f0b6ab34f77cdd4d7c6d60d059fe952df68"
 
 S = "${WORKDIR}/git"
 

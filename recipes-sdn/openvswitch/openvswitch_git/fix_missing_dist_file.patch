@@ -6,6 +6,7 @@ index b3ff4e3..02a9c30 100644
  	build-aux/dist-docs \
  	build-aux/sodepends.pl \
  	build-aux/soexpand.pl \
+	build-aux/xml2nroff \
 +	m4/ax_check_openssl.m4 \
 +	m4/ax_func_posix_memalign.m4 \
 +	m4/openvswitch.m4 \
