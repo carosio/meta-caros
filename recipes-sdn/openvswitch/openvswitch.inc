@@ -90,7 +90,7 @@ SYSTEMD_SERVICE_${PN}-vswitchd = "openvswitch-vswitchd.service"
 
 do_install_append() {
 	oe_runmake 'INSTALL_MOD_PATH=${D}' modules_install
-	rm -fr ${D}/${datadir}/${PN}/pki ${D}/${localstatedir}
+	rm -fr ${D}/${datadir}/${PN}/pki ${D}/${localstatedir} ${D}/${sysconfdir}/bash_completion.d
 	mkdir -p ${D}/${localstatedir}/lib/openvswitch/pki
 
     install -d ${D}${systemd_unitdir}/system/
