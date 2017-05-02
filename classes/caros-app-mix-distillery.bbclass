@@ -35,68 +35,34 @@ FILES_${PN}-staticdev += "${APP_PREFIX}/${APPNAME}/${APPVERSION}/erts*/lib/inter
 CONFFILE ?= "${SYSCONFIG_PREFIX}/${APPNAME}.conf"
 CONFFILES_${PN} += "${CONFFILE}"
 
-DEPENDS += "elixir-native rebar-native rebar3-native hex-native"
+DEPENDS += "erlang elixir rebar3-native hex-native rebar3-hex-native"
 
 # packages based on this class are copying some files
 # together instead of "compiling" them (mainly deps)
 INSANE_SKIP_${PN} = "already-stripped"
 
 do_compile() {
-    # because of our pre-downloading of all deps into deps/
-    # (similar to vendoring), there is no need for further
-    # downloading or looking up dependencies from the net.
-    # unfortunately mix/hex still fails on missing hex-registry
-    # to workaround that we create an "empty" one:
-    export HEX_OFFLINE=true
-    export HEX_HOME=${WORKDIR}/hex-home
-    mkdir -pv $HEX_HOME
-    echo 'defmodule Hex do' > ${WORKDIR}/createreg.ex
-    echo '    def ets_registry(path) do' >> ${WORKDIR}/createreg.ex
-    echo '      tid = :ets.new(:hex_ets_registry, [])' >> ${WORKDIR}/createreg.ex
-    echo '      :ets.insert(tid, {:"$$version$$", 4})' >> ${WORKDIR}/createreg.ex
-    echo '      :ets.insert(tid, {:"$$installs2$$", []})' >> ${WORKDIR}/createreg.ex
-    echo '      :ok = :ets.tab2file(tid, String.to_char_list(path))' >> ${WORKDIR}/createreg.ex
-    echo '    end' >> ${WORKDIR}/createreg.ex
-    echo 'end' >> ${WORKDIR}/createreg.ex
-
-    elixir -r ${WORKDIR}/createreg.ex -e 'Hex.ets_registry("'${HEX_HOME}'/registry.ets")'
-
-    if [ -d ${WORKDIR}/git-deps ]
-    then
-        cp -navl ${WORKDIR}/git-deps ./deps
-    fi
-    for mixdep in ${WORKDIR}/hex-deps/*; do
-        mixdepbase="`basename $mixdep`"
-        if [ ! -e deps/$mixdepbase ] ; then
-            mkdir -pv deps/$mixdepbase
-            if [ -e $mixdep/contents.tar.gz ] ; then
-                tar xz -C deps/$mixdepbase -f $mixdep/contents.tar.gz
-            else
-                cp -navl $mixdep/$mixdepbase-*/* deps/$mixdepbase
-            fi
-        fi
-    done
 
     export LC_ALL=en_US.UTF-8
     export MIX_ENV=prod
+    # enable HEX_OFFLINE later after hex 0.16.0 will be fixed
+    # https://github.com/hexpm/hex/issues/367
+    #export HEX_OFFLINE=true
+    export REPLACE_OS_VARS=true
     export MIX_REBAR3="${STAGING_BINDIR_NATIVE}/rebar3"
     export MIX_REBAR="${STAGING_BINDIR_NATIVE}/rebar"
-
+    export STAGING_DIR_TARGET=${STAGING_DIR_TARGET}
     mix compile
     mix release --name=${REL_NAME} --env=prod
 }
 
 do_install() {
-    if [ -e _build/prod/rel/${REL_NAME}/releases/${REL_VSN}/${REL_NAME}.tar.gz ]
+    RELEASE_TAR="_build/prod/rel/${REL_NAME}/releases/${REL_VSN}/${REL_NAME}.tar.gz"
+    if [ -e ${RELEASE_TAR} ]
     then
-        RELEASE_TAR="_build/prod/rel/${REL_NAME}/releases/${REL_VSN}/${REL_NAME}.tar.gz"
-        bbnote "tar found at _build/prod/rel/${REL_NAME}/releases/${REL_VSN}/${REL_NAME}.tar.gz"
-    elif [ -e rel/${REL_NAME}/${REL_NAME}-${REL_VSN}.tar.gz ]
-    then
-        RELEASE_TAR="_build/prod/rel/${REL_NAME}/${REL_NAME}-${REL_VSN}.tar.gz"
-        bbnote "tar found at _build/prod/rel/${REL_NAME}-${REL_VSN}.tar.gz"
+        bbnote "${REL_NAME}: tar found at ${RELEASE_TAR}"
     else
-        bbfatal "${REL_NAME}: tar file not found"
+        bbfatal "${REL_NAME}: tar file not found at ${RELEASE_TAR}"
         exit 1
     fi
 
@@ -117,24 +83,10 @@ do_install() {
     echo '#!/bin/sh\n' > ${erts_base}/bin/beam.smp
     echo "exec ${APPNAME} \"\$@\"" >> ${erts_base}/bin/beam.smp
     chmod 755 ${erts_base}/bin/beam.smp
-
-    if [ -f ${S}/config/${REL_NAME}.conf ];
-    then
-        install -m 0755 -d "${D}/${SYSCONFIG_PREFIX}"
-        install -m 0644 ${S}/config/${REL_NAME}.conf ${D}${CONFFILE}
-        echo >> ${D}${CONFFILE}
-        echo "# Choose the logging level for the journal backend." >> ${D}${CONFFILE}
-        echo "# Allowed values: emerg, alert, crit, error, warning, notive, info, debug, false" >> ${D}${CONFFILE}
-        echo "log.journal.level = info" >> ${D}${CONFFILE}
-        echo "# Choose the logging level for the console backend." >> ${D}${CONFFILE}
-        echo "# Allowed values: info, error, false" >> ${D}${CONFFILE}
-        echo "log.console.level = false" >> ${D}${CONFFILE}
-
-        echo "${CONFFILE}" > ${D}/${APP_PREFIX}/${APPNAME}/${APPVERSION}/CONFPATH
-    fi;
-
+    echo "${CONFFILE}" > ${D}/${APP_PREFIX}/${APPNAME}/${APPVERSION}/CONFPATH
     # fix permissions
     chmod 0755 "${D}/${APP_PREFIX}/${APPNAME}/${APPVERSION}/releases/${REL_VSN}/${REL_NAME}.sh"
     chmod 0755 "${D}/${APP_PREFIX}/${APPNAME}/${APPVERSION}/bin/${REL_NAME}"
     chmod 0755 "${D}/${APP_PREFIX}/${APPNAME}/${APPVERSION}/bin/nodetool"
 }
+
