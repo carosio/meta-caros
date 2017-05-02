@@ -6,7 +6,7 @@ LIC_FILES_CHKSUM = "file://LICENSE;md5=815ca599c9df247a0c7f619bab123dad"
 PR = "r1"
 
 SRC_URI = "git://github.com/carosio/app-mgmt.git"
-SRCREV = "de0963618ec1d29bf0f2c8dce2e680ce5fbfff59"
+SRCREV = "ef05dcece85058b0a062cfb68932a2d53e567d0d"
 
 S = "${WORKDIR}/git"
 
