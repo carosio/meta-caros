@@ -35,7 +35,7 @@ FILES_${PN}-staticdev += "${APP_PREFIX}/${APPNAME}/${APPVERSION}/erts*/lib/inter
 CONFFILE ?= "${SYSCONFIG_PREFIX}/${APPNAME}.conf"
 CONFFILES_${PN} += "${CONFFILE}"
 
-DEPENDS += "erlang elixir rebar3-native hex-native rebar3-hex-native"
+DEPENDS += "erlang elixir rebar3-native hex-native"
 
 # packages based on this class are copying some files
 # together instead of "compiling" them (mainly deps)
