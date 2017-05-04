@@ -10,13 +10,9 @@ PACKAGES = "${PN}"
 PACKAGE_GROUP_caros_erlang = "${PN}"
 
 RDEPENDS_${PN} = "\
-erlang-dike \
-erlang-dike-cache \
 erlang-ejournald \
 erlang-eradius \
-erlang-hello \
 erlang-lager \
 erlang-lager-journald-backend \
 erlang-redbug \
 "
-
