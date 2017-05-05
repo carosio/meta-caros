@@ -25,4 +25,11 @@ unzip \
 unbound nsd \
 kellner \
 influxdb \
+rebar3-native \
+hex-native \
+avahi \
+erlang-lager-journald-backend \
+elixir-native \
+elixir \
+rebar-native \
 "
