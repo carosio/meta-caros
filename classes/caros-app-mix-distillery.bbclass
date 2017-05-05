@@ -83,10 +83,18 @@ do_install() {
     echo '#!/bin/sh\n' > ${erts_base}/bin/beam.smp
     echo "exec ${APPNAME} \"\$@\"" >> ${erts_base}/bin/beam.smp
     chmod 755 ${erts_base}/bin/beam.smp
-    echo "${CONFFILE}" > ${D}/${APP_PREFIX}/${APPNAME}/${APPVERSION}/CONFPATH
+
+    if [ -f ${S}/config/${REL_NAME}.conf ]
+    then
+        install -m 0755 -d "${D}/${SYSCONFIG_PREFIX}"
+        install -m 0644 ${S}/config/${REL_NAME}.conf ${D}${CONFFILE}
+        echo "${CONFFILE}" > ${D}/${APP_PREFIX}/${APPNAME}/${APPVERSION}/CONFPATH
+    else
+        bbnote "release config ${REL_NAME}.conf not found"
+    fi
+
     # fix permissions
     chmod 0755 "${D}/${APP_PREFIX}/${APPNAME}/${APPVERSION}/releases/${REL_VSN}/${REL_NAME}.sh"
     chmod 0755 "${D}/${APP_PREFIX}/${APPNAME}/${APPVERSION}/bin/${REL_NAME}"
     chmod 0755 "${D}/${APP_PREFIX}/${APPNAME}/${APPVERSION}/bin/nodetool"
 }
-
