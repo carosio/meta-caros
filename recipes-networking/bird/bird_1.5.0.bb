@@ -12,6 +12,8 @@ LIC_FILES_CHKSUM = "file://README;beginline=29;endline=41;md5=1f0a42ec48e7a3fdf8
 # the "ip" command from busybox is not sufficient (flush by protocol flushes all routes)
 RDEPENDS_${PN} += "iproute2"
 
+PR = "r1"
+
 #
 # wget < 1.16.2 is broken for passive ftp in some cases,
 # see https://lists.gnu.org/archive/html/bug-wget/2015-01/msg00007.html
@@ -26,7 +28,7 @@ SRC_URI += " file://envvars"
 SRC_URI[md5sum] = "330bde6372afa106abfe5a9737e471c1"
 SRC_URI[sha256sum] = "79d5c4254e25f5890626830ca42aae03735716bdf152ddd8368473d2b3c17b5d"
 
-inherit autotools systemd useradd
+inherit autotools caros-service useradd
 
 SYSTEMD_PACKAGES = "${PN}"
 SYSTEMD_SERVICE_${PN} = "bird.service"
