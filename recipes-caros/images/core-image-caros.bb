@@ -6,6 +6,8 @@ LICENSE = "MIT"
 
 IMAGE_FEATURES += "splash ssh-server-openssh ${CAROS_IMAGE_FEATURES}"
 
+IMAGE_INSTALL += "packagegroup-caros-ansible-deps"
+
 inherit core-image-caros core-image distro_features_check extrausers
 
 # set root password to 'caros'
