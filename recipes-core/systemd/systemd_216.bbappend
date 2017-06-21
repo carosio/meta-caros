@@ -1,6 +1,6 @@
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
-PR := "${PR}.6"
+PR := "${PR}.7"
 
 SRC_URI += " \
 	file://0001-tp-remote-syslog.patch \
@@ -8,6 +8,7 @@ SRC_URI += " \
 	file://journal-remote-fix.patch \
 	file://timesyncd.conf \
 	file://multiline-fix.patch \
+	file://systemd-networkd.after-override.udevd \
 "
 
 CONFFILES_${PN} += "${sysconfdir}/systemd/timesyncd.conf"
@@ -41,4 +42,8 @@ do_install_append() {
 	install -d -m 0755 "${D}${sysconfdir}/systemd/network/"
 	install -m 0644 ${WORKDIR}/mgmt.network.in ${D}${sysconfdir}/systemd/network/mgmt.network
 	sed -i -e "s/@@MGMT_IF@@/${MGMT_IF}/" ${D}${sysconfdir}/systemd/network/mgmt.network
+
+	# install systemd-networkd.service override to start after systemd-udevd
+	install -d -m 0755 ${D}${sysconfdir}/systemd/system/systemd-networkd.service.d
+	install -m 0644 ${WORKDIR}/systemd-networkd.after-override.udevd ${D}${sysconfdir}/systemd/system/systemd-networkd.service.d/override.conf
 }
